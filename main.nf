@@ -20,25 +20,25 @@ workflow {
     // sample, readpath, ref_fasta, ref_gff
     ch_input = Channel.fromPath(params.samplesheet) 
                         .splitCsv(header:true)
+    in_reads = ch_input.map(row -> [row.sample, row.readpath])
 
-
+    if(params.collect) {
     // COLLECT
     // Collect reads from fastq.gz into single fastq
-    in_reads = ch_input.map(row -> [row.sample, row.readpath])
+
     // view for debug
     // in_reads.view()
-
-    ch_collected_reads = Channel.empty()
     COLLECT_READS(in_reads)
-    ch_collected_reads = COLLECT_READS.out.combined_reads
+    in_reads = COLLECT_READS.out.combined_reads
+    }
 
     // Asssembly using FLYE
     ch_flye_assembly = Channel.empty()
-    FLYE(ch_collected_reads, params.flye_mode)
+    FLYE(in_reads, params.flye_mode)
     ch_flye_assembly = FLYE.out.fasta
 
     // Map reads to reference
-    ch_map_ref_in = ch_collected_reads
+    ch_map_ref_in = in_reads
               .join(ch_input)
               .map(row -> [row.sample, row.combined_reads, row.ref_fasta])
     // View for debug
@@ -49,9 +49,8 @@ workflow {
     ch_aln_to_ref = ALIGN_TO_REF.out.alignment
     BAM_STATS_REF(ch_aln_to_ref)
 
-
     // Remap reads to flye assembly
-    map_assembly = ch_collected_reads
+    map_assembly = in_reads
                    .join(ch_flye_assembly) 
     // View for debug
     map_assembly.view()

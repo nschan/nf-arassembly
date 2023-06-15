@@ -37,7 +37,18 @@ nextflow run nf-arassembly --samplesheet 'path/to/sample_sheet.csv' \
                            -profile charliecloud,biohpc_gen
 ```
 
-## Problems
+## Parameters
+
+`--out`: output folder, typically './results'. Needs to be provided.
+
+`--samplesheet`: path to the samplesheet (required)
+
+`--collect`: should reads be collected into a single fastq? Default: true
+
+`--flye_mode`: changes mode for flye, default is "--nano-hq".
+Valid options are: "--pacbio-raw", "--pacbio-corr", "--pacbio-hifi", "--nano-raw", "--nano-corr", "--nano-hq"
+
+# Problems
 
 Presumably, something like this will happen:
 
