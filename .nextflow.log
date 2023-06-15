@@ -1,0 +1,219 @@
+Jun-15 15:21:26.110 [main] DEBUG nextflow.cli.Launcher - $> nextflow run /dss/dsshome1/lxc0A/ra34bin/nf-arassembly/main_refactor.nf --samplesheet samplesheet.csv -profile biohpc_gen --out ./results_refactor -resume
+Jun-15 15:21:26.164 [main] INFO  nextflow.cli.CmdRun - N E X T F L O W  ~  version 22.10.1
+Jun-15 15:21:26.187 [main] DEBUG nextflow.plugin.PluginsFacade - Setting up plugin manager > mode=prod; embedded=false; plugins-dir=/dss/dsshome1/lxc0A/ra34bin/.nextflow/plugins; core-plugins: nf-amazon@1.11.0,nf-azure@0.14.2,nf-codecommit@0.1.2,nf-console@1.0.4,nf-ga4gh@1.0.4,nf-google@1.4.4,nf-tower@1.5.5,nf-wave@0.5.2
+Jun-15 15:21:26.197 [main] INFO  org.pf4j.DefaultPluginStatusProvider - Enabled plugins: []
+Jun-15 15:21:26.198 [main] INFO  org.pf4j.DefaultPluginStatusProvider - Disabled plugins: []
+Jun-15 15:21:26.202 [main] INFO  org.pf4j.DefaultPluginManager - PF4J version 3.4.1 in 'deployment' mode
+Jun-15 15:21:26.211 [main] INFO  org.pf4j.AbstractPluginManager - No plugins
+Jun-15 15:21:26.227 [main] DEBUG nextflow.config.ConfigBuilder - Found config local: /dss/dsshome1/lxc0A/ra34bin/nf-arassembly/nextflow.config
+Jun-15 15:21:26.228 [main] DEBUG nextflow.config.ConfigBuilder - Parsing config file: /dss/dsshome1/lxc0A/ra34bin/nf-arassembly/nextflow.config
+Jun-15 15:21:26.249 [main] DEBUG nextflow.config.ConfigBuilder - Applying config profile: `biohpc_gen`
+Jun-15 15:21:27.055 [main] DEBUG nextflow.config.ConfigBuilder - Available config profiles: [biohpc_gen, spack, charliecloud, conda, local]
+Jun-15 15:21:27.064 [main] WARN  nextflow.config.ConfigBuilder - It appears you have never run this project before -- Option `-resume` is ignored
+Jun-15 15:21:27.087 [main] DEBUG nextflow.cli.CmdRun - Applied DSL=2 from script declararion
+Jun-15 15:21:27.105 [main] INFO  nextflow.cli.CmdRun - Launching `/dss/dsshome1/lxc0A/ra34bin/nf-arassembly/main_refactor.nf` [angry_brahmagupta] DSL2 - revision: e33fbfd536
+Jun-15 15:21:27.106 [main] DEBUG nextflow.plugin.PluginsFacade - Plugins default=[]
+Jun-15 15:21:27.106 [main] DEBUG nextflow.plugin.PluginsFacade - Plugins resolved requirement=[]
+Jun-15 15:21:27.116 [main] DEBUG nextflow.secret.LocalSecretsProvider - Secrets store: /dss/dsshome1/lxc0A/ra34bin/.nextflow/secrets/store.json
+Jun-15 15:21:27.119 [main] DEBUG nextflow.secret.SecretsLoader - Discovered secrets providers: [nextflow.secret.LocalSecretsProvider@5b9499fe] - activable => nextflow.secret.LocalSecretsProvider@5b9499fe
+Jun-15 15:21:27.175 [main] DEBUG nextflow.Session - Session UUID: 84db3b18-0222-4ae8-9bcc-57813a8c9917
+Jun-15 15:21:27.175 [main] DEBUG nextflow.Session - Run name: angry_brahmagupta
+Jun-15 15:21:27.175 [main] DEBUG nextflow.Session - Executor pool size: 56
+Jun-15 15:21:27.185 [main] DEBUG nextflow.util.ThreadPoolBuilder - Creating thread pool 'FileTransfer' minSize=10; maxSize=168; workQueue=LinkedBlockingQueue[10000]; allowCoreThreadTimeout=false
+Jun-15 15:21:27.213 [main] DEBUG nextflow.cli.CmdRun - 
+  Version: 22.10.1 build 5828
+  Created: 27-10-2022 16:58 UTC (18:58 CEST)
+  System: Linux 4.12.14-197.108-default
+  Runtime: Groovy 3.0.13 on OpenJDK 64-Bit Server VM 11.0.13+8-suse-3.68.1-x8664
+  Encoding: UTF-8 (UTF-8)
+  Process: 5630@cm2login4 [10.156.79.104]
+  CPUs: 56 - Mem: 117.2 GB (66.9 GB) - Swap: 8 GB (7.8 GB)
+Jun-15 15:21:27.240 [main] DEBUG nextflow.Session - Work-dir: /dss/dsshome1/lxc0A/ra34bin/nf-arassembly/work [gpfs]
+Jun-15 15:21:27.240 [main] DEBUG nextflow.Session - Script base path does not exist or is not a directory: /dss/dsshome1/lxc0A/ra34bin/nf-arassembly/bin
+Jun-15 15:21:27.251 [main] DEBUG nextflow.executor.ExecutorFactory - Extension executors providers=[]
+Jun-15 15:21:27.260 [main] DEBUG nextflow.Session - Observer factory: DefaultObserverFactory
+Jun-15 15:21:27.279 [main] DEBUG nextflow.cache.CacheFactory - Using Nextflow cache factory: nextflow.cache.DefaultCacheFactory
+Jun-15 15:21:27.291 [main] DEBUG nextflow.util.CustomThreadPool - Creating default thread pool > poolSize: 57; maxThreads: 1000
+Jun-15 15:21:27.423 [main] DEBUG nextflow.Session - Session start
+Jun-15 15:21:27.800 [main] DEBUG nextflow.script.ScriptRunner - > Launching execution
+Jun-15 15:21:29.153 [main] DEBUG nextflow.script.ProcessConfig - Config settings `withName:COLLECT_READS` matches process COLLECT:COLLECT_READS
+Jun-15 15:21:29.159 [main] DEBUG nextflow.executor.ExecutorFactory - << taskConfig executor: slurm
+Jun-15 15:21:29.159 [main] DEBUG nextflow.executor.ExecutorFactory - >> processorType: 'slurm'
+Jun-15 15:21:29.167 [main] DEBUG nextflow.executor.Executor - [warm up] executor > slurm
+Jun-15 15:21:29.173 [main] DEBUG n.processor.TaskPollingMonitor - Creating task monitor for executor 'slurm' > capacity: 100; pollInterval: 5s; dumpInterval: 5m 
+Jun-15 15:21:29.176 [main] DEBUG n.executor.AbstractGridExecutor - Creating executor 'slurm' > queue-stat-interval: 1m
+Jun-15 15:21:29.247 [main] DEBUG nextflow.script.ProcessConfig - Config settings `withName:FLYE` matches process FLYE_ASSEMBLY:FLYE
+Jun-15 15:21:29.250 [main] DEBUG nextflow.executor.ExecutorFactory - << taskConfig executor: slurm
+Jun-15 15:21:29.250 [main] DEBUG nextflow.executor.ExecutorFactory - >> processorType: 'slurm'
+Jun-15 15:21:29.272 [main] DEBUG nextflow.script.ProcessConfig - Config settings `withName:ALIGN_TO_BAM` matches process MAP_TO_REF:ALIGN
+Jun-15 15:21:29.272 [main] DEBUG nextflow.script.ProcessConfig - Config settings `withName:ALIGN` matches process MAP_TO_REF:ALIGN
+Jun-15 15:21:29.273 [main] DEBUG nextflow.executor.ExecutorFactory - << taskConfig executor: slurm
+Jun-15 15:21:29.273 [main] DEBUG nextflow.executor.ExecutorFactory - >> processorType: 'slurm'
+Jun-15 15:21:29.279 [main] DEBUG nextflow.script.ProcessConfig - Config settings `withName:SAMTOOLS_INDEX` matches process MAP_TO_REF:BAM_STATS:SAMTOOLS_INDEX
+Jun-15 15:21:29.280 [main] DEBUG nextflow.executor.ExecutorFactory - << taskConfig executor: slurm
+Jun-15 15:21:29.280 [main] DEBUG nextflow.executor.ExecutorFactory - >> processorType: 'slurm'
+Jun-15 15:21:29.288 [main] DEBUG nextflow.executor.ExecutorFactory - << taskConfig executor: slurm
+Jun-15 15:21:29.288 [main] DEBUG nextflow.executor.ExecutorFactory - >> processorType: 'slurm'
+Jun-15 15:21:29.293 [main] DEBUG nextflow.executor.ExecutorFactory - << taskConfig executor: slurm
+Jun-15 15:21:29.294 [main] DEBUG nextflow.executor.ExecutorFactory - >> processorType: 'slurm'
+Jun-15 15:21:29.299 [main] DEBUG nextflow.script.ProcessConfig - Config settings `withName:SAMTOOLS_IDXSTATS` matches process MAP_TO_REF:BAM_STATS:BAM_STATS_SAMTOOLS:SAMTOOLS_IDXSTATS
+Jun-15 15:21:29.300 [main] DEBUG nextflow.executor.ExecutorFactory - << taskConfig executor: slurm
+Jun-15 15:21:29.300 [main] DEBUG nextflow.executor.ExecutorFactory - >> processorType: 'slurm'
+Jun-15 15:21:29.310 [main] DEBUG nextflow.script.ProcessConfig - Config settings `withName:ALIGN_TO_BAM` matches process MAP_TO_ASSEMBLY:ALIGN
+Jun-15 15:21:29.310 [main] DEBUG nextflow.script.ProcessConfig - Config settings `withName:ALIGN` matches process MAP_TO_ASSEMBLY:ALIGN
+Jun-15 15:21:29.311 [main] DEBUG nextflow.executor.ExecutorFactory - << taskConfig executor: slurm
+Jun-15 15:21:29.311 [main] DEBUG nextflow.executor.ExecutorFactory - >> processorType: 'slurm'
+Jun-15 15:21:29.316 [main] DEBUG nextflow.script.ProcessConfig - Config settings `withName:SAMTOOLS_INDEX` matches process MAP_TO_ASSEMBLY:BAM_STATS:SAMTOOLS_INDEX
+Jun-15 15:21:29.316 [main] DEBUG nextflow.executor.ExecutorFactory - << taskConfig executor: slurm
+Jun-15 15:21:29.316 [main] DEBUG nextflow.executor.ExecutorFactory - >> processorType: 'slurm'
+Jun-15 15:21:29.322 [main] DEBUG nextflow.executor.ExecutorFactory - << taskConfig executor: slurm
+Jun-15 15:21:29.322 [main] DEBUG nextflow.executor.ExecutorFactory - >> processorType: 'slurm'
+Jun-15 15:21:29.326 [main] DEBUG nextflow.executor.ExecutorFactory - << taskConfig executor: slurm
+Jun-15 15:21:29.327 [main] DEBUG nextflow.executor.ExecutorFactory - >> processorType: 'slurm'
+Jun-15 15:21:29.329 [main] DEBUG nextflow.script.ProcessConfig - Config settings `withName:SAMTOOLS_IDXSTATS` matches process MAP_TO_ASSEMBLY:BAM_STATS:BAM_STATS_SAMTOOLS:SAMTOOLS_IDXSTATS
+Jun-15 15:21:29.330 [main] DEBUG nextflow.executor.ExecutorFactory - << taskConfig executor: slurm
+Jun-15 15:21:29.330 [main] DEBUG nextflow.executor.ExecutorFactory - >> processorType: 'slurm'
+Jun-15 15:21:29.342 [main] DEBUG nextflow.script.ProcessConfig - Config settings `withName:QUAST` matches process QUAST:RUN_QUAST
+Jun-15 15:21:29.343 [main] DEBUG nextflow.executor.ExecutorFactory - << taskConfig executor: slurm
+Jun-15 15:21:29.343 [main] DEBUG nextflow.executor.ExecutorFactory - >> processorType: 'slurm'
+Jun-15 15:21:29.346 [main] DEBUG nextflow.Session - Workflow process names [dsl2]: QUAST:RUN_QUAST, MAP_TO_ASSEMBLY:BAM_STATS:SAMTOOLS_INDEX, MAP_TO_REF:BAM_STATS:BAM_STATS_SAMTOOLS:SAMTOOLS_FLAGSTAT, FLYE_ASSEMBLY:FLYE, ALIGN_TO_BAM, SAMTOOLS_SORT, ALIGN, COLLECT:COLLECT_READS, MAP_TO_REF:ALIGN, SAMTOOLS_STATS, SAMTOOLS_FLAGSTAT, QUAST, RUN_QUAST, MAP_TO_REF:BAM_STATS:SAMTOOLS_INDEX, MAP_TO_ASSEMBLY:BAM_STATS:BAM_STATS_SAMTOOLS:SAMTOOLS_STATS, MAP_TO_ASSEMBLY:BAM_STATS:BAM_STATS_SAMTOOLS:SAMTOOLS_IDXSTATS, MAP_TO_ASSEMBLY:ALIGN, SAMTOOLS_GET_UNMAPPED, MAP_TO_REF:BAM_STATS:BAM_STATS_SAMTOOLS:SAMTOOLS_IDXSTATS, MAP_TO_ASSEMBLY:BAM_STATS:BAM_STATS_SAMTOOLS:SAMTOOLS_FLAGSTAT, FLYE, COLLECT_READS, SAMTOOLS_IDXSTATS, MAP_TO_REF:BAM_STATS:BAM_STATS_SAMTOOLS:SAMTOOLS_STATS, SAMTOOLS_INDEX
+Jun-15 15:21:29.347 [main] DEBUG nextflow.Session - Igniting dataflow network (17)
+Jun-15 15:21:29.353 [main] DEBUG nextflow.processor.TaskProcessor - Starting process > COLLECT:COLLECT_READS
+Jun-15 15:21:29.353 [main] DEBUG nextflow.processor.TaskProcessor - Starting process > FLYE_ASSEMBLY:FLYE
+Jun-15 15:21:29.354 [main] DEBUG nextflow.processor.TaskProcessor - Starting process > MAP_TO_REF:ALIGN
+Jun-15 15:21:29.355 [main] DEBUG nextflow.processor.TaskProcessor - Starting process > MAP_TO_REF:BAM_STATS:SAMTOOLS_INDEX
+Jun-15 15:21:29.358 [main] DEBUG nextflow.processor.TaskProcessor - Starting process > MAP_TO_REF:BAM_STATS:BAM_STATS_SAMTOOLS:SAMTOOLS_STATS
+Jun-15 15:21:29.358 [main] DEBUG nextflow.processor.TaskProcessor - Starting process > MAP_TO_REF:BAM_STATS:BAM_STATS_SAMTOOLS:SAMTOOLS_FLAGSTAT
+Jun-15 15:21:29.359 [main] DEBUG nextflow.processor.TaskProcessor - Starting process > MAP_TO_REF:BAM_STATS:BAM_STATS_SAMTOOLS:SAMTOOLS_IDXSTATS
+Jun-15 15:21:29.360 [main] DEBUG nextflow.processor.TaskProcessor - Starting process > MAP_TO_ASSEMBLY:ALIGN
+Jun-15 15:21:29.361 [main] DEBUG nextflow.processor.TaskProcessor - Starting process > MAP_TO_ASSEMBLY:BAM_STATS:SAMTOOLS_INDEX
+Jun-15 15:21:29.362 [main] DEBUG nextflow.processor.TaskProcessor - Starting process > MAP_TO_ASSEMBLY:BAM_STATS:BAM_STATS_SAMTOOLS:SAMTOOLS_STATS
+Jun-15 15:21:29.363 [main] DEBUG nextflow.processor.TaskProcessor - Starting process > MAP_TO_ASSEMBLY:BAM_STATS:BAM_STATS_SAMTOOLS:SAMTOOLS_FLAGSTAT
+Jun-15 15:21:29.363 [main] DEBUG nextflow.processor.TaskProcessor - Starting process > MAP_TO_ASSEMBLY:BAM_STATS:BAM_STATS_SAMTOOLS:SAMTOOLS_IDXSTATS
+Jun-15 15:21:29.364 [main] DEBUG nextflow.processor.TaskProcessor - Starting process > QUAST:RUN_QUAST
+Jun-15 15:21:29.364 [main] DEBUG nextflow.script.ScriptRunner - > Awaiting termination 
+Jun-15 15:21:29.364 [main] DEBUG nextflow.Session - Session await
+Jun-15 15:21:29.368 [Actor Thread 28] ERROR nextflow.extension.DataflowHelper - @unknown
+java.nio.file.NoSuchFileException: /dss/dsshome1/lxc0A/ra34bin/nf-arassembly/samplesheet.csv
+	at java.base/sun.nio.fs.UnixException.translateToIOException(UnixException.java:92)
+	at java.base/sun.nio.fs.UnixException.rethrowAsIOException(UnixException.java:111)
+	at java.base/sun.nio.fs.UnixException.rethrowAsIOException(UnixException.java:116)
+	at java.base/sun.nio.fs.UnixFileSystemProvider.newByteChannel(UnixFileSystemProvider.java:219)
+	at java.base/java.nio.file.Files.newByteChannel(Files.java:371)
+	at java.base/java.nio.file.Files.newByteChannel(Files.java:422)
+	at java.base/java.nio.file.spi.FileSystemProvider.newInputStream(FileSystemProvider.java:420)
+	at java.base/java.nio.file.Files.newInputStream(Files.java:156)
+	at nextflow.splitter.AbstractSplitter.newInputStream(AbstractSplitter.groovy:454)
+	at nextflow.splitter.AbstractTextSplitter.newReader(AbstractTextSplitter.groovy:153)
+	at nextflow.splitter.AbstractTextSplitter.normalizeSource0(AbstractTextSplitter.groovy:131)
+	at nextflow.splitter.AbstractTextSplitter.normalizeSource(AbstractTextSplitter.groovy:113)
+	at nextflow.splitter.AbstractTextSplitter.normalizeSource(AbstractTextSplitter.groovy)
+	at nextflow.splitter.AbstractSplitter.apply(AbstractSplitter.groovy:154)
+	at nextflow.extension.SplitOp$_applySplittingOperator_closure1.doCall(SplitOp.groovy:190)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:566)
+	at org.codehaus.groovy.reflection.CachedMethod.invoke(CachedMethod.java:107)
+	at groovy.lang.MetaMethod.doMethodInvoke(MetaMethod.java:323)
+	at org.codehaus.groovy.runtime.metaclass.ClosureMetaClass.invokeMethod(ClosureMetaClass.java:274)
+	at groovy.lang.MetaClassImpl.invokeMethod(MetaClassImpl.java:1035)
+	at org.codehaus.groovy.runtime.callsite.PogoMetaClassSite.call(PogoMetaClassSite.java:38)
+	at org.codehaus.groovy.runtime.callsite.CallSiteArray.defaultCall(CallSiteArray.java:47)
+	at org.codehaus.groovy.runtime.callsite.AbstractCallSite.call(AbstractCallSite.java:125)
+	at org.codehaus.groovy.runtime.callsite.AbstractCallSite.call(AbstractCallSite.java:139)
+	at nextflow.extension.DataflowHelper$_subscribeImpl_closure2.doCall(DataflowHelper.groovy:285)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:566)
+	at org.codehaus.groovy.reflection.CachedMethod.invoke(CachedMethod.java:107)
+	at groovy.lang.MetaMethod.doMethodInvoke(MetaMethod.java:323)
+	at org.codehaus.groovy.runtime.metaclass.ClosureMetaClass.invokeMethod(ClosureMetaClass.java:274)
+	at groovy.lang.MetaClassImpl.invokeMethod(MetaClassImpl.java:1035)
+	at groovy.lang.Closure.call(Closure.java:412)
+	at groovyx.gpars.dataflow.operator.DataflowOperatorActor.startTask(DataflowOperatorActor.java:120)
+	at groovyx.gpars.dataflow.operator.DataflowOperatorActor.onMessage(DataflowOperatorActor.java:108)
+	at groovyx.gpars.actor.impl.SDAClosure$1.call(SDAClosure.java:43)
+	at groovyx.gpars.actor.AbstractLoopingActor.runEnhancedWithoutRepliesOnMessages(AbstractLoopingActor.java:293)
+	at groovyx.gpars.actor.AbstractLoopingActor.access$400(AbstractLoopingActor.java:30)
+	at groovyx.gpars.actor.AbstractLoopingActor$1.handleMessage(AbstractLoopingActor.java:93)
+	at groovyx.gpars.util.AsyncMessagingCore.run(AsyncMessagingCore.java:132)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)
+	at java.base/java.lang.Thread.run(Thread.java:829)
+Jun-15 15:21:29.381 [Actor Thread 28] DEBUG nextflow.Session - Session aborted -- Cause: /dss/dsshome1/lxc0A/ra34bin/nf-arassembly/samplesheet.csv
+Jun-15 15:21:29.405 [Actor Thread 28] DEBUG nextflow.Session - The following nodes are still active:
+[process] COLLECT:COLLECT_READS
+  status=ACTIVE
+  port 0: (queue) OPEN  ; channel: -
+  port 1: (cntrl) -     ; channel: $
+
+[process] FLYE_ASSEMBLY:FLYE
+  status=ACTIVE
+  port 0: (queue) OPEN  ; channel: -
+  port 1: (value) bound ; channel: mode
+  port 2: (cntrl) -     ; channel: $
+
+[process] MAP_TO_REF:ALIGN
+  status=ACTIVE
+  port 0: (queue) OPEN  ; channel: -
+  port 1: (cntrl) -     ; channel: $
+
+[process] MAP_TO_REF:BAM_STATS:SAMTOOLS_INDEX
+  status=ACTIVE
+  port 0: (queue) OPEN  ; channel: -
+  port 1: (cntrl) -     ; channel: $
+
+[process] MAP_TO_REF:BAM_STATS:BAM_STATS_SAMTOOLS:SAMTOOLS_STATS
+  status=ACTIVE
+  port 0: (queue) OPEN  ; channel: -
+  port 1: (cntrl) -     ; channel: $
+
+[process] MAP_TO_REF:BAM_STATS:BAM_STATS_SAMTOOLS:SAMTOOLS_FLAGSTAT
+  status=ACTIVE
+  port 0: (queue) OPEN  ; channel: -
+  port 1: (cntrl) -     ; channel: $
+
+[process] MAP_TO_REF:BAM_STATS:BAM_STATS_SAMTOOLS:SAMTOOLS_IDXSTATS
+  status=ACTIVE
+  port 0: (queue) OPEN  ; channel: -
+  port 1: (cntrl) -     ; channel: $
+
+[process] MAP_TO_ASSEMBLY:ALIGN
+  status=ACTIVE
+  port 0: (queue) OPEN  ; channel: -
+  port 1: (cntrl) -     ; channel: $
+
+[process] MAP_TO_ASSEMBLY:BAM_STATS:SAMTOOLS_INDEX
+  status=ACTIVE
+  port 0: (queue) OPEN  ; channel: -
+  port 1: (cntrl) -     ; channel: $
+
+[process] MAP_TO_ASSEMBLY:BAM_STATS:BAM_STATS_SAMTOOLS:SAMTOOLS_STATS
+  status=ACTIVE
+  port 0: (queue) OPEN  ; channel: -
+  port 1: (cntrl) -     ; channel: $
+
+[process] MAP_TO_ASSEMBLY:BAM_STATS:BAM_STATS_SAMTOOLS:SAMTOOLS_FLAGSTAT
+  status=ACTIVE
+  port 0: (queue) OPEN  ; channel: -
+  port 1: (cntrl) -     ; channel: $
+
+[process] MAP_TO_ASSEMBLY:BAM_STATS:BAM_STATS_SAMTOOLS:SAMTOOLS_IDXSTATS
+  status=ACTIVE
+  port 0: (queue) OPEN  ; channel: -
+  port 1: (cntrl) -     ; channel: $
+
+[process] QUAST:RUN_QUAST
+  status=ACTIVE
+  port 0: (queue) OPEN  ; channel: -
+  port 1: (value) bound ; channel: use_fasta
+  port 2: (value) bound ; channel: use_gff
+  port 3: (cntrl) -     ; channel: $
+
+Jun-15 15:21:29.408 [main] DEBUG nextflow.Session - Session await > all processes finished
+Jun-15 15:21:29.408 [main] DEBUG nextflow.Session - Session await > all barriers passed
+Jun-15 15:21:29.418 [main] DEBUG nextflow.trace.WorkflowStatsObserver - Workflow completed > WorkflowStats[succeededCount=0; failedCount=0; ignoredCount=0; cachedCount=0; pendingCount=0; submittedCount=0; runningCount=0; retriesCount=0; abortedCount=0; succeedDuration=0ms; failedDuration=0ms; cachedDuration=0ms;loadCpus=0; loadMemory=0; peakRunning=0; peakCpus=0; peakMemory=0; ]
+Jun-15 15:21:29.597 [main] DEBUG nextflow.cache.CacheDB - Closing CacheDB done
+Jun-15 15:21:29.622 [main] DEBUG nextflow.script.ScriptRunner - > Execution complete -- Goodbye
