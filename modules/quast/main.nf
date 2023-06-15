@@ -1,5 +1,8 @@
 process QUAST {
     label 'process_medium'
+    publishDir "${params.out}",
+      mode: params.publish_dir_mode,
+      saveAs: { filename -> saveFiles(filename:filename, options:params.options, publish_dir:getSoftwareName(task.process), publish_id:meta) }
 
     conda "bioconda::quast=5.2.0"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
