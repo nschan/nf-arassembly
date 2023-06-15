@@ -1,13 +1,23 @@
-# nf-remap
+# nf-arassembly
 
-Map your long reads to assemblies.
+Arabidopsis assembly using flye, qc using quast (also works for other species).
 
-# Why
+# Procedure
 
-You made assemblies from long reads, now you want to map the reads to the assemblies.
+This pipeline will in a first step (COLLECT_READS) extract all fastq.gz files in the readpath folder into a single fastq file.
+The pipeline then assembles using flye and uses minimap2 to align reads to the new assembly, and the reference.
+These alignments, together with the assembly and reference genome & annotation will then be used as inputs for QUAST.
+QUAST will run with the following additional parameters:
 
-# How
+```
+        --eukaryote \\
+        --gene-finding \\
+        --conserved-genes-finding \\
+        --ref-bam ${ref_bam} \\
+        --bam ${bam} 
+```
 
+# Usage
 
 ## With a samplesheet
 
@@ -16,36 +26,23 @@ I assume that creating a samplesheet is the easiest way to do this.
 The samplesheet _must_ adhere to this format, including the header row. Please note the absence of spaces after the commas:
 
 ```
-sample,reads,ref
-Name,path/to/Sample_Reads.fastq,path/to/Reference.fasta
+sample,readpath,ref_fasta,ref_gff
+sampleName,path/to/reads,path/to/reference.fasta,path/to/reference.gff
 ```
 
 To run the pipeline with a samplesheet on biohpc_gen:
 ```
-nextflow run reseq-nf/  --samplesheet 'path/to/sample_sheet.csv' \
-                        --out './results' \
-                        -profile charliecloud,biohpc_gen
+nextflow run nf-arassembly --samplesheet 'path/to/sample_sheet.csv' \
+                           --out './results' \
+                           -profile charliecloud,biohpc_gen
 ```
 
-## Working example
-
-Samplesheet looks like this and is saved as samplesheet.csv:
-
-```
-sample,reads,ref
-barcode49,/dss/dsslegfs01/pn73so/pn73so-dss-0000/becker_common/read_data/A_thaliana_ONT/single_fq/barcode49.fastq,/dss/dsslegfs01/pn73so/pn73so-dss-0000/becker_common/Duncan/assemblies/flye/barcode49/OUT/assembly.fasta
-
-```
-Nextflow call like this:
-
-```
-nextflow run ~/nf-remap --samplesheet samplesheet.csv -profile charliecloud,biohpc_gen
-```
+## Problems
 
 Presumably, something like this will happen:
 
 ```
-Error executing process > 'ALIGN (barcode49)'
+Error executing process > 'ALIGN_TO_REF (TestSample)'
 
 Caused by:
   Charliecloud failed to pull image
@@ -58,4 +55,4 @@ Caused by:
     hint: if your registry needs authentication, use --auth
 ```
 
-Follow the "hint" and just copy the `ch-image pull -s ...` line and append `--auth` to pull the container, authenticate with lrz credentials, then retry.
+Follow the "hint" and just copy the `ch-image pull -s ...` line (excluding `> /dev/null`) and append `--auth` to pull the container, authenticate with lrz credentials, then retry.

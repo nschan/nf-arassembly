@@ -34,9 +34,9 @@ process QUAST {
         ${consensus.join(' ')} \\
         --eukaryote \\
         --gene-finding \\
+        --conserved-genes-finding \\
         --ref-bam ${ref_bam} \\
-        --bam ${bam} \\ 
-        --gene-finding
+        --bam ${bam} 
 
     ln -s ${prefix}/report.tsv
 
