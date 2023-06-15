@@ -23,13 +23,15 @@ workflow {
     in_reads = ch_input.map(row -> [row.sample, row.readpath])
 
     if(params.collect) {
-    // COLLECT
-    // Collect reads from fastq.gz into single fastq
-
-    // view for debug
-    // in_reads.view()
-    COLLECT_READS(in_reads)
-    in_reads = COLLECT_READS.out.combined_reads
+      // COLLECT
+      // Collect reads from fastq.gz into single fastq
+  
+      // view for debug
+      // in_reads.view()
+      COLLECT_READS(in_reads)
+      in_reads = COLLECT_READS.out.combined_reads
+    } else {
+     in_reads = in_reads.map(row -> [row.sample, row.combined_reads])   
     }
 
     // Asssembly using FLYE
