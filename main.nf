@@ -30,16 +30,24 @@ _| """ _|"""""_|"""""_|"""""_|"""""_|"""""_|"""""_|"""""_|"""""_|"""""_|"""""|
 "`-0-0-"`-0-0-"`-0-0-"`-0-0-"`-0-0-"`-0-0-"`-0-0-"`-0-0-"`-0-0-"`-0-0-"`-0-0-' 
 
    samplesheet   : ${params.samplesheet}
+   collect       : ${params.collect}
    flye_mode     : ${params.flye_mode}
    outdir        : ${params.out}
 """
     .stripIndent(false)
-
+/*
+ * Import processes
+ */
 include { COLLECT_READS } from './modules/local/collect_reads/main'
 include { ALIGN_TO_BAM as ALIGN } from './modules/align/main'
 include { BAM_INDEX_STATS_SAMTOOLS as BAM_STATS } from './modules/bam_sort_stat/main'
 include { FLYE } from './modules/flye/main'    
 include { QUAST as RUN_QUAST } from './modules/quast/main'
+
+/*
+ * WORKFLOW:
+ * Collect reads into single fastq file
+ */
 
 workflow COLLECT {
   take: ch_input
@@ -47,11 +55,6 @@ workflow COLLECT {
   main:
     in_reads = ch_input.map(row -> [row.sample, row.readpath])
     if(params.collect) {
-      // COLLECT
-      // Collect reads from fastq.gz into single fastq
-  
-      // view for debug
-      // in_reads.view()
       COLLECT_READS(in_reads)
       in_reads = COLLECT_READS.out.combined_reads
     } else {
@@ -61,6 +64,11 @@ workflow COLLECT {
   emit:
     in_reads
  }
+
+/*
+ * WORKFLOW:
+ * assembly via Flye
+ */
 
 workflow FLYE_ASSEMBLY {
   take: in_reads
@@ -73,6 +81,11 @@ workflow FLYE_ASSEMBLY {
 
   emit: ch_flye_assembly
 }
+
+/*
+ * WORKFLOW:
+ * map to reference genome using minimap2
+ */
 
 workflow MAP_TO_REF {
   take: 
@@ -90,6 +103,11 @@ workflow MAP_TO_REF {
   emit:
     ch_aln_to_ref
 }
+
+/*
+ * WORKFLOW:
+ * map to flye assembly using minimap2
+ */
 
 workflow MAP_TO_ASSEMBLY {
   take:
@@ -109,6 +127,11 @@ workflow MAP_TO_ASSEMBLY {
     ch_aln_to_assembly
 }
 
+/*
+ * WORKFLOW:
+ * Run quast
+ */
+
 workflow QUAST {
   take: 
     flye_assembly
@@ -125,6 +148,11 @@ workflow QUAST {
                .join(aln_to_assembly)
     RUN_QUAST(quast_in, use_gff = true, use_fasta = true)
 }
+
+/*
+ * WORKFLOW:
+ * Main workflow
+ */
 
 workflow {
     // Sample sheet layout:
