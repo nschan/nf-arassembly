@@ -1,1 +1,0 @@
-2023-06-15 15:21:27	2.6s	angry_brahmagupta	ERR	e33fbfd536592004a9b9ac396b47e3e5	84db3b18-0222-4ae8-9bcc-57813a8c9917	nextflow run /dss/dsshome1/lxc0A/ra34bin/nf-arassembly/main_refactor.nf --samplesheet samplesheet.csv -profile biohpc_gen --out ./results_refactor -resume
