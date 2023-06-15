@@ -1,3 +1,7 @@
+include { initOptions; saveFiles; getSoftwareName } from './functions'
+
+params.options = [:]
+options        = initOptions(params.options)
 process QUAST {
     label 'process_medium'
     publishDir "${params.out}",
