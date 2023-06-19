@@ -37,6 +37,6 @@ process ALIGN_TO_BAM {
 
     script:
         """
-        minimap2 -ax map-ont ${reference} ${reads} | samtools sort -o ${meta}.bam
+        minimap2 -ax map-ont ${reference} ${reads} | samtools sort -o ${meta}_${reference}.bam
         """
 }
