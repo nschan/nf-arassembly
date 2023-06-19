@@ -38,7 +38,7 @@ include { COLLECT_READS } from './modules/local/collect_reads/main'
 include { ALIGN_TO_BAM as ALIGN } from './modules/align/main'
 include { BAM_INDEX_STATS_SAMTOOLS as BAM_STATS } from './modules/bam_sort_stat/main'
 include { FLYE } from './modules/flye/main'    
-include { QUAST as RUN_QUAST } from './modules/quast/main'
+include { QUAST } from './modules/quast/main'
 
 /* 
  * SUBWORKFLOWS
@@ -132,7 +132,7 @@ workflow MAP_TO_ASSEMBLY {
  * Run quast
  */
 
-workflow QUAST {
+workflow RUN_QUAST {
   take: 
     flye_assembly
     ch_input
@@ -149,7 +149,7 @@ workflow QUAST {
                .join(ch_input_references)
                .join(aln_to_ref)
                .join(aln_to_assembly)
-    RUN_QUAST(quast_in, use_gff = true, use_fasta = true)
+    QUAST(quast_in, use_gff = true, use_fasta = true)
 }
 
 /*
@@ -175,5 +175,5 @@ workflow {
 
     MAP_TO_ASSEMBLY(COLLECT.out, FLYE_ASSEMBLY.out)
 
-    QUAST(FLYE_ASSEMBLY.out, ch_input, MAP_TO_REF.out, MAP_TO_ASSEMBLY.out)
+    RUN_QUAST(FLYE_ASSEMBLY.out, ch_input, MAP_TO_REF.out, MAP_TO_ASSEMBLY.out)
 }
