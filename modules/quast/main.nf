@@ -3,6 +3,7 @@ include { initOptions; saveFiles; getSoftwareName } from './functions'
 params.options = [:]
 options        = initOptions(params.options)
 process QUAST {
+    tag "$meta"
     label 'process_medium'
     publishDir "${params.out}",
       mode: params.publish_dir_mode,
@@ -19,7 +20,7 @@ process QUAST {
     val use_gff
 
     output:
-    path "${prefix}"    , emit: results
+    path "${meta}"    , emit: results
     path '*.tsv'        , emit: tsv
     path "versions.yml" , emit: versions
 
@@ -33,7 +34,7 @@ process QUAST {
     def reference = use_fasta ? "-r $fasta" : ''
     """
     quast.py \\
-        --output-dir $prefix \\
+        --output-dir $meta \\
         $reference \\
         $features \\
         --threads $task.cpus \\
