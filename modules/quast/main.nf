@@ -20,8 +20,8 @@ process QUAST {
     val use_gff
 
     output:
-    path "${meta}"    , emit: results
-    path '*.tsv'        , emit: tsv
+    path "${meta}"      , emit: results
+    path "${meta}/*.tsv", emit: tsv
     path "versions.yml" , emit: versions
 
     when:
