@@ -6,7 +6,9 @@ params.enable_conda = false
 params.collect = true
 params.flye_mode = "--nano-hq"
 params.out = './results'
-
+/*
+ * Print very cool text and paramter info to log. 
+ */
 log.info """\
 ==========================================================================================
 ==========================================================================================
@@ -30,7 +32,7 @@ log.info """\
 """
     .stripIndent(false)
 /*
- * Import processes
+ * Import processes from modules
  */
 include { COLLECT_READS } from './modules/local/collect_reads/main'
 include { ALIGN_TO_BAM as ALIGN } from './modules/align/main'
@@ -38,8 +40,12 @@ include { BAM_INDEX_STATS_SAMTOOLS as BAM_STATS } from './modules/bam_sort_stat/
 include { FLYE } from './modules/flye/main'    
 include { QUAST as RUN_QUAST } from './modules/quast/main'
 
+/* 
+ * SUBWORKFLOWS
+ */
+
 /*
- * WORKFLOW:
+ * SUBWORKFLOW:
  * Collect reads into single fastq file
  */
 
@@ -60,7 +66,7 @@ workflow COLLECT {
  }
 
 /*
- * WORKFLOW:
+ * SUBWORKFLOW:
  * assembly via Flye
  */
 
@@ -77,7 +83,7 @@ workflow FLYE_ASSEMBLY {
 }
 
 /*
- * WORKFLOW:
+ * SUBWORKFLOW:
  * map to reference genome using minimap2
  */
 
@@ -99,7 +105,7 @@ workflow MAP_TO_REF {
 }
 
 /*
- * WORKFLOW:
+ * SUBWORKFLOW:
  * map to flye assembly using minimap2
  */
 
@@ -122,7 +128,7 @@ workflow MAP_TO_ASSEMBLY {
 }
 
 /*
- * WORKFLOW:
+ * SUBWORKFLOW:
  * Run quast
  */
 
@@ -134,7 +140,10 @@ workflow QUAST {
     aln_to_assembly
 
   main:
-    // prepare for quast
+    /* prepare for quast
+     * This makes use of the input channel to obtain the reference and reference annotations
+     * See quast module for details
+     */
     ch_input_references = ch_input.map(row -> [row.sample, row.ref_fasta, row.ref_gff])
     quast_in = flye_assembly
                .join(ch_input_references)
@@ -144,8 +153,11 @@ workflow QUAST {
 }
 
 /*
- * WORKFLOW:
- * Main workflow
+ * MAIN WORKFLOW
+ * Run Collect
+ * Run flye
+ * Run minimap2 to align to reference and flye assembly
+ * Run quast
  */
 
 workflow {
