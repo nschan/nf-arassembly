@@ -57,10 +57,7 @@ workflow COLLECT {
     if(params.collect) {
       COLLECT_READS(in_reads)
       in_reads = COLLECT_READS.out.combined_reads
-    } else {
-      in_reads = in_reads.map{sample, readpath -> [sample, combined_reads]}   
     }
-
   emit:
     in_reads
  }
