@@ -58,6 +58,7 @@ workflow COLLECT {
       COLLECT_READS(in_reads)
       in_reads = COLLECT_READS.out.combined_reads
     }
+  
   emit:
     in_reads
  }

@@ -41,7 +41,7 @@ process QUAST {
         $args \\
         ${consensus.join(' ')} \\
         --eukaryote \\
-        --gene-finding \\
+        --glimmer \\
         --conserved-genes-finding \\
         --ref-bam ${ref_bam} \\
         --bam ${bam} 
