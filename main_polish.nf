@@ -39,8 +39,8 @@ include { ALIGN_TO_BAM as ALIGN } from './modules/align/main'
 include { BAM_INDEX_STATS_SAMTOOLS as BAM_STATS } from './modules/bam_sort_stat/main'
 include { FLYE } from './modules/flye/main'    
 include { QUAST } from './modules/quast/main'
-include { MEDAKA } from './modules/medaka/main'
-include { PILON } from './modules/pilon/main'
+inlcude { MEDAKA } from './modules/medaka/main'
+inlcude { PILON } from './modules/medaka/main'
 /* 
  * SUBWORKFLOWS
  */
@@ -188,7 +188,7 @@ workflow RUN_PILON {
       PILON(pilon_in, "bam")
     
     emit:
-      PILON.out.improved_assembly
+      improved_assembly
 }
 
 workflow POLISH_PILON {
@@ -196,18 +196,17 @@ workflow POLISH_PILON {
        input_channel
        in_reads
        flye_assembly
-       aln_to_assembly_bam_bai
        ch_aln_to_ref
 
       main:
           RUN_PILON(flye_assembly, aln_to_assembly_bam_bai)
-          pilon_improved = RUN_PILON.out
-          MAP_TO_POLISHED(in_reads, pilon_improved)
-          RUN_QUAST(pilon_improved, input_channel, ch_aln_to_ref, MAP_TO_POLISHED.out.ch_aln_to_assembly)
+          pilon_improved = RUN_PILON.out.improved_assembly
+          MAP_TO_POLISHED(in_reads, RUN_PILON.out.improved_assembly)
+          RUN_QUAST(RUN_PILON.out, input_channel, ch_aln_to_ref, MAP_TO_POLISHED.out)
       
       emit:
         pilon_improved
-}
+    }
 
 workflow RUN_MEDAKA {
   take:
@@ -217,10 +216,9 @@ workflow RUN_MEDAKA {
   main:
       medaka_in = in_reads.join(improved_assembly)
       MEDAKA(medaka_in)
-      medaka_out = MEDAKA.out.assembly
   
-  emit:
-      medaka_out
+  emit: 
+     assembly
 }
 
 workflow POLISH_MEDAKA {
@@ -232,9 +230,8 @@ workflow POLISH_MEDAKA {
 
     main:
       RUN_MEDAKA(in_reads, pilon_improved)
-      medaka_assembly = RUN_MEDAKA.out
-      MAP_TO_POLISHED(in_reads, medaka_assembly)
-      RUN_QUAST(medaka_assembly, input_channel, ch_aln_to_ref, MAP_TO_POLISHED.out.ch_aln_to_assembly)
+      MAP_TO_POLISHED(in_reads, RUN_MEDAKA.out.assembly)
+      RUN_QUAST(RUN_MEDAKA.out, input_channel, ch_aln_to_ref, MAP_TO_POLISHED.out)
 }
 
 /*
@@ -243,8 +240,6 @@ workflow POLISH_MEDAKA {
  * Run flye
  * Run minimap2 to align to reference and flye assembly
  * Run quast
- * Polish with pilon
- * Polish with medaka
  */
 
 workflow {
@@ -264,7 +259,11 @@ workflow {
 
     RUN_QUAST(FLYE_ASSEMBLY.out, ch_input, MAP_TO_REF.out, MAP_TO_ASSEMBLY.out.ch_aln_to_assembly)
 
-    POLISH_PILON(ch_input, COLLECT.out, FLYE_ASSEMBLY.out, MAP_TO_ASSEMBLY.out.aln_to_assembly_bam_bai , MAP_TO_REF.out)
+    POLISH_PILON(ch_input, COLLECT.out, FLYE_ASSEMBLY.out, MAP_TO_ASSEMBLY.out.aln_to_assembly_bam_bai, MAP_TO_REF.out)
 
-    POLISH_MEDAKA(ch_input, COLLECT.out, POLISH_PILON.out.pilon_improved, MAP_TO_REF.out)
+    POLISH_MEDAKA(ch_input, COLLECT.out, POLISH_PILON.pilon_improved, MAP_TO_REF.out)
+
+    
+
+
 }

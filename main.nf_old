@@ -39,8 +39,7 @@ include { ALIGN_TO_BAM as ALIGN } from './modules/align/main'
 include { BAM_INDEX_STATS_SAMTOOLS as BAM_STATS } from './modules/bam_sort_stat/main'
 include { FLYE } from './modules/flye/main'    
 include { QUAST } from './modules/quast/main'
-include { MEDAKA } from './modules/medaka/main'
-include { PILON } from './modules/pilon/main'
+
 /* 
  * SUBWORKFLOWS
  */
@@ -111,43 +110,19 @@ workflow MAP_TO_REF {
 workflow MAP_TO_ASSEMBLY {
   take:
     in_reads
-    genome_assembly
+    flye_assembly
 
   main:
     // Remap reads to flye assembly
     map_assembly = in_reads
-                   .join(genome_assembly) 
+                   .join(flye_assembly) 
     ch_aln_to_assembly = Channel.empty()
     ALIGN(map_assembly)
     ch_aln_to_assembly = ALIGN.out.alignment
     BAM_STATS(ch_aln_to_assembly)
-    aln_to_assembly_bai = BAM_STATS.out.bai
-    aln_to_assembly_bam_bai = ch_aln_to_assembly.join(aln_to_assembly_bai)
 
   emit:
     ch_aln_to_assembly
-    aln_to_assembly_bam_bai
-}
-
-workflow MAP_TO_POLISHED {
-  take:
-    in_reads
-    genome_assembly
-
-  main:
-    // Remap reads to flye assembly
-    map_assembly = in_reads
-                   .join(genome_assembly) 
-    ch_aln_to_assembly = Channel.empty()
-    ALIGN(map_assembly)
-    ch_aln_to_assembly = ALIGN.out.alignment
-    BAM_STATS(ch_aln_to_assembly)
-    aln_to_assembly_bai = BAM_STATS.out.bai
-    aln_to_assembly_bam_bai = ch_aln_to_assembly.join(aln_to_assembly_bai)
-
-  emit:
-    ch_aln_to_assembly
-    aln_to_assembly_bam_bai
 }
 
 /*
@@ -176,75 +151,11 @@ workflow RUN_QUAST {
 }
 
 /*
- * ADD POLISHING STEP
- */
-workflow RUN_PILON {
-    take:
-      flye_assembly
-      aln_to_assembly_bam_bai
-
-    main:
-      pilon_in = flye_assembly.join(aln_to_assembly_bam_bai)
-      PILON(pilon_in, "bam")
-    
-    emit:
-      PILON.out.improved_assembly
-}
-
-workflow POLISH_PILON {
-     take:
-       input_channel
-       in_reads
-       flye_assembly
-       aln_to_assembly_bam_bai
-       ch_aln_to_ref
-
-      main:
-          RUN_PILON(flye_assembly, aln_to_assembly_bam_bai)
-          pilon_improved = RUN_PILON.out
-          MAP_TO_POLISHED(in_reads, pilon_improved)
-          RUN_QUAST(pilon_improved, input_channel, ch_aln_to_ref, MAP_TO_POLISHED.out.ch_aln_to_assembly)
-      
-      emit:
-        pilon_improved
-}
-
-workflow RUN_MEDAKA {
-  take:
-     in_reads
-     improved_assembly
-  
-  main:
-      medaka_in = in_reads.join(improved_assembly)
-      MEDAKA(medaka_in)
-      medaka_out = MEDAKA.out.assembly
-  
-  emit:
-      medaka_out
-}
-
-workflow POLISH_MEDAKA {
-    take:
-     input_channel
-     in_reads
-     pilon_improved
-     ch_aln_to_ref
-
-    main:
-      RUN_MEDAKA(in_reads, pilon_improved)
-      medaka_assembly = RUN_MEDAKA.out
-      MAP_TO_POLISHED(in_reads, medaka_assembly)
-      RUN_QUAST(medaka_assembly, input_channel, ch_aln_to_ref, MAP_TO_POLISHED.out.ch_aln_to_assembly)
-}
-
-/*
  * MAIN WORKFLOW
  * Run Collect
  * Run flye
  * Run minimap2 to align to reference and flye assembly
  * Run quast
- * Polish with pilon
- * Polish with medaka
  */
 
 workflow {
@@ -262,9 +173,5 @@ workflow {
 
     MAP_TO_ASSEMBLY(COLLECT.out, FLYE_ASSEMBLY.out)
 
-    RUN_QUAST(FLYE_ASSEMBLY.out, ch_input, MAP_TO_REF.out, MAP_TO_ASSEMBLY.out.ch_aln_to_assembly)
-
-    POLISH_PILON(ch_input, COLLECT.out, FLYE_ASSEMBLY.out, MAP_TO_ASSEMBLY.out.aln_to_assembly_bam_bai , MAP_TO_REF.out)
-
-    POLISH_MEDAKA(ch_input, COLLECT.out, POLISH_PILON.out.pilon_improved, MAP_TO_REF.out)
+    RUN_QUAST(FLYE_ASSEMBLY.out, ch_input, MAP_TO_REF.out, MAP_TO_ASSEMBLY.out)
 }

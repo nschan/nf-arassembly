@@ -36,8 +36,7 @@ process ALIGN_TO_BAM {
         tuple val(meta), path("*.bam"), emit: alignment
 
     script:
-        def genome = reference.simpleName()
         """
-        minimap2 -ax map-ont ${reference} ${reads} | samtools sort -o ${meta}_$genome.bam
+        minimap2 -ax map-ont ${reference} ${reads} | samtools sort -o ${meta}_${reference}.bam
         """
 }
