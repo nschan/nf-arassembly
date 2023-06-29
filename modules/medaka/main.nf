@@ -7,10 +7,10 @@ process MEDAKA {
     tag "$meta"
     label 'process_high'
 
-    conda "bioconda::medaka=1.4.4"
+    conda "bioconda::medaka=1.8.0"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/medaka:1.4.4--py38h130def0_0' :
-        'quay.io/biocontainers/medaka:1.4.4--py38h130def0_0' }"
+        'https://depot.galaxyproject.org/singularity/1.8.0--py38hdaa7744_0' :
+        'quay.io/biocontainers/madaka:1.8.0--py38hdaa7744_0' }"
         
     publishDir "${params.out}",
         mode: params.publish_dir_mode,
@@ -35,6 +35,7 @@ process MEDAKA {
         $args \\
         -i $reads \\
         -d $assembly \\
+        -m r1041_e82_260bps_hac_v4.1.0\\
         -o ./
 
     mv consensus.fasta ${prefix}.fa

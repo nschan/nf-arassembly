@@ -4,6 +4,7 @@ params.publish_dir_mode = 'copy'
 params.samplesheet = false
 params.enable_conda = false
 params.collect = true
+params.skip_pilon = false
 params.flye_mode = "--nano-hq"
 params.out = './results'
 /*
@@ -263,8 +264,11 @@ workflow {
     MAP_TO_ASSEMBLY(COLLECT.out, FLYE_ASSEMBLY.out)
 
     RUN_QUAST(FLYE_ASSEMBLY.out, ch_input, MAP_TO_REF.out, MAP_TO_ASSEMBLY.out.ch_aln_to_assembly)
-
+  if(!params.skip_pilon) {
     POLISH_PILON(ch_input, COLLECT.out, FLYE_ASSEMBLY.out, MAP_TO_ASSEMBLY.out.aln_to_assembly_bam_bai , MAP_TO_REF.out)
-
     POLISH_MEDAKA(ch_input, COLLECT.out, POLISH_PILON.out.pilon_improved, MAP_TO_REF.out)
+  } else {
+    POLISH_MEDAKA(ch_input, COLLECT.out, FLYE_ASSEMBLY.out, MAP_TO_REF.out)
+  }
+    
 }
