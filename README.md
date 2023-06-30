@@ -14,11 +14,11 @@ Genome assembly using flye, qc using quast (also works for other species), polis
 
 `--medaka_model`        Model used by medaka, default: 'r1041_e82_400bps_hac_v4.2.0'
 
-`--skip_pilon`             should pilon be skipped; default: false 
+`--skip_pilon`            Should pilon be skipped; default: false 
 
-`--skip_alignments`  should the alignments be skipped, requires different samplesheet (!), default: false
+`--skip_alignments` Should the alignments be skipped, requires different samplesheet (!), default: false
 
-`--out`                            results directory, default: './results'`
+`--out`                            Results directory, default: './results'`
 
 # Procedure
 
