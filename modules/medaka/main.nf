@@ -10,7 +10,7 @@ process MEDAKA {
     conda "bioconda::medaka=1.8.0"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
         'https://depot.galaxyproject.org/singularity/1.8.0--py38hdaa7744_0' :
-        'quay.io/biocontainers/madaka:1.8.0--py38hdaa7744_0' }"
+        'quay.io/biocontainers/medaka:1.8.0--py38hdaa7744_0' }"
         
     publishDir "${params.out}",
         mode: params.publish_dir_mode,
@@ -29,12 +29,14 @@ process MEDAKA {
     script:
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta}"
+    def NEW_ASSEMBLY = assembly.baseName
     """
+    gunzip $assembly
     medaka_consensus \\
         -t $task.cpus \\
         $args \\
         -i $reads \\
-        -d $assembly \\
+        -d $NEW_ASSEMBLY \\
         -m r1041_e82_260bps_hac_v4.1.0\\
         -o ./
 

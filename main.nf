@@ -4,8 +4,9 @@ params.publish_dir_mode = 'copy'
 params.samplesheet = false
 params.enable_conda = false
 params.collect = true
-params.skip_pilon = false
+params.skip_flye = false
 params.flye_mode = "--nano-hq"
+params.skip_pilon = false
 params.out = './results'
 /*
  * Print very cool text and paramter info to log. 
@@ -29,6 +30,7 @@ log.info """\
    samplesheet   : ${params.samplesheet}
    collect       : ${params.collect}
    flye_mode     : ${params.flye_mode}
+   skip_pilon    : ${params.skip_pilon}
    outdir        : ${params.out}
 """
     .stripIndent(false)
@@ -43,7 +45,9 @@ include { QUAST } from './modules/quast/main'
 include { MEDAKA } from './modules/medaka/main'
 include { PILON } from './modules/pilon/main'
 /* 
+ * =========================================
  * SUBWORKFLOWS
+ * =========================================
  */
 
 /*
@@ -153,7 +157,7 @@ workflow MAP_TO_POLISHED {
 
 /*
  * SUBWORKFLOW:
- * Run quast
+ * Run QUAST
  */
 
 workflow RUN_QUAST {
@@ -164,7 +168,7 @@ workflow RUN_QUAST {
     aln_to_assembly
 
   main:
-    /* prepare for quast
+    /* prepare for quast:
      * This makes use of the input channel to obtain the reference and reference annotations
      * See quast module for details
      */
@@ -173,11 +177,14 @@ workflow RUN_QUAST {
                .join(ch_input_references)
                .join(aln_to_ref)
                .join(aln_to_assembly)
+    /*
+     * Run QUAST
+     */
     QUAST(quast_in, use_gff = true, use_fasta = true)
 }
 
 /*
- * ADD POLISHING STEP
+ * POLISHING STEPS
  */
 workflow RUN_PILON {
     take:
@@ -239,13 +246,25 @@ workflow POLISH_MEDAKA {
 }
 
 /*
- * MAIN WORKFLOW
- * Run Collect
- * Run flye
- * Run minimap2 to align to reference and flye assembly
- * Run quast
+ ====================================================
+ ====================================================
+                 MAIN WORKFLOW
+ ====================================================
+ * Collect fastq files
+ * Assemble using flye
+ * Align to reference
+ * Aling to flye assembly
+ * Run quast on flye assebly
  * Polish with pilon
+    * Polish with pilon
+    * Align to polished assembly
+    * Run quast
  * Polish with medaka
+    * Polish with medaka
+    * Align to polished assembly
+    * Run quast
+ ====================================================
+ ====================================================
  */
 
 workflow {
@@ -264,6 +283,7 @@ workflow {
     MAP_TO_ASSEMBLY(COLLECT.out, FLYE_ASSEMBLY.out)
 
     RUN_QUAST(FLYE_ASSEMBLY.out, ch_input, MAP_TO_REF.out, MAP_TO_ASSEMBLY.out.ch_aln_to_assembly)
+
   if(!params.skip_pilon) {
     POLISH_PILON(ch_input, COLLECT.out, FLYE_ASSEMBLY.out, MAP_TO_ASSEMBLY.out.aln_to_assembly_bam_bai , MAP_TO_REF.out)
     POLISH_MEDAKA(ch_input, COLLECT.out, POLISH_PILON.out.pilon_improved, MAP_TO_REF.out)

@@ -21,12 +21,12 @@ process PILON {
     val pilon_mode
 
     output:
-    tuple val(meta), path("*.fasta") , emit: improved_assembly
-    tuple val(meta), path("*.vcf")   , emit: vcf               , optional : true
-    tuple val(meta), path("*.change"), emit: change_record     , optional : true
-    tuple val(meta), path("*.bed")   , emit: tracks_bed        , optional : true
-    tuple val(meta), path("*.wig")   , emit: tracks_wig        , optional : true
-    path "versions.yml"              , emit: versions
+    tuple val(meta), path("*.fasta.gz") , emit: improved_assembly
+    tuple val(meta), path("*.vcf")      , emit: vcf               , optional : true
+    tuple val(meta), path("*.change")   , emit: change_record     , optional : true
+    tuple val(meta), path("*.bed")      , emit: tracks_bed        , optional : true
+    tuple val(meta), path("*.wig")      , emit: tracks_wig        , optional : true
+    path "versions.yml"                 , emit: versions
 
     when:
     task.ext.when == null || task.ext.when
@@ -44,6 +44,8 @@ process PILON {
         $args \\
         --$pilon_mode $bam \\
         -Xmx190G
+
+gzip -n ${prefix}.fasta
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
