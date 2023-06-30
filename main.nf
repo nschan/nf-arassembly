@@ -5,8 +5,10 @@ params.samplesheet = false
 params.enable_conda = false
 params.collect = true
 params.skip_flye = false
+params.skip_alignments = false
 params.flye_mode = "--nano-hq"
 params.skip_pilon = false
+params.medaka_model = 'r1041_e82_400bps_hac_v4.2.0'
 params.out = './results'
 /*
  * Print very cool text and paramter info to log. 
@@ -24,18 +26,24 @@ log.info """\
   ░   ▒     ░░   ░   ░   ▒   ░  ░  ░  ░  ░  ░     ░   ░      ░    ░    ░   ░ ░   ▒ ▒ ░░  
       ░  ░   ░           ░  ░      ░        ░     ░  ░       ░    ░          ░  ░░ ░     
                                                                        ░         ░ ░     
+Niklas Schandry                                                          ░        ░
 ==========================================================================================
 ==========================================================================================
   Parameters:
    samplesheet   : ${params.samplesheet}
    collect       : ${params.collect}
+   skip_fyle     : ${params.skip_flye}
    flye_mode     : ${params.flye_mode}
    skip_pilon    : ${params.skip_pilon}
+   medaka_model  : ${params.medaka_model}
    outdir        : ${params.out}
 """
     .stripIndent(false)
+
 /*
+ ===========================================
  * Import processes from modules
+ ===========================================
  */
 include { COLLECT_READS } from './modules/local/collect_reads/main'
 include { ALIGN_TO_BAM as ALIGN } from './modules/align/main'
@@ -45,13 +53,15 @@ include { QUAST } from './modules/quast/main'
 include { MEDAKA } from './modules/medaka/main'
 include { PILON } from './modules/pilon/main'
 /* 
- * =========================================
+ ===========================================
+ ===========================================
  * SUBWORKFLOWS
- * =========================================
+ ===========================================
  */
 
 /*
- * SUBWORKFLOW:
+ * COLLECT
+ ===========================================
  * Collect reads into single fastq file
  */
 
@@ -70,8 +80,9 @@ workflow COLLECT {
  }
 
 /*
- * SUBWORKFLOW:
- * assembly via Flye
+ * FLYE_ASSEMBLY
+ ===========================================
+ * Assemble using Flye
  */
 
 workflow FLYE_ASSEMBLY {
@@ -85,9 +96,14 @@ workflow FLYE_ASSEMBLY {
 
   emit: ch_flye_assembly
 }
-
 /*
- * SUBWORKFLOW:
+ ===========================================
+ * MAPPING WORKFLOWS
+ ===========================================
+ */
+/*
+ * MAP_TO_REF
+ ===========================================
  * map to reference genome using minimap2
  */
 
@@ -109,7 +125,8 @@ workflow MAP_TO_REF {
 }
 
 /*
- * SUBWORKFLOW:
+ * MAP_TO_ASSEMBLY
+ ===========================================
  * map to flye assembly using minimap2
  */
 
@@ -134,6 +151,12 @@ workflow MAP_TO_ASSEMBLY {
     aln_to_assembly_bam_bai
 }
 
+/*
+ * MAP_TO_POLISHED
+ ===========================================
+ * map to output from polisher using minimap2
+ */
+
 workflow MAP_TO_POLISHED {
   take:
     in_reads
@@ -156,7 +179,9 @@ workflow MAP_TO_POLISHED {
 }
 
 /*
- * SUBWORKFLOW:
+ ===========================================
+ * QUAST
+ ===========================================
  * Run QUAST
  */
 
@@ -184,8 +209,17 @@ workflow RUN_QUAST {
 }
 
 /*
+ ===========================================
  * POLISHING STEPS
+ ===========================================
  */
+
+ /*
+ * PILON
+ ===========================================
+ * Run pilon
+ */
+
 workflow RUN_PILON {
     take:
       flye_assembly
@@ -217,6 +251,12 @@ workflow POLISH_PILON {
         pilon_improved
 }
 
+/*
+ * MEDAKA
+ ===========================================
+ * Run medaka
+ */
+
 workflow RUN_MEDAKA {
   take:
      in_reads
@@ -224,7 +264,7 @@ workflow RUN_MEDAKA {
   
   main:
       medaka_in = in_reads.join(improved_assembly)
-      MEDAKA(medaka_in)
+      MEDAKA(medaka_in, params.medaka_model)
       medaka_out = MEDAKA.out.assembly
   
   emit:
@@ -252,10 +292,12 @@ workflow POLISH_MEDAKA {
  ====================================================
  * Collect fastq files
  * Assemble using flye
- * Align to reference
+      (Enter here: skip_flye)
+ * Align to reference 
  * Aling to flye assembly
- * Run quast on flye assebly
- * Polish with pilon
+      (Enter here: skip_flye, skip_alignments)
+ * Run quast on flye assembly 
+ * Polish with pilon 
     * Polish with pilon
     * Align to polished assembly
     * Run quast
@@ -268,6 +310,7 @@ workflow POLISH_MEDAKA {
  */
 
 workflow {
+    if(!params.skip_flye) {
     // Sample sheet layout:
     // sample, readpath, ref_fasta, ref_gff
     ch_input = Channel.fromPath(params.samplesheet) 
@@ -284,11 +327,56 @@ workflow {
 
     RUN_QUAST(FLYE_ASSEMBLY.out, ch_input, MAP_TO_REF.out, MAP_TO_ASSEMBLY.out.ch_aln_to_assembly)
 
-  if(!params.skip_pilon) {
-    POLISH_PILON(ch_input, COLLECT.out, FLYE_ASSEMBLY.out, MAP_TO_ASSEMBLY.out.aln_to_assembly_bam_bai , MAP_TO_REF.out)
-    POLISH_MEDAKA(ch_input, COLLECT.out, POLISH_PILON.out.pilon_improved, MAP_TO_REF.out)
+      if(!params.skip_pilon) {
+        POLISH_PILON(ch_input, COLLECT.out, FLYE_ASSEMBLY.out, MAP_TO_ASSEMBLY.out.aln_to_assembly_bam_bai , MAP_TO_REF.out)
+        POLISH_MEDAKA(ch_input, COLLECT.out, POLISH_PILON.out.pilon_improved, MAP_TO_REF.out)
+      } else {
+        POLISH_MEDAKA(ch_input, COLLECT.out, FLYE_ASSEMBLY.out, MAP_TO_REF.out)
+     }
   } else {
-    POLISH_MEDAKA(ch_input, COLLECT.out, FLYE_ASSEMBLY.out, MAP_TO_REF.out)
+    if(!params.skip_alignments) {
+    // Sample sheet layout when skipping FLYE
+    // sample,readpath,assembly,ref_fasta,ref_gff
+    ch_input = Channel.fromPath(params.samplesheet) 
+                      .splitCsv(header:true)
+    ch_refs = ch_input.map(row -> [row.sample, row.ref_fasta])
+
+    ch_assembly = ch_input.map(row -> [row.sample, row.assembly])
+
+    COLLECT(ch_input)
+
+    MAP_TO_REF(COLLECT.out, ch_refs)
+        
+    MAP_TO_ASSEMBLY(COLLECT.out, ch_assembly)
+
+    RUN_QUAST(FLYE_ASSEMBLY.out, ch_input, MAP_TO_REF.out, MAP_TO_ASSEMBLY.out.ch_aln_to_assembly)
+
+      if(!params.skip_pilon) {
+        POLISH_PILON(ch_input, COLLECT.out, FLYE_ASSEMBLY.out, MAP_TO_ASSEMBLY.out.aln_to_assembly_bam_bai , MAP_TO_REF.out)
+        POLISH_MEDAKA(ch_input, COLLECT.out, POLISH_PILON.out.pilon_improved, MAP_TO_REF.out)
+      } else {
+        POLISH_MEDAKA(ch_input, COLLECT.out, FLYE_ASSEMBLY.out, MAP_TO_REF.out)
+     }
+    } else {
+        // Sample sheet layout when skipping FLYE and mapping
+        // sample,readpath,assembly,ref_fasta,ref_gff,assembly_bam,assembly_bai,ref_bam
+        ch_input = Channel.fromPath(params.samplesheet) 
+                          .splitCsv(header:true)
+        ch_assembly = ch_input.map(row -> [row.sample, row.assembly]) 
+        ch_assembly_bam = ch_input.map(row -> [row.sample, row.assembly_bam]) 
+        ch_assembly_bam_bai = ch_input.map(row -> [row.sample, row.assembly_bam, row.assembly_bai]) 
+        ch_ref_bam = ch_input.map(row -> [row.sample, row.ref_bam]) 
+        COLLECT(ch_input)
+
+        RUN_QUAST(ch_assembly, ch_input, ch_ref_bam, ch_assembly_bam)
+        
+        if(!params.skip_pilon) {
+          POLISH_PILON(ch_input, COLLECT.out, ch_assembly, ch_assembly_bam_bai , ch_ref_bam)
+          POLISH_MEDAKA(ch_input, COLLECT.out, POLISH_PILON.out.pilon_improved, ch_ref_bam)
+        } else {
+          POLISH_MEDAKA(ch_input, COLLECT.out, ch_assembly,ch_ref_bam)
+     }
+    }
   }
     
 }

@@ -1,6 +1,17 @@
 # nf-arassembly
 
-Arabidopsis assembly using flye, qc using quast (also works for other species).
+Genome assembly using flye, qc using quast (also works for other species), polish with pilon and / or medaka.
+
+# Parameters
+
+`--samplesheet`      Path to samplesheet
+`--collect`          Are the provided reads a folder (default, true) or a single fq files (false)
+`--skip_flye`        Should the flye assembly step be skipped (default false), requires different samplesheet (!)
+`--flye_mode`        default: "--nano-hq"; the mode to be used by flye
+`--medaka_model`     Model used by medaka, default: 'r1041_e82_400bps_hac_v4.2.0'
+`--skip_pilon`       default: false; should pilon be skipped
+`--skip_alignments`  default: false; should the alignments be skipped, requires different samplesheet (!)
+`--out`              results directory, default: './results'`
 
 # Procedure
 
@@ -11,17 +22,19 @@ QUAST will run with the following additional parameters:
 
 ```
         --eukaryote \\
-        --gene-finding \\
+        --glimmer \\
         --conserved-genes-finding \\
         --ref-bam ${ref_bam} \\
         --bam ${bam} 
 ```
 
+Subsequently, the assembly will be polished using first pilon and then medaka, QUAST will again be used to assess the polished genomes.
+If --skip_pilon is used the genome will only be polished using medaka
+
+
 # Usage
 
-## With a samplesheet
-
-I assume that creating a samplesheet is the easiest way to do this.
+## Full Pipeline
 
 The samplesheet _must_ adhere to this format, including the header row. Please note the absence of spaces after the commas:
 
@@ -37,16 +50,31 @@ nextflow run nf-arassembly --samplesheet 'path/to/sample_sheet.csv' \
                            -profile charliecloud,biohpc_gen
 ```
 
-## Parameters
+## Skipping Flye
 
-`--out`: output folder, typically './results'. Needs to be provided.
+In case you already have an assembly and would only like to check it with QUAST and polish use
+`--skip_flye true`
 
-`--samplesheet`: path to the samplesheet (required)
+This mode requires a different samplesheet:
 
-`--collect`: should reads be collected into a single fastq? Default: true
+```
+sample,readpath,assembly,ref_fasta,ref_gff
+sampleName,path/to/reads,assembly.fasta.gz,reference.fasta,reference.gff
+```
 
-`--flye_mode`: changes mode for flye, default is "--nano-hq".
-Valid options are: "--pacbio-raw", "--pacbio-corr", "--pacbio-hifi", "--nano-raw", "--nano-corr", "--nano-hq"
+When skipping flye the original reads will be mapped to the assembly and the reference genome.
+
+## Skipping Flye and mappings
+
+In case you have an assembly and have already mapped your reads to the assembly and the reference genome you can use
+`--skip_flye true --skip_alignments true`
+
+This mode requires a different samplesheet:
+
+```
+sample,readpath,assembly,ref_fasta,ref_gff,assembly_bam,assembly_bai,ref_bam
+sampleName,reads,assembly.fasta.gz,reference.fasta,reference.gff,reads_on_assembly.bam,reads_on_assembly.bai,reads_on_reference.bam
+```
 
 # Problems
 
