@@ -8,10 +8,10 @@ Genome assembly using flye, qc using quast (also works for other species), polis
 |---|---|
 | `--samplesheet` | Path to samplesheet |
 | `--collect` | Are the provided reads a folder (default, true) or a single fq files (false) |
-| `--skip_flye` | Should the flye assembly step be skipped (default false), requires different samplesheet (!) |
 | `--flye_mode` | The mode to be used by flye; default: "--nano-hq" |
 | `--medaka_model` | Model used by medaka, default: 'r1041_e82_400bps_hac_v4.2.0' |
 | `--skip_pilon` | Should pilon be skipped; default: false |
+| `--skip_flye` | Should the flye assembly step be skipped (default false), requires different samplesheet (!) |
 | `--skip_alignments` | Should the alignments be skipped, requires different samplesheet (!), default: false |
 | `--out` | Results directory, default: './results'` |
 
