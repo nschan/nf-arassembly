@@ -5,7 +5,7 @@ Genome assembly using flye, qc using quast (also works for other species), polis
 # Parameters
 
 | Parameter | Effect |
-|---|---|
+| --- | --- |
 | `--samplesheet` | Path to samplesheet |
 | `--collect` | Are the provided reads a folder (default, true) or a single fq files (false) |
 | `--flye_mode` | The mode to be used by flye; default: "--nano-hq" |
@@ -17,8 +17,10 @@ Genome assembly using flye, qc using quast (also works for other species), polis
 
 # Procedure
 
-This pipeline will in a first step (COLLECT_READS) extract all fastq.gz files in the readpath folder into a single fastq file.
-The pipeline then assembles using flye and uses minimap2 to align reads to the new assembly, and the reference.
+This pipeline will in a first step extract all fastq.gz files in the readpath folder into a single fastq file. This can be skipped using `--collect false`.
+
+The pipeline then assembles reads into an assembly using flye. 
+Then minimap2 aligns reads to the new assembly, and the reference.
 These alignments, together with the assembly and reference genome & annotation will then be used as inputs for QUAST.
 QUAST will run with the following additional parameters:
 
