@@ -30,13 +30,15 @@ Niklas Schandry                                                          ░    
 ==========================================================================================
 ==========================================================================================
   Parameters:
-   samplesheet   : ${params.samplesheet}
-   collect       : ${params.collect}
-   skip_fyle     : ${params.skip_flye}
-   flye_mode     : ${params.flye_mode}
-   skip_pilon    : ${params.skip_pilon}
-   medaka_model  : ${params.medaka_model}
-   outdir        : ${params.out}
+     samplesheet     : ${params.samplesheet}
+     collect         : ${params.collect}
+     flye_mode       : ${params.flye_mode}
+     medaka_model    : ${params.medaka_model}
+   Steps skipped:
+     skip_flye       : ${params.skip_flye}
+     skip_alignments : ${params.skip_alignments}
+     skip_pilon      : ${params.skip_pilon}
+   outdir            : ${params.out}
 """
     .stripIndent(false)
 
