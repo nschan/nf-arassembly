@@ -20,9 +20,9 @@ process RAGTAG_SCAFFOLD {
       tuple val(meta), path(assembly), path(reference)
   
   output:
-      tuple val(meta), path("*.fasta"), emit: corrected_assembly
-      tuple val(meta), path("*.agp"),   emit: corrected_agp
-      tuple val(meta), path("*.stats"), emit: corrected_stats
+      tuple val(meta), path("${assembly}_corrected_${reference}/*.fasta"), emit: corrected_assembly
+      tuple val(meta), path("${assembly}_corrected_${reference}/*.agp"),   emit: corrected_agp
+      tuple val(meta), path("${assembly}_corrected_${reference}/*.stats"), emit: corrected_stats
   
   script:
       def prefix = task.ext.prefix ?: "${meta}"
