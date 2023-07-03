@@ -22,7 +22,7 @@ process QUAST {
     path "${meta}/*.tsv", emit: tsv
     path "versions.yml" , emit: versions
     
-    publishDir "${params.out}/quast/${consensus}",
+    publishDir "${params.out}/quast/${consensus.baseName}",
       mode: params.publish_dir_mode,
       saveAs: { filename -> saveFiles(filename:filename, options:params.options, publish_dir:getSoftwareName(task.process), publish_id:meta) }
     
