@@ -39,13 +39,13 @@ process PILON {
     """
     pilon \\
         --genome $fasta \\
-        --output ${meta} \\
+        --output ${meta}_pilon \\
         --threads $task.cpus \\
         $args \\
         --$pilon_mode $bam \\
         -Xmx190G
 
-gzip -n ${prefix}.fasta
+    gzip -n ${prefix}_pilon.fasta
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

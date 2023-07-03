@@ -41,9 +41,9 @@ process MEDAKA {
         -m $model\\
         -o ./
 
-    mv consensus.fasta ${prefix}.fa
+    mv consensus.fasta ${prefix}_medaka.fa
 
-    gzip -n ${prefix}.fa
+    gzip -n ${prefix}_medaka.fa
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

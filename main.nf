@@ -165,7 +165,7 @@ workflow MAP_TO_POLISHED {
     genome_assembly
 
   main:
-    // Remap reads to flye assembly
+    // Remap reads to polished assembly
     map_assembly = in_reads
                    .join(genome_assembly) 
     ch_aln_to_assembly = Channel.empty()

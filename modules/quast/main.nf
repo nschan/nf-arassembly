@@ -5,9 +5,7 @@ options        = initOptions(params.options)
 process QUAST {
     tag "$meta"
     label 'process_medium'
-    publishDir "${params.out}",
-      mode: params.publish_dir_mode,
-      saveAs: { filename -> saveFiles(filename:filename, options:params.options, publish_dir:getSoftwareName(task.process), publish_id:meta) }
+
 
     conda "bioconda::quast=5.2.0"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
@@ -23,7 +21,11 @@ process QUAST {
     path "${meta}"      , emit: results
     path "${meta}/*.tsv", emit: tsv
     path "versions.yml" , emit: versions
-
+    
+    publishDir "${params.out}/quast/${consensus}",
+      mode: params.publish_dir_mode,
+      saveAs: { filename -> saveFiles(filename:filename, options:params.options, publish_dir:getSoftwareName(task.process), publish_id:meta) }
+    
     when:
     task.ext.when == null || task.ext.when
 
