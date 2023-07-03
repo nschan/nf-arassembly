@@ -23,6 +23,7 @@ process COLLECT_READS {
   
   script:
       def prefix = task.ext.prefix ?: "${meta}"
+      
   """
   gunzip -c ${read_directory}/*.gz > ${prefix}_all_reads.fastq
   """

@@ -40,13 +40,13 @@ process QUAST {
         $reference \\
         $features \\
         --threads $task.cpus \\
-        $args \\
         ${consensus.join(' ')} \\
-        --eukaryote \\
         --glimmer \\
         --conserved-genes-finding \\
         --ref-bam ${ref_bam} \\
-        --bam ${bam} 
+        --bam ${bam} \\
+        --large \\
+        ${args}
 
     ln -s ${prefix}/report.tsv
 

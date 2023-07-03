@@ -1,17 +1,19 @@
 #!/usr/bin/env nextflow
-nextflow.enable.dsl=2
+
+nextflow.enable.dsl = 2 
 params.publish_dir_mode = 'copy'
 params.samplesheet = false
 params.enable_conda = false
 params.collect = true
 params.skip_flye = false
 params.skip_alignments = false
-params.flye_mode = "--nano-hq"
+params.flye_mode = '--nano-hq'
 params.skip_pilon = false
 params.medaka_model = 'r1041_e82_400bps_hac_v4.2.0'
+params.skip_ragtag = false
 params.out = './results'
 /*
- * Print very cool text and paramter info to log. 
+ * Print very cool text and parameter info to log. 
  */
 log.info """\
 ==========================================================================================
@@ -38,6 +40,7 @@ Niklas Schandry                                                          ░    
      skip_flye       : ${params.skip_flye}
      skip_alignments : ${params.skip_alignments}
      skip_pilon      : ${params.skip_pilon}
+     skip_ragtag     : ${params.skip_ragtag}
    outdir            : ${params.out}
 """
     .stripIndent(false)
@@ -54,6 +57,7 @@ include { FLYE } from './modules/flye/main'
 include { QUAST } from './modules/quast/main'
 include { MEDAKA } from './modules/medaka/main'
 include { PILON } from './modules/pilon/main'
+include { RAGTAG_SCAFFOLD} from './modules/local/ragtag/main'
 /* 
  ===========================================
  ===========================================
@@ -285,7 +289,39 @@ workflow POLISH_MEDAKA {
       medaka_assembly = RUN_MEDAKA.out
       MAP_TO_POLISHED(in_reads, medaka_assembly)
       RUN_QUAST(medaka_assembly, input_channel, ch_aln_to_ref, MAP_TO_POLISHED.out.ch_aln_to_assembly)
+    
+    emit:
+      medaka_assembly
 }
+
+
+/*
+ * SCAFFOLDING
+ ===========================================
+ * Run ragtag scaffold
+ */
+
+ workflow RUN_RAGTAG {
+  take:
+     input_channel
+     in_reads
+     assembly
+     references
+     ch_aln_to_ref
+  
+  main:
+      ragtag_in = assembly.join(references)
+      RAGTAG_SCAFFOLD(ragtag_in)
+      ragtag_scaffold_fasta = RAGTAG_SCAFFOLD.out.corrected_assembly
+      ragtag_scaffold_agp = RAGTAG_SCAFFOLD.out.corrected_agp
+      MAP_TO_POLISHED(in_reads, ragtag_scaffold_fasta)
+      RUN_QUAST(ragtag_scaffold_fasta, input_channel, ch_aln_to_ref, MAP_TO_POLISHED.out.ch_aln_to_assembly)
+
+  emit:
+      ragtag_scaffold_fasta
+      ragtag_scaffold_agp
+}
+
 
 /*
  ====================================================
@@ -307,17 +343,27 @@ workflow POLISH_MEDAKA {
     * Polish with medaka
     * Align to polished assembly
     * Run quast
+ * Scaffold with ragtag
  ====================================================
  ====================================================
  */
 
 workflow {
-    if(!params.skip_flye) {
+  /*
+  Check samplesheet
+  */
+  if(params.samplesheet) {
+    ch_input = Channel.fromPath(params.samplesheet) 
+                      .splitCsv(header:true) 
+    ch_refs = ch_input.map(row -> [row.sample, row.ref_fasta])
+                      }
+  else {
+    exit 1, 'Input samplesheet not specified!'
+  }
+  
+  if(!params.skip_flye & !params.skip_alignments) {
     // Sample sheet layout:
     // sample, readpath, ref_fasta, ref_gff
-    ch_input = Channel.fromPath(params.samplesheet) 
-                      .splitCsv(header:true)
-    ch_refs = ch_input.map(row -> [row.sample, row.ref_fasta])
 
     COLLECT(ch_input)
 
@@ -335,13 +381,14 @@ workflow {
       } else {
         POLISH_MEDAKA(ch_input, COLLECT.out, FLYE_ASSEMBLY.out, MAP_TO_REF.out)
      }
+    if(!params.skip_ragtag) {
+    RUN_RAGTAG(ch_input, COLLECT.out, POLISH_MEDAKA.out, ch_refs, MAP_TO_REF.out)
+    }
   } else {
-    if(!params.skip_alignments) {
+    if(params.skip_flye & !params.skip_alignments) {
+    
     // Sample sheet layout when skipping FLYE
     // sample,readpath,assembly,ref_fasta,ref_gff
-    ch_input = Channel.fromPath(params.samplesheet) 
-                      .splitCsv(header:true)
-    ch_refs = ch_input.map(row -> [row.sample, row.ref_fasta])
 
     ch_assembly = ch_input.map(row -> [row.sample, row.assembly])
 
@@ -353,17 +400,19 @@ workflow {
 
     RUN_QUAST(FLYE_ASSEMBLY.out, ch_input, MAP_TO_REF.out, MAP_TO_ASSEMBLY.out.ch_aln_to_assembly)
 
-      if(!params.skip_pilon) {
+     if(!params.skip_pilon) {
         POLISH_PILON(ch_input, COLLECT.out, FLYE_ASSEMBLY.out, MAP_TO_ASSEMBLY.out.aln_to_assembly_bam_bai , MAP_TO_REF.out)
         POLISH_MEDAKA(ch_input, COLLECT.out, POLISH_PILON.out.pilon_improved, MAP_TO_REF.out)
       } else {
         POLISH_MEDAKA(ch_input, COLLECT.out, FLYE_ASSEMBLY.out, MAP_TO_REF.out)
+        RUN_RAGTAG(POLISH_MEDAKA.out, ch_input)
+     }
+     if(!params.skip_ragtag) {
+      RUN_RAGTAG(ch_input, COLLECT.out, POLISH_MEDAKA.out, ch_refs, MAP_TO_REF.out)
      }
     } else {
         // Sample sheet layout when skipping FLYE and mapping
         // sample,readpath,assembly,ref_fasta,ref_gff,assembly_bam,assembly_bai,ref_bam
-        ch_input = Channel.fromPath(params.samplesheet) 
-                          .splitCsv(header:true)
         ch_assembly = ch_input.map(row -> [row.sample, row.assembly]) 
         ch_assembly_bam = ch_input.map(row -> [row.sample, row.assembly_bam]) 
         ch_assembly_bam_bai = ch_input.map(row -> [row.sample, row.assembly_bam, row.assembly_bai]) 
@@ -376,9 +425,13 @@ workflow {
           POLISH_PILON(ch_input, COLLECT.out, ch_assembly, ch_assembly_bam_bai , ch_ref_bam)
           POLISH_MEDAKA(ch_input, COLLECT.out, POLISH_PILON.out.pilon_improved, ch_ref_bam)
         } else {
-          POLISH_MEDAKA(ch_input, COLLECT.out, ch_assembly,ch_ref_bam)
+          POLISH_MEDAKA(ch_input, COLLECT.out, ch_assembly, ch_ref_bam)
+     }
+     if(!params.skip_ragtag) {
+      RUN_RAGTAG(ch_input, COLLECT.out, POLISH_MEDAKA.out, ch_refs, ch_assembly_bam)
      }
     }
   }
+
     
 }
