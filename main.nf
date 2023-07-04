@@ -389,13 +389,13 @@ workflow POLISH_MEDAKA {
  * Aling to flye assembly
       (Enter here: skip_flye, skip_alignments)
  * Run quast on flye assembly 
- * Polish with pilon 
-    * Polish with pilon
-    * Align to polished assembly
-    * Run quast
  * Polish with medaka
     * Polish with medaka
     * Align to polished assembly
+    * Run quast
+  * Polish with pilon (only if polish_pilon true)
+    * Polish medaka output with shortreads
+    * Align long reads to polished assembly
     * Run quast
  * Scaffold with ragtag
  ====================================================
