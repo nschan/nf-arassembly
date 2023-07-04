@@ -4,11 +4,11 @@ nextflow.enable.dsl = 2
 params.publish_dir_mode = 'copy'
 params.samplesheet = false
 params.enable_conda = false
-params.collect = true
+params.collect = false
 params.skip_flye = false
 params.skip_alignments = false
 params.flye_mode = '--nano-hq'
-params.skip_pilon = false
+params.polish_pilon = false
 params.medaka_model = 'r1041_e82_400bps_hac_v4.2.0'
 params.skip_ragtag = false
 params.out = './results'
@@ -36,10 +36,10 @@ Niklas Schandry                                                          ░    
      collect         : ${params.collect}
      flye_mode       : ${params.flye_mode}
      medaka_model    : ${params.medaka_model}
+     polish_pilon    : ${params.polish_pilon}
    Steps skipped:
      skip_flye       : ${params.skip_flye}
      skip_alignments : ${params.skip_alignments}
-     skip_pilon      : ${params.skip_pilon}
      skip_ragtag     : ${params.skip_ragtag}
    outdir            : ${params.out}
 """
@@ -50,18 +50,22 @@ Niklas Schandry                                                          ░    
  * Import processes from modules
  ===========================================
  */
+
 include { COLLECT_READS } from './modules/local/collect_reads/main'
 include { ALIGN_TO_BAM as ALIGN } from './modules/align/main'
+include { ALIGN_SHORT_TO_BAM as ALIGN_SHORT } from './modules/align/main'
 include { BAM_INDEX_STATS_SAMTOOLS as BAM_STATS } from './modules/bam_sort_stat/main'
 include { FLYE } from './modules/flye/main'    
 include { QUAST } from './modules/quast/main'
 include { MEDAKA } from './modules/medaka/main'
 include { PILON } from './modules/pilon/main'
 include { RAGTAG_SCAFFOLD} from './modules/local/ragtag/main'
+
 /* 
  ===========================================
  ===========================================
  * SUBWORKFLOWS
+ ===========================================
  ===========================================
  */
 
@@ -142,18 +146,39 @@ workflow MAP_TO_ASSEMBLY {
     genome_assembly
 
   main:
-    // Remap reads to flye assembly
+    // map reads to assembly
     map_assembly = in_reads
                    .join(genome_assembly) 
-    ch_aln_to_assembly = Channel.empty()
     ALIGN(map_assembly)
-    ch_aln_to_assembly = ALIGN.out.alignment
+    aln_to_assembly_bam = ALIGN.out.alignment
+    BAM_STATS(aln_to_assembly_bam)
+    aln_to_assembly_bai = BAM_STATS.out.bai
+    aln_to_assembly_bam_bai = aln_to_assembly_bam.join(aln_to_assembly_bai)
+
+  emit:
+    aln_to_assembly_bam
+    aln_to_assembly_bai
+    aln_to_assembly_bam_bai
+}
+
+workflow MAP_SR_TO_ASSEMBLY {
+  take:
+    in_reads
+    genome_assembly
+
+  main:
+    // map reads to assembly
+    map_assembly = in_reads
+                   .join(genome_assembly) 
+    ALIGN_SHORT(map_assembly)
+    aln_to_assembly_bam = ALIGN_SHORT.out.alignment
     BAM_STATS(ch_aln_to_assembly)
     aln_to_assembly_bai = BAM_STATS.out.bai
     aln_to_assembly_bam_bai = ch_aln_to_assembly.join(aln_to_assembly_bai)
 
   emit:
-    ch_aln_to_assembly
+    aln_to_assembly_bam
+    aln_to_assembly_bai
     aln_to_assembly_bam_bai
 }
 
@@ -161,7 +186,7 @@ workflow MAP_TO_ASSEMBLY {
  * MAP_TO_POLISHED
  ===========================================
  * map to output from polisher using minimap2
- */
+
 
 workflow MAP_TO_POLISHED {
   take:
@@ -174,15 +199,17 @@ workflow MAP_TO_POLISHED {
                    .join(genome_assembly) 
     ch_aln_to_assembly = Channel.empty()
     ALIGN(map_assembly)
-    ch_aln_to_assembly = ALIGN.out.alignment
+    aln_to_assembly_bam = ALIGN.out.alignment
     BAM_STATS(ch_aln_to_assembly)
     aln_to_assembly_bai = BAM_STATS.out.bai
     aln_to_assembly_bam_bai = ch_aln_to_assembly.join(aln_to_assembly_bai)
 
   emit:
-    ch_aln_to_assembly
+    aln_to_assembly_bam
+    aln_to_assembly_bai
     aln_to_assembly_bam_bai
 }
+*/
 
 /*
  ===========================================
@@ -228,11 +255,11 @@ workflow RUN_QUAST {
 
 workflow RUN_PILON {
     take:
-      flye_assembly
+      assembly_in
       aln_to_assembly_bam_bai
 
     main:
-      pilon_in = flye_assembly.join(aln_to_assembly_bam_bai)
+      pilon_in = assembly_in.join(aln_to_assembly_bam_bai)
       PILON(pilon_in, "bam")
     
     emit:
@@ -242,19 +269,46 @@ workflow RUN_PILON {
 workflow POLISH_PILON {
      take:
        input_channel
-       in_reads
-       flye_assembly
-       aln_to_assembly_bam_bai
+       assembly
        ch_aln_to_ref
 
       main:
-          RUN_PILON(flye_assembly, aln_to_assembly_bam_bai)
+          ch_shortreads = input_channel.map { create_shortread_channel(it) }
+          MAP_SR_TO_ASSEMBLY(ch_shortreads)
+          RUN_PILON(assembly, MAP_SR_TO_ASSEMBLY.out.aln_to_assembly_bam_bai)
           pilon_improved = RUN_PILON.out
-          MAP_TO_POLISHED(in_reads, pilon_improved)
-          RUN_QUAST(pilon_improved, input_channel, ch_aln_to_ref, MAP_TO_POLISHED.out.ch_aln_to_assembly)
+          MAP_TO_ASSEMBLY(in_reads, pilon_improved)
+          RUN_QUAST(pilon_improved, input_channel, ch_aln_to_ref, MAP_TO_ASSEMBLY.out.aln_to_assembly_bam)
       
       emit:
         pilon_improved
+}
+
+ /*
+ Accessory function to create input for pilon
+ modified from nf-core/rnaseq/subworkflows/local/input_check.nf
+ */
+
+def create_shortread_channel(LinkedHashMap row) {
+    // create meta map
+    def meta = [:]
+    meta.id       = row.sample
+    meta.paired   = row.paired.toBoolean()
+
+    // add path(s) of the fastq file(s) to the meta map
+    def shortreads = []
+    if (!file(row.shortread_F).exists()) {
+        exit 1, "ERROR: shortread_F fastq file does not exist!\n${row.shortread_F}"
+    }
+    if (!meta.paired) {
+        shortreads = [ meta.id, [ file(row.shortread_F) ] ]
+    } else {
+        if (!file(row.fastq_2).exists()) {
+            exit 1, "ERROR: shortread_R fastq file does not exist!\n${row.shortread_R}"
+        }
+        shortreads = [ meta.id, [ file(row.shortread_F), file(row.shortread_R) ] ]
+    }
+    return shortreads
 }
 
 /*
@@ -266,10 +320,10 @@ workflow POLISH_PILON {
 workflow RUN_MEDAKA {
   take:
      in_reads
-     improved_assembly
+     assembly
   
   main:
-      medaka_in = in_reads.join(improved_assembly)
+      medaka_in = in_reads.join(assembly)
       MEDAKA(medaka_in, params.medaka_model)
       medaka_out = MEDAKA.out.assembly
   
@@ -287,8 +341,8 @@ workflow POLISH_MEDAKA {
     main:
       RUN_MEDAKA(in_reads, pilon_improved)
       medaka_assembly = RUN_MEDAKA.out
-      MAP_TO_POLISHED(in_reads, medaka_assembly)
-      RUN_QUAST(medaka_assembly, input_channel, ch_aln_to_ref, MAP_TO_POLISHED.out.ch_aln_to_assembly)
+      MAP_TO_ASSEMBLY(in_reads, medaka_assembly)
+      RUN_QUAST(medaka_assembly, input_channel, ch_aln_to_ref, MAP_TO_ASSEMBLY.out.aln_to_assembly_bam)
     
     emit:
       medaka_assembly
@@ -314,8 +368,8 @@ workflow POLISH_MEDAKA {
       RAGTAG_SCAFFOLD(ragtag_in)
       ragtag_scaffold_fasta = RAGTAG_SCAFFOLD.out.corrected_assembly
       ragtag_scaffold_agp = RAGTAG_SCAFFOLD.out.corrected_agp
-      MAP_TO_POLISHED(in_reads, ragtag_scaffold_fasta)
-      RUN_QUAST(ragtag_scaffold_fasta, input_channel, ch_aln_to_ref, MAP_TO_POLISHED.out.ch_aln_to_assembly)
+      MAP_TO_ASSEMBLY(in_reads, ragtag_scaffold_fasta)
+      RUN_QUAST(ragtag_scaffold_fasta, input_channel, ch_aln_to_ref, MAP_TO_ASSEMBLY.out.aln_to_assembly_bam)
 
   emit:
       ragtag_scaffold_fasta
@@ -349,9 +403,24 @@ workflow POLISH_MEDAKA {
  */
 
 workflow {
+ /*
+ Define channels
+ */
+
+ ch_input = Channel.empty()
+ ch_refs = Channel.empty()
+ ch_aln_to_ref = Channel.empty()
+ ch_assembly = Channel.empty()
+ ch_assembly_bam = Channel.empty()
+ ch_assembly_bam_bai = Channel.empty()
+ ch_medaka_in = Channel.empty()
+ ch_polished_genome = Channel.empty()
+ ch_short_reads = Channel.empty()
+
   /*
   Check samplesheet
   */
+
   if(params.samplesheet) {
     ch_input = Channel.fromPath(params.samplesheet) 
                       .splitCsv(header:true) 
@@ -360,78 +429,73 @@ workflow {
   else {
     exit 1, 'Input samplesheet not specified!'
   }
-  
-  if(!params.skip_flye & !params.skip_alignments) {
-    // Sample sheet layout:
-    // sample, readpath, ref_fasta, ref_gff
 
-    COLLECT(ch_input)
+  /*
+  Prepare reads
+  */
 
-    FLYE_ASSEMBLY(COLLECT.out)
+  COLLECT(ch_input)
 
-    MAP_TO_REF(COLLECT.out, ch_refs)
+  /*
+  Prepare assembly
+  */
 
-    MAP_TO_ASSEMBLY(COLLECT.out, FLYE_ASSEMBLY.out)
-
-    RUN_QUAST(FLYE_ASSEMBLY.out, ch_input, MAP_TO_REF.out, MAP_TO_ASSEMBLY.out.ch_aln_to_assembly)
-
-      if(!params.skip_pilon) {
-        POLISH_PILON(ch_input, COLLECT.out, FLYE_ASSEMBLY.out, MAP_TO_ASSEMBLY.out.aln_to_assembly_bam_bai , MAP_TO_REF.out)
-        POLISH_MEDAKA(ch_input, COLLECT.out, POLISH_PILON.out.pilon_improved, MAP_TO_REF.out)
-      } else {
-        POLISH_MEDAKA(ch_input, COLLECT.out, FLYE_ASSEMBLY.out, MAP_TO_REF.out)
-     }
-    if(!params.skip_ragtag) {
-    RUN_RAGTAG(ch_input, COLLECT.out, POLISH_MEDAKA.out, ch_refs, MAP_TO_REF.out)
-    }
-  } else {
-    if(params.skip_flye & !params.skip_alignments) {
-    
+  if(params.skip_flye ) {
     // Sample sheet layout when skipping FLYE
     // sample,readpath,assembly,ref_fasta,ref_gff
-
     ch_assembly = ch_input.map(row -> [row.sample, row.assembly])
-
-    COLLECT(ch_input)
-
-    MAP_TO_REF(COLLECT.out, ch_refs)
-        
-    MAP_TO_ASSEMBLY(COLLECT.out, ch_assembly)
-
-    RUN_QUAST(FLYE_ASSEMBLY.out, ch_input, MAP_TO_REF.out, MAP_TO_ASSEMBLY.out.ch_aln_to_assembly)
-
-     if(!params.skip_pilon) {
-        POLISH_PILON(ch_input, COLLECT.out, FLYE_ASSEMBLY.out, MAP_TO_ASSEMBLY.out.aln_to_assembly_bam_bai , MAP_TO_REF.out)
-        POLISH_MEDAKA(ch_input, COLLECT.out, POLISH_PILON.out.pilon_improved, MAP_TO_REF.out)
-      } else {
-        POLISH_MEDAKA(ch_input, COLLECT.out, FLYE_ASSEMBLY.out, MAP_TO_REF.out)
-        RUN_RAGTAG(POLISH_MEDAKA.out, ch_input)
-     }
-     if(!params.skip_ragtag) {
-      RUN_RAGTAG(ch_input, COLLECT.out, POLISH_MEDAKA.out, ch_refs, MAP_TO_REF.out)
-     }
-    } else {
-        // Sample sheet layout when skipping FLYE and mapping
-        // sample,readpath,assembly,ref_fasta,ref_gff,assembly_bam,assembly_bai,ref_bam
-        ch_assembly = ch_input.map(row -> [row.sample, row.assembly]) 
-        ch_assembly_bam = ch_input.map(row -> [row.sample, row.assembly_bam]) 
-        ch_assembly_bam_bai = ch_input.map(row -> [row.sample, row.assembly_bam, row.assembly_bai]) 
-        ch_ref_bam = ch_input.map(row -> [row.sample, row.ref_bam]) 
-        COLLECT(ch_input)
-
-        RUN_QUAST(ch_assembly, ch_input, ch_ref_bam, ch_assembly_bam)
-        
-        if(!params.skip_pilon) {
-          POLISH_PILON(ch_input, COLLECT.out, ch_assembly, ch_assembly_bam_bai , ch_ref_bam)
-          POLISH_MEDAKA(ch_input, COLLECT.out, POLISH_PILON.out.pilon_improved, ch_ref_bam)
-        } else {
-          POLISH_MEDAKA(ch_input, COLLECT.out, ch_assembly, ch_ref_bam)
-     }
-     if(!params.skip_ragtag) {
-      RUN_RAGTAG(ch_input, COLLECT.out, POLISH_MEDAKA.out, ch_refs, ch_assembly_bam)
-     }
-    }
+  } else {
+    FLYE_ASSEMBLY(COLLECT.out)
+    ch_assembly = FLYE_ASSEMBLY.out
   }
 
-    
-}
+  /*
+  Prepare alignments
+  */
+
+  if(params.skip_alignments) {
+    // Sample sheet layout when skipping FLYE and mapping
+    // sample,readpath,assembly,ref_fasta,ref_gff,assembly_bam,assembly_bai,ref_bam
+    ch_ref_bam = ch_input.map(row -> [row.sample, row.ref_bam]) 
+    ch_assembly_bam = ch_input.map(row -> [row.sample, row.assembly_bam]) 
+    ch_assembly_bam_bai = ch_input.map(row -> [row.sample, row.assembly_bam, row.assembly_bai]) 
+  } else {
+    MAP_TO_REF(COLLECT.out, ch_refs)
+    ch_ref_bam = MAP_TO_REF.out  
+
+    MAP_TO_ASSEMBLY(COLLECT.out, ch_assembly)
+    ch_assembly_bam = MAP_TO_ASSEMBLY.out.aln_to_assembly_bam
+    ch_assembly_bam_bai = MAP_TO_ASSEMBLY.out.aln_to_assembly_bam_bai
+  }
+
+  /*
+  Run QUAST on initial assembly
+  */
+  RUN_QUAST(ch_assembly, ch_input, ch_ref_bam, ch_assembly_bam)
+
+  /*
+  Polishing with medaka
+  */
+
+  ch_medaka_in = ch_assembly
+  POLISH_MEDAKA(ch_input, COLLECT.out, ch_medaka_in, ch_ref_bam)
+  ch_polished_genome = POLISH_MEDAKA.out
+
+  /*
+  Polishing with short reads using pulon
+  */
+
+  if(params.polish_pilon) {
+    POLISH_PILON(ch_input, COLLECT.out, ch_assembly, ch_assembly_bam_bai, ch_ref_bam)
+    ch_polished_genome = POLISH_PILON.out.pilon_improved
+  } 
+
+  /*
+  Scaffolding with ragtag
+  */
+
+  if(!params.skip_ragtag) {
+    RUN_RAGTAG(ch_input, COLLECT.out, ch_polished_genome, ch_refs, ch_ref_bam)
+  }
+
+} 

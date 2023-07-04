@@ -7,10 +7,10 @@ Genome assembly using flye, qc using quast (also works for other species), polis
 | Parameter | Effect |
 | --- | --- |
 | `--samplesheet` | Path to samplesheet |
-| `--collect` | Are the provided reads a folder (default, true) or a single fq files (false) |
+| `--collect` | Are the provided reads a folder (true) or a single fq files (default, false) |
 | `--flye_mode` | The mode to be used by flye; default: "--nano-hq" |
 | `--medaka_model` | Model used by medaka, default: 'r1041_e82_400bps_hac_v4.2.0' |
-| `--skip_pilon` | Skip pilon polishing?; default: false |
+| `--polish_pilon` | Polish with short reads using pilon?; default: false |
 | `--skip_flye` | Skip assembly with flye?, requires different samplesheet (!); default: false |
 | `--skip_alignments` | Skip alignments? requires different samplesheet (!); default: false |
 | `--skip_ragtag` | Skip scaffolding with ragtag?; default: false |
@@ -80,6 +80,20 @@ This mode requires a different samplesheet:
 sample,readpath,assembly,ref_fasta,ref_gff,assembly_bam,assembly_bai,ref_bam
 sampleName,reads,assembly.fasta.gz,reference.fasta,reference.gff,reads_on_assembly.bam,reads_on_assembly.bai,reads_on_reference.bam
 ```
+
+## Polishing with pilon
+
+The assemblies can optionally be polished using available short-reads using pilon.
+`--polish pilon true`
+
+This requires additional information in the samplesheet, shortread_F, shortread_R and paired
+
+```
+sample,readpath,assembly,ref_fasta,ref_gff,assembly_bam,assembly_bai,ref_bam,shortread_F,shortread_R,paired
+sampleName,reads,assembly.fasta.gz,reference.fasta,reference.gff,reads_on_assembly.bam,reads_on_assembly.bai,reads_on_reference.bam,short_F1.fastq,short_F2.fastq,true
+```
+
+In a case where only single-reads are available, shortread_R should be empty, and paired should be false
 
 # Problems
 
