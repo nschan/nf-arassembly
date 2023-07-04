@@ -61,6 +61,8 @@ include { MEDAKA } from './modules/medaka/main'
 include { PILON } from './modules/pilon/main'
 include { RAGTAG_SCAFFOLD} from './modules/local/ragtag/main'
 
+include { create_shortread_channel } from './functions/functions'
+
 /* 
  ===========================================
  ===========================================
@@ -161,7 +163,7 @@ workflow MAP_TO_ASSEMBLY {
     aln_to_assembly_bam_bai
 }
 
-workflow MAP_SR_TO_ASSEMBLY {
+workflow MAP_SR {
   take:
     in_reads
     genome_assembly
@@ -247,70 +249,6 @@ workflow RUN_QUAST {
  ===========================================
  */
 
- /*
- * PILON
- ===========================================
- * Run pilon
- */
-
-workflow RUN_PILON {
-    take:
-      assembly_in
-      aln_to_assembly_bam_bai
-
-    main:
-      pilon_in = assembly_in.join(aln_to_assembly_bam_bai)
-      PILON(pilon_in, "bam")
-    
-    emit:
-      PILON.out.improved_assembly
-}
-
-workflow POLISH_PILON {
-     take:
-       input_channel
-       assembly
-       ch_aln_to_ref
-
-      main:
-          ch_shortreads = input_channel.map { create_shortread_channel(it) }
-          MAP_SR_TO_ASSEMBLY(ch_shortreads)
-          RUN_PILON(assembly, MAP_SR_TO_ASSEMBLY.out.aln_to_assembly_bam_bai)
-          pilon_improved = RUN_PILON.out
-          MAP_TO_ASSEMBLY(in_reads, pilon_improved)
-          RUN_QUAST(pilon_improved, input_channel, ch_aln_to_ref, MAP_TO_ASSEMBLY.out.aln_to_assembly_bam)
-      
-      emit:
-        pilon_improved
-}
-
- /*
- Accessory function to create input for pilon
- modified from nf-core/rnaseq/subworkflows/local/input_check.nf
- */
-
-def create_shortread_channel(LinkedHashMap row) {
-    // create meta map
-    def meta = [:]
-    meta.id       = row.sample
-    meta.paired   = row.paired.toBoolean()
-
-    // add path(s) of the fastq file(s) to the meta map
-    def shortreads = []
-    if (!file(row.shortread_F).exists()) {
-        exit 1, "ERROR: shortread_F fastq file does not exist!\n${row.shortread_F}"
-    }
-    if (!meta.paired) {
-        shortreads = [ meta.id, [ file(row.shortread_F) ] ]
-    } else {
-        if (!file(row.fastq_2).exists()) {
-            exit 1, "ERROR: shortread_R fastq file does not exist!\n${row.shortread_R}"
-        }
-        shortreads = [ meta.id, [ file(row.shortread_F), file(row.shortread_R) ] ]
-    }
-    return shortreads
-}
-
 /*
  * MEDAKA
  ===========================================
@@ -348,6 +286,70 @@ workflow POLISH_MEDAKA {
       medaka_assembly
 }
 
+ /*
+ * PILON
+ ===========================================
+ * Run pilon
+ */
+
+workflow RUN_PILON {
+    take:
+      assembly_in
+      aln_to_assembly_bam_bai
+
+    main:
+      pilon_in = assembly_in.join(aln_to_assembly_bam_bai)
+      PILON(pilon_in, "bam")
+    
+    emit:
+      PILON.out.improved_assembly
+}
+
+workflow POLISH_PILON {
+     take:
+       input_channel
+       in_reads
+       assembly
+       ch_aln_to_ref
+
+      main:
+          ch_shortreads = input_channel.map { create_shortread_channel(it) }
+          MAP_SR(ch_shortreads)
+          RUN_PILON(assembly, MAP_SR.out.aln_to_assembly_bam_bai)
+          pilon_improved = RUN_PILON.out
+          MAP_TO_ASSEMBLY(in_reads, pilon_improved)
+          RUN_QUAST(pilon_improved, input_channel, ch_aln_to_ref, MAP_TO_ASSEMBLY.out.aln_to_assembly_bam)
+      
+      emit:
+        pilon_improved
+}
+
+ /*
+ Accessory function to create input for pilon
+ modified from nf-core/rnaseq/subworkflows/local/input_check.nf
+ */
+
+def create_shortread_channel(LinkedHashMap row) {
+    // create meta map
+    def meta = [:]
+    meta.id       = row.sample
+    meta.paired   = row.paired.toBoolean()
+
+    // add path(s) of the fastq file(s) to the meta map
+    def shortreads = []
+    if (!file(row.shortread_F).exists()) {
+        exit 1, "ERROR: shortread_F fastq file does not exist!\n${row.shortread_F}"
+    }
+    if (!meta.paired) {
+        shortreads = [ meta.id, [ file(row.shortread_F) ] ]
+    } else {
+        if (!file(row.fastq_2).exists()) {
+            exit 1, "ERROR: shortread_R fastq file does not exist!\n${row.shortread_R}"
+        }
+        shortreads = [ meta.id, [ file(row.shortread_F), file(row.shortread_R) ] ]
+    }
+    return shortreads
+}
 
 /*
  * SCAFFOLDING
@@ -479,6 +481,7 @@ workflow {
 
   ch_medaka_in = ch_assembly
   POLISH_MEDAKA(ch_input, COLLECT.out, ch_medaka_in, ch_ref_bam)
+
   ch_polished_genome = POLISH_MEDAKA.out
 
   /*
@@ -486,7 +489,7 @@ workflow {
   */
 
   if(params.polish_pilon) {
-    POLISH_PILON(ch_input, COLLECT.out, ch_assembly, ch_assembly_bam_bai, ch_ref_bam)
+    POLISH_PILON(ch_input, COLLECT.out, ch_polished_genome, ch_ref_bam)
     ch_polished_genome = POLISH_PILON.out.pilon_improved
   } 
 
