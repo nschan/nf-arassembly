@@ -61,8 +61,6 @@ include { MEDAKA } from './modules/medaka/main'
 include { PILON } from './modules/pilon/main'
 include { RAGTAG_SCAFFOLD} from './modules/local/ragtag/main'
 
-include { create_shortread_channel } from './functions/functions'
-
 /* 
  ===========================================
  ===========================================
@@ -174,9 +172,9 @@ workflow MAP_SR {
                    .join(genome_assembly) 
     ALIGN_SHORT(map_assembly)
     aln_to_assembly_bam = ALIGN_SHORT.out.alignment
-    BAM_STATS(ch_aln_to_assembly)
+    BAM_STATS(aln_to_assembly_bam)
     aln_to_assembly_bai = BAM_STATS.out.bai
-    aln_to_assembly_bam_bai = ch_aln_to_assembly.join(aln_to_assembly_bai)
+    aln_to_assembly_bam_bai = aln_to_assembly_bam.join(aln_to_assembly_bai)
 
   emit:
     aln_to_assembly_bam
@@ -285,7 +283,7 @@ workflow POLISH_PILON {
 
       main:
           ch_shortreads = input_channel.map { create_shortread_channel(it) }
-          MAP_SR(ch_shortreads)
+          MAP_SR(ch_shortreads, assembly)
           RUN_PILON(assembly, MAP_SR.out.aln_to_assembly_bam_bai)
           pilon_improved = RUN_PILON.out
           MAP_TO_ASSEMBLY(in_reads, pilon_improved)
@@ -312,12 +310,12 @@ def create_shortread_channel(LinkedHashMap row) {
         exit 1, "ERROR: shortread_F fastq file does not exist!\n${row.shortread_F}"
     }
     if (!meta.paired) {
-        shortreads = [ meta.id, [ file(row.shortread_F) ] ]
+        shortreads = [ meta.id, meta.paired, [ file(row.shortread_F) ] ]
     } else {
         if (!file(row.fastq_2).exists()) {
             exit 1, "ERROR: shortread_R fastq file does not exist!\n${row.shortread_R}"
         }
-        shortreads = [ meta.id, [ file(row.shortread_F), file(row.shortread_R) ] ]
+        shortreads = [ meta.id, meta.paired, [ file(row.shortread_F), file(row.shortread_R) ] ]
     }
     return shortreads
 }

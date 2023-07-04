@@ -49,13 +49,15 @@ process ALIGN_SHORT_TO_BAM {
         saveAs: { filename -> saveFiles(filename:filename, options:params.options, publish_dir:getSoftwareName(task.process), publish_id:meta) }
 
     input:
-        tuple val(meta), tuple (reads), path(reference)
+        tuple val(meta), val(paired), path(reads), path(reference)
 
     output:
         tuple val(meta), path("*.bam"), emit: alignment
 
     script:
+     def reads1 = [], reads2 = []
+     paired ? [reads].flatten().each{reads1 << it} : reads.eachWithIndex{ v, ix -> ( ix & 1 ? reads2 : reads1) << v }
         """
-        minimap2 -ax sr ${reference} ${reads} | samtools sort -o ${meta}_${reference}.bam
+        minimap2 -ax sr ${reference} ${reads1.join(",")} ${reads2.join(",")} | samtools sort -o ${meta}_${reference}.bam
         """
 }
