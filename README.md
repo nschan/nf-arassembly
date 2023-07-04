@@ -84,7 +84,7 @@ sampleName,reads,assembly.fasta.gz,reference.fasta,reference.gff,reads_on_assemb
 ## Polishing with pilon
 
 The assemblies can optionally be polished using available short-reads using pilon.
-`--polish pilon true`
+`--polish_pilon true`
 
 This requires additional information in the samplesheet, shortread_F, shortread_R and paired
 

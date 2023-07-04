@@ -185,35 +185,6 @@ workflow MAP_SR {
 }
 
 /*
- * MAP_TO_POLISHED
- ===========================================
- * map to output from polisher using minimap2
-
-
-workflow MAP_TO_POLISHED {
-  take:
-    in_reads
-    genome_assembly
-
-  main:
-    // Remap reads to polished assembly
-    map_assembly = in_reads
-                   .join(genome_assembly) 
-    ch_aln_to_assembly = Channel.empty()
-    ALIGN(map_assembly)
-    aln_to_assembly_bam = ALIGN.out.alignment
-    BAM_STATS(ch_aln_to_assembly)
-    aln_to_assembly_bai = BAM_STATS.out.bai
-    aln_to_assembly_bam_bai = ch_aln_to_assembly.join(aln_to_assembly_bai)
-
-  emit:
-    aln_to_assembly_bam
-    aln_to_assembly_bai
-    aln_to_assembly_bam_bai
-}
-*/
-
-/*
  ===========================================
  * QUAST
  ===========================================
