@@ -51,15 +51,27 @@ Niklas Schandry                                                          ░    
  ===========================================
  */
 
+// Preprocessing
 include { COLLECT_READS } from './modules/local/collect_reads/main'
+
+// Alignment
 include { ALIGN_TO_BAM as ALIGN } from './modules/align/main'
 include { ALIGN_SHORT_TO_BAM as ALIGN_SHORT } from './modules/align/main'
 include { BAM_INDEX_STATS_SAMTOOLS as BAM_STATS } from './modules/bam_sort_stat/main'
+
+// Assembly 
 include { FLYE } from './modules/flye/main'    
-include { QUAST } from './modules/quast/main'
+
+// Polishing
 include { MEDAKA } from './modules/medaka/main'
 include { PILON } from './modules/pilon/main'
+
+// Scaffolding
 include { RAGTAG_SCAFFOLD} from './modules/local/ragtag/main'
+
+// Quality control
+include { QUAST } from './modules/quast/main'
+include { BUSCO } from './modules/busco/main'
 
 /* 
  ===========================================
@@ -79,6 +91,7 @@ workflow COLLECT {
   take: ch_input
 
   main:
+  
     in_reads = ch_input.map(row -> [row.sample, row.readpath])
     if(params.collect) {
       COLLECT_READS(in_reads)
@@ -184,36 +197,6 @@ workflow MAP_SR {
 
 /*
  ===========================================
- * QUAST
- ===========================================
- * Run QUAST
- */
-
-workflow RUN_QUAST {
-  take: 
-    flye_assembly
-    ch_input
-    aln_to_ref
-    aln_to_assembly
-
-  main:
-    /* prepare for quast:
-     * This makes use of the input channel to obtain the reference and reference annotations
-     * See quast module for details
-     */
-    ch_input_references = ch_input.map(row -> [row.sample, row.ref_fasta, row.ref_gff])
-    quast_in = flye_assembly
-               .join(ch_input_references)
-               .join(aln_to_ref)
-               .join(aln_to_assembly)
-    /*
-     * Run QUAST
-     */
-    QUAST(quast_in, use_gff = true, use_fasta = true)
-}
-
-/*
- ===========================================
  * POLISHING STEPS
  ===========================================
  */
@@ -250,6 +233,7 @@ workflow POLISH_MEDAKA {
       medaka_assembly = RUN_MEDAKA.out
       MAP_TO_ASSEMBLY(in_reads, medaka_assembly)
       RUN_QUAST(medaka_assembly, input_channel, ch_aln_to_ref, MAP_TO_ASSEMBLY.out.aln_to_assembly_bam)
+      RUN_BUSCO(medaka_assembly)
     
     emit:
       medaka_assembly
@@ -288,6 +272,7 @@ workflow POLISH_PILON {
           pilon_improved = RUN_PILON.out
           MAP_TO_ASSEMBLY(in_reads, pilon_improved)
           RUN_QUAST(pilon_improved, input_channel, ch_aln_to_ref, MAP_TO_ASSEMBLY.out.aln_to_assembly_bam)
+          RUN_BUSCO(pilon_improved)
       
       emit:
         pilon_improved
@@ -341,12 +326,66 @@ def create_shortread_channel(LinkedHashMap row) {
       ragtag_scaffold_agp = RAGTAG_SCAFFOLD.out.corrected_agp
       MAP_TO_ASSEMBLY(in_reads, ragtag_scaffold_fasta)
       RUN_QUAST(ragtag_scaffold_fasta, input_channel, ch_aln_to_ref, MAP_TO_ASSEMBLY.out.aln_to_assembly_bam)
+      RUN_BUSCO(ragtag_scaffold_fasta)
 
   emit:
       ragtag_scaffold_fasta
       ragtag_scaffold_agp
 }
 
+/*
+ ===========================================
+ * QUALITY CONTROL STEPS
+ ===========================================
+ */
+
+/*
+ * QUAST
+ ===========================================
+ * Run QUAST
+ */
+
+workflow RUN_QUAST {
+  take: 
+    flye_assembly
+    ch_input
+    aln_to_ref
+    aln_to_assembly
+
+  main:
+    /* prepare for quast:
+     * This makes use of the input channel to obtain the reference and reference annotations
+     * See quast module for details
+     */
+    ch_input_references = ch_input.map(row -> [row.sample, row.ref_fasta, row.ref_gff])
+    quast_in = flye_assembly
+               .join(ch_input_references)
+               .join(aln_to_ref)
+               .join(aln_to_assembly)
+    /*
+     * Run QUAST
+     */
+    QUAST(quast_in, use_gff = true, use_fasta = true)
+}
+
+/*
+ * BUSCO
+ ===========================================
+ * Run BUSCO standalone 
+ * BUSCO in quast is quite old.
+ */
+
+workflow RUN_BUSCO {
+  take: 
+    assembly
+
+  main:
+    busco_in = assembly
+    /*
+     * Run BUSCO
+     */
+    BUSCO(busco_in ,"brassicales_odb10", "/dss/dsslegfs01/pn73so/pn73so-dss-0000/becker_common/software/busco_db")
+}
 
 /*
  ====================================================
@@ -443,6 +482,7 @@ workflow {
   Run QUAST on initial assembly
   */
   RUN_QUAST(ch_assembly, ch_input, ch_ref_bam, ch_assembly_bam)
+  RUN_BUSCO(ch_assembly)
 
   /*
   Polishing with medaka

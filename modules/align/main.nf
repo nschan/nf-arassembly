@@ -58,6 +58,6 @@ process ALIGN_SHORT_TO_BAM {
      def reads1 = [], reads2 = []
      paired ? [reads].flatten().each{reads1 << it} : reads.eachWithIndex{ v, ix -> ( ix & 1 ? reads2 : reads1) << v }
         """
-        minimap2 -ax sr ${reference} ${reads1.join(",")} ${reads2.join(",")} | samtools sort -o ${meta}_${reference}.bam
+        minimap2 -ax sr ${reference} ${reads1.join(",")} ${reads2.join(",")} | samtools sort -o ${meta}_${reference}_shortreads.bam
         """
 }
