@@ -82,8 +82,8 @@ process BUSCO {
     rm -rf "\$INPUT_SEQS"
 
     # Move files to avoid staging/publishing issues
-    mv ${prefix}-busco/batch_summary.txt "\$INPUT_SEQS"/${prefix}--busco.batch_summary.txt
-    mv ${prefix}-busco/*/short_summary.*.{json,txt} "\$INPUT_SEQS"/. || echo "Short summaries were not available: No genes were found."
+    mv ${prefix}-busco/batch_summary.txt ${prefix}--busco.batch_summary.txt
+    mv ${prefix}-busco/*/short_summary.*.{json,txt} . || echo "Short summaries were not available: No genes were found."
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
