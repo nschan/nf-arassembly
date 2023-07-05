@@ -14,6 +14,7 @@ Genome assembly using flye, qc using quast (also works for other species), polis
 | `--skip_flye` | Skip assembly with flye?, requires different samplesheet (!); default: false |
 | `--skip_alignments` | Skip alignments? requires different samplesheet (!); default: false |
 | `--skip_ragtag` | Skip scaffolding with ragtag?; default: false |
+| `--lift_annotations` | Lift annotations from reference?; default: true |
 | `--out` | Results directory, default: './results'` |
 
 # Procedure

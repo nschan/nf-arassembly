@@ -11,6 +11,7 @@ params.flye_mode = '--nano-hq'
 params.polish_pilon = false
 params.medaka_model = 'r1041_e82_400bps_hac_v4.2.0'
 params.skip_ragtag = false
+params.lift_annotations = true
 params.out = './results'
 /*
  * Print very cool text and parameter info to log. 
@@ -41,6 +42,7 @@ Niklas Schandry                                                          ░    
      skip_flye       : ${params.skip_flye}
      skip_alignments : ${params.skip_alignments}
      skip_ragtag     : ${params.skip_ragtag}
+   Lift annotations  : ${params.lift_annotations}
    outdir            : ${params.out}
 """
     .stripIndent(false)
@@ -68,6 +70,9 @@ include { PILON } from './modules/pilon/main'
 
 // Scaffolding
 include { RAGTAG_SCAFFOLD} from './modules/local/ragtag/main'
+
+// Annotation
+include { LIFTOFF } from './modules/local/liftoff/main'
 
 // Quality control
 include { QUAST } from './modules/quast/main'
@@ -387,6 +392,20 @@ workflow RUN_BUSCO {
     BUSCO(busco_in ,"brassicales_odb10", "/dss/dsslegfs01/pn73so/pn73so-dss-0000/becker_common/software/busco_db")
 }
 
+workflow RUN_LIFTOFF {
+  take:
+    assembly
+    inputs
+  
+  main:
+    liftoff_in = assembly.join(inputs.map(row -> [row.sample, row.ref_fasta, row.ref_gff]))
+    LIFTOFF(liftoff_in)
+    lifted_annotations = LIFTOFF.out
+
+  emit:
+    lifted_annotations
+}
+
 /*
  ====================================================
  ====================================================
@@ -508,6 +527,11 @@ workflow {
 
   if(!params.skip_ragtag) {
     RUN_RAGTAG(ch_input, COLLECT.out, ch_polished_genome, ch_refs, ch_ref_bam)
+    ch_polished_genome = RUN_RAGTAG.out.ragtag_scaffold_fasta
   }
-
+  
+  if(params.lift_annotations) {
+    RUN_LIFTOFF(ch_polished_genome, ch_input)
+  }
+  
 } 
