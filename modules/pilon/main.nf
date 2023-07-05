@@ -43,7 +43,7 @@ process PILON {
         --threads $task.cpus \\
         $args \\
         --$pilon_mode $bam \\
-        -Xmx190G
+        -Xmx90G
 
     gzip -n ${prefix}_pilon.fasta
 
