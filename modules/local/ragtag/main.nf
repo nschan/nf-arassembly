@@ -34,5 +34,7 @@ process RAGTAG_SCAFFOLD {
     --remove-small
 
   mv ${assembly}_corrected_${reference}/ragtag.scaffold.fasta ${assembly}_corrected_${reference}/${assembly}_corrected_${reference}.fasta
+  mv ${assembly}_corrected_${reference}/ragtag.scaffold.agp ${assembly}_corrected_${reference}/${assembly}_corrected_${reference}.agp
+  mv ${assembly}_corrected_${reference}/ragtag.scaffold.stats ${assembly}_corrected_${reference}/${assembly}_corrected_${reference}.stats
   """
 }
