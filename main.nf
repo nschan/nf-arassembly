@@ -56,6 +56,9 @@ Niklas Schandry                                                          ░    
 // Preprocessing
 include { COLLECT_READS } from './modules/local/collect_reads/main'
 
+// Read statistics
+include { NANOQ } from './modules/nanoq/main'
+
 // Alignment
 include { ALIGN_TO_BAM as ALIGN } from './modules/align/main'
 include { ALIGN_SHORT_TO_BAM as ALIGN_SHORT } from './modules/align/main'
@@ -105,6 +108,20 @@ workflow COLLECT {
   
   emit:
     in_reads
+ }
+
+ workflow RUN_NANOQ {
+  take: in_reads
+
+  main:
+  
+  NANOQ(in_reads)
+  report = NANOQ.out.report
+  stats = NANOQ.out.stats
+
+  emit:
+    report
+    stats
  }
 
 /*
@@ -465,6 +482,7 @@ workflow {
 
   COLLECT(ch_input)
 
+  NANOQ(COLLECT.out)
   /*
   Prepare assembly
   */
