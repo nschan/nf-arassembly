@@ -319,7 +319,7 @@ def create_shortread_channel(LinkedHashMap row) {
     if (!meta.paired) {
         shortreads = [ meta.id, meta.paired, [ file(row.shortread_F) ] ]
     } else {
-        if (!file(row.fastq_2).exists()) {
+        if (!file(row.shortread_R).exists()) {
             exit 1, "ERROR: shortread_R fastq file does not exist!\n${row.shortread_R}"
         }
         shortreads = [ meta.id, meta.paired, [ file(row.shortread_F), file(row.shortread_R) ] ]
