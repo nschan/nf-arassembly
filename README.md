@@ -9,6 +9,7 @@ Genome assembly using flye, qc using quast (also works for other species), polis
 | `--samplesheet` | Path to samplesheet |
 | `--collect` | Are the provided reads a folder (true) or a single fq files (default, false) |
 | `--flye_mode` | The mode to be used by flye; default: "--nano-hq" |
+| `--flye_args` | Arguments to be passed to flye, default: `none`. Example: `--flye_args '--genome-size 130g --asm-coverage 50'` |
 | `--medaka_model` | Model used by medaka, default: 'r1041_e82_400bps_hac_v4.2.0' |
 | `--polish_pilon` | Polish with short reads using pilon?; default: false |
 | `--skip_flye` | Skip assembly with flye?, requires different samplesheet (!); default: false |

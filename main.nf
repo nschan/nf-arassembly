@@ -8,6 +8,7 @@ params.collect = false
 params.skip_flye = false
 params.skip_alignments = false
 params.flye_mode = '--nano-hq'
+params.flye_args = ''
 params.polish_pilon = false
 params.medaka_model = 'r1041_e82_400bps_hac_v4.2.0'
 params.skip_ragtag = false
