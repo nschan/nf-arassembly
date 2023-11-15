@@ -14,8 +14,10 @@ process MEDAKA {
         
     publishDir "${params.out}",
         mode: params.publish_dir_mode,
-        saveAs: { filename -> saveFiles(filename:filename, options:params.options, publish_dir:getSoftwareName(task.process), publish_id:meta) }
-
+        saveAs: { filename -> saveFiles(filename:filename,
+                                        options:params.options, 
+                                        publish_dir:"${task.process}".replace(':','/'), 
+                                        publish_id:meta) }
     input:
     tuple val(meta), path(reads), path(assembly)
     val(model)

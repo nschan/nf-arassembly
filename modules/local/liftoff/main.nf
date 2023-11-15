@@ -12,10 +12,12 @@ process LIFTOFF {
           'https://depot.galaxyproject.org/singularity/liftoff:1.6.3--pyhdfd78af_0' :
           'quay.io/biocontainers/liftoff:1.6.3--pyhdfd78af_0' }"
 
-  publishDir "${params.out}",
-    mode: params.publish_dir_mode,
-    saveAs: { filename -> saveFiles(filename:filename, options:params.options, publish_dir:getSoftwareName(task.process), publish_id:meta) }
-
+    publishDir "${params.out}",
+        mode: params.publish_dir_mode,
+        saveAs: { filename -> saveFiles(filename:filename,
+                                        options:params.options, 
+                                        publish_dir:"${task.process}".replace(':','/'), 
+                                        publish_id:meta) }
   input:
       tuple val(meta), path(assembly), path(reference_fasta), path(reference_gff)
   

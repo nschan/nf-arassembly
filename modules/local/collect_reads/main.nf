@@ -7,9 +7,11 @@ process COLLECT_READS {
   tag "$meta"
   label 'process_low'
   publishDir "${params.out}",
-    mode: params.publish_dir_mode,
-    saveAs: { filename -> saveFiles(filename:filename, options:params.options, publish_dir:getSoftwareName(task.process), publish_id:meta) }
-  
+        mode: params.publish_dir_mode,
+        saveAs: { filename -> saveFiles(filename:filename,
+                                        options:params.options, 
+                                        publish_dir:"${task.process}".replace(':','/'), 
+                                        publish_id:meta) }
   conda "conda-forge::python=3.8.3"
   container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
           'https://depot.galaxyproject.org/singularity/python:3.8.3' :

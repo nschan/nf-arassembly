@@ -11,7 +11,12 @@ process QUAST {
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
         'https://depot.galaxyproject.org/singularity/quast:5.2.0--py39pl5321h2add14b_1' :
         'quay.io/biocontainers/quast:5.2.0--py39pl5321h2add14b_1' }"
-
+    publishDir "${params.out}",
+        mode: params.publish_dir_mode,
+        saveAs: { filename -> saveFiles(filename:filename,
+                                        options:params.options, 
+                                        publish_dir:"${task.process}".replace(':','/'), 
+                                        publish_id:meta) }
     input:
     tuple val(meta), path(consensus), path(fasta), path(gff), path(ref_bam), path(bam)
     val use_fasta
@@ -22,10 +27,7 @@ process QUAST {
     path "${meta}/*.tsv", emit: tsv
     path "versions.yml" , emit: versions
     
-    publishDir "${params.out}/quast/${consensus.baseName}",
-      mode: params.publish_dir_mode,
-      saveAs: { filename -> saveFiles(filename:filename, options:params.options, publish_dir:getSoftwareName(task.process), publish_id:meta) }
-    
+
     when:
     task.ext.when == null || task.ext.when
 
