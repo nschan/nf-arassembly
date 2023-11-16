@@ -11,7 +11,7 @@ process SAMTOOLS_IDXSTATS {
         mode: params.publish_dir_mode,
         saveAs: { filename -> saveFiles(filename:filename,
                                         options:params.options, 
-                                        publish_dir:"${task.process}".replace(':','/'), 
+                                        publish_dir:"${task.process}".replace(':','/').toLowerCase(), 
                                         publish_id:meta) }
     conda (params.enable_conda ? "bioconda::samtools=1.10" : null)
     if (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container) {
