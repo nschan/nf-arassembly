@@ -10,7 +10,7 @@ process COLLECT_READS {
         mode: params.publish_dir_mode,
         saveAs: { filename -> saveFiles(filename:filename,
                                         options:params.options, 
-                                        publish_dir:"${task.process}".replace(':','/'), 
+                                        publish_dir:"${task.process}".replace(':','/').toLowerCase(), 
                                         publish_id:meta) }
   conda "conda-forge::python=3.8.3"
   container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?

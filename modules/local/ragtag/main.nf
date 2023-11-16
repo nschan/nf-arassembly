@@ -13,11 +13,11 @@ process RAGTAG_SCAFFOLD {
           'quay.io/biocontainers/ragtag:2.1.0--pyhb7b1952_0' }"
 
   publishDir "${params.out}",
-        mode: params.publish_dir_mode,
-        saveAs: { filename -> saveFiles(filename:filename,
-                                        options:params.options, 
-                                        publish_dir:"${task.process}".replace(':','/'), 
-                                        publish_id:meta) }
+      mode: params.publish_dir_mode,
+      saveAs: { filename -> saveFiles(filename:filename,
+                                      options:params.options, 
+                                      publish_dir:"${task.process}".replace(':','/').toLowerCase(), 
+                                      publish_id:meta) }
   input:
       tuple val(meta), path(assembly), path(reference)
   

@@ -15,7 +15,7 @@ process QUAST {
         mode: params.publish_dir_mode,
         saveAs: { filename -> saveFiles(filename:filename,
                                         options:params.options, 
-                                        publish_dir:"${task.process}".replace(':','/'), 
+                                        publish_dir:"${task.process}".replace(':','/').toLowerCase(), 
                                         publish_id:meta) }
     input:
     tuple val(meta), path(consensus), path(fasta), path(gff), path(ref_bam), path(bam)
