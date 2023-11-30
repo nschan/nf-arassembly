@@ -30,6 +30,7 @@ process LIFTOFF {
   """
   liftoff \\
     -g ${reference_gff} \\
+    -p ${task.cpus} \\
     ${assembly} \\
     ${reference_fasta} \\
     -o ${assembly}_liftoff.gff
