@@ -39,49 +39,57 @@
     "properties": {
         "samplesheet": {
             "type": "string",
-            "default": null
+            "default": "None"
         },
         "enable_conda": {
             "type": "string",
-            "default": null
+            "default": "None"
         },
         "collect": {
             "type": "string",
-            "default": null
+            "default": "None"
         },
         "skip_flye": {
             "type": "string",
-            "default": null
+            "default": "None"
         },
         "skip_alignments": {
             "type": "string",
-            "default": null
+            "default": "None"
         },
         "flye_mode": {
             "type": "string",
-            "default": null
+            "default": "None"
         },
         "flye_args": {
             "type": "string",
-            "default": null
+            "default": "None"
         },
         "polish_pilon": {
             "type": "string",
-            "default": null
+            "default": "None"
         },
         "medaka_model": {
             "type": "string",
-            "default": null
-        },
-        "skip_ragtag": {
-            "type": "string",
-            "default": null
+            "default": "None"
         },
         "lift_annotations": {
             "type": "string",
-            "default": null
+            "default": "None"
         },
         "out": {
+            "type": "string",
+            "default": "None"
+        },
+        "scaffold_ragtag": {
+            "type": "string",
+            "default": null
+        },
+        "scaffold_links": {
+            "type": "string",
+            "default": null
+        },
+        "scaffold_slr": {
             "type": "string",
             "default": null
         }
