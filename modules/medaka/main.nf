@@ -7,10 +7,10 @@ process MEDAKA {
     tag "$meta"
     label 'process_high'
 
-    conda "bioconda::medaka=1.8.0"
+    conda "bioconda::medaka=1.11.1"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
         'https://depot.galaxyproject.org/singularity/1.8.0--py38hdaa7744_0' :
-        'quay.io/biocontainers/medaka:1.8.0--py38hdaa7744_0' }"
+        'quay.io/biocontainers/medaka:1.11.1--py310h87e71ce_0' }"
         
     publishDir "${params.out}",
         mode: params.publish_dir_mode,

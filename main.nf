@@ -45,7 +45,7 @@ Niklas Schandry      niklas@bio.lmu.de      https://gitlab.lrz.de/beckerlab/nf-a
      polish_pilon    : ${params.polish_pilon}
      scaffold_ragtag : ${params.scaffold_ragtag}
      scaffold_links  : ${params.scaffold_links}
-     scaffold_slr    : ${params.slr}
+     scaffold_slr    : ${params.scaffold_slr}
    Steps skipped:
      skip_flye       : ${params.skip_flye}
      skip_alignments : ${params.skip_alignments}
@@ -378,13 +378,13 @@ def create_shortread_channel(LinkedHashMap row) {
   main:
       links_in = assembly.join(in_reads)
       LINKS(links_in)
-      scaffold = LINKS.out.scaffold
-      MAP_TO_ASSEMBLY(in_reads, scaffold)
-      RUN_QUAST(scaffold, input_channel, ch_aln_to_ref, MAP_TO_ASSEMBLY.out.aln_to_assembly_bam)
-      RUN_BUSCO(scaffold)
+      scaffolds = LINKS.out.scaffolds
+      MAP_TO_ASSEMBLY(in_reads, scaffolds)
+      RUN_QUAST(scaffolds, input_channel, ch_aln_to_ref, MAP_TO_ASSEMBLY.out.aln_to_assembly_bam)
+      RUN_BUSCO(scaffolds)
 
   emit:
-      scaffold
+     scaffolds
 }
 
 workflow RUN_SLR {
@@ -397,14 +397,14 @@ workflow RUN_SLR {
   
   main:
       slr_in = assembly.join(in_reads)
-      SLR(links_in)
-      scaffold = SLR.out.scaffold
-      MAP_TO_ASSEMBLY(in_reads, scaffold)
-      RUN_QUAST(scaffold, input_channel, ch_aln_to_ref, MAP_TO_ASSEMBLY.out.aln_to_assembly_bam)
-      RUN_BUSCO(scaffold)
+      SLR(slr_in)
+      scaffolds = SLR.out.scaffolds
+      MAP_TO_ASSEMBLY(in_reads, scaffolds)
+      RUN_QUAST(scaffolds, input_channel, ch_aln_to_ref, MAP_TO_ASSEMBLY.out.aln_to_assembly_bam)
+      RUN_BUSCO(scaffolds)
 
   emit:
-      scaffold
+     scaffolds
 }
 
 /*
@@ -599,7 +599,7 @@ workflow {
     RUN_RAGTAG(ch_input, COLLECT.out, ch_polished_genome, ch_refs, ch_ref_bam)
     ch_polished_genome = RUN_RAGTAG.out.ragtag_scaffold_fasta
   }
-  
+
   if(params.scaffold_links) {
     RUN_LINKS(ch_input, COLLECT.out, ch_polished_genome, ch_refs, ch_ref_bam)
     ch_polished_genome = RUN_LINKS.out.scaffolds
