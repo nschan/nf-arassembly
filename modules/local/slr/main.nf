@@ -38,3 +38,4 @@ process SLR {
   cp ${meta}_out/unique-contig-set.fa ${meta}_slr_unique.fa
   cp ${meta}_out/ambiguous-contig-set.fa ${meta}_slr_ambigous.fa
   """
+}

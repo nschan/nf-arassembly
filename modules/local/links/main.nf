@@ -20,7 +20,7 @@ process LINKS {
 
   output:
       tuple val(meta), path("*.scaffolds.fa"), emit: scaffolds
-      tuple val(meta), path("*.scaffolds"),   emit: scaffold_csv
+      tuple val(meta), path("*.scaffolds"), emit: scaffold_csv
       tuple val(meta), path("*.gv"), emit: graph
       tuple val(meta), path("*.log"), emit: log
   
@@ -29,3 +29,4 @@ process LINKS {
   """
   LINKS -f ${assembly} -s ${reads} -j 4 -b ${meta}_links
   """
+}
