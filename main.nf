@@ -11,7 +11,9 @@ params.flye_mode = '--nano-hq'
 params.flye_args = ''
 params.polish_pilon = false
 params.medaka_model = 'r1041_e82_400bps_hac_v4.2.0'
-params.skip_ragtag = false
+params.scaffold_ragtag = false
+params.scaffold_links = false
+params.scaffold_slr = false
 params.lift_annotations = true
 params.out = './results'
 /*
@@ -41,10 +43,12 @@ Niklas Schandry      niklas@bio.lmu.de      https://gitlab.lrz.de/beckerlab/nf-a
      flye_mode       : ${params.flye_mode}
      medaka_model    : ${params.medaka_model}
      polish_pilon    : ${params.polish_pilon}
+     scaffold_ragtag : ${params.scaffold_ragtag}
+     scaffold_links  : ${params.scaffold_links}
+     scaffold_slr    : ${params.slr}
    Steps skipped:
      skip_flye       : ${params.skip_flye}
      skip_alignments : ${params.skip_alignments}
-     skip_ragtag     : ${params.skip_ragtag}
    Lift annotations  : ${params.lift_annotations}
    outdir            : ${params.out}
 
@@ -78,7 +82,9 @@ include { MEDAKA } from './modules/medaka/main'
 include { PILON } from './modules/pilon/main'
 
 // Scaffolding
-include { RAGTAG_SCAFFOLD} from './modules/local/ragtag/main'
+include { RAGTAG_SCAFFOLD } from './modules/local/ragtag/main'
+include { LINKS } from './modules/local/links/main'
+include { SLR } from './modules/local/slr/main'
 
 // Annotation
 include { LIFTOFF } from './modules/local/liftoff/main'
@@ -361,6 +367,46 @@ def create_shortread_channel(LinkedHashMap row) {
       ragtag_scaffold_agp
 }
 
+ workflow RUN_LINKS {
+  take:
+     input_channel
+     in_reads
+     assembly
+     references
+     ch_aln_to_ref
+  
+  main:
+      links_in = assembly.join(in_reads)
+      LINKS(links_in)
+      scaffold = LINKS.out.scaffold
+      MAP_TO_ASSEMBLY(in_reads, scaffold)
+      RUN_QUAST(scaffold, input_channel, ch_aln_to_ref, MAP_TO_ASSEMBLY.out.aln_to_assembly_bam)
+      RUN_BUSCO(scaffold)
+
+  emit:
+      scaffold
+}
+
+workflow RUN_SLR {
+  take:
+     input_channel
+     in_reads
+     assembly
+     references
+     ch_aln_to_ref
+  
+  main:
+      slr_in = assembly.join(in_reads)
+      SLR(links_in)
+      scaffold = SLR.out.scaffold
+      MAP_TO_ASSEMBLY(in_reads, scaffold)
+      RUN_QUAST(scaffold, input_channel, ch_aln_to_ref, MAP_TO_ASSEMBLY.out.aln_to_assembly_bam)
+      RUN_BUSCO(scaffold)
+
+  emit:
+      scaffold
+}
+
 /*
  ===========================================
  * QUALITY CONTROL STEPS
@@ -549,9 +595,19 @@ workflow {
   Scaffolding with ragtag
   */
 
-  if(!params.skip_ragtag) {
+  if(params.scaffold_ragtag) {
     RUN_RAGTAG(ch_input, COLLECT.out, ch_polished_genome, ch_refs, ch_ref_bam)
     ch_polished_genome = RUN_RAGTAG.out.ragtag_scaffold_fasta
+  }
+  
+  if(params.scaffold_links) {
+    RUN_LINKS(ch_input, COLLECT.out, ch_polished_genome, ch_refs, ch_ref_bam)
+    ch_polished_genome = RUN_LINKS.out.scaffolds
+  }
+
+  if(params.scaffold_slr) {
+    RUN_SLR(ch_input, COLLECT.out, ch_polished_genome, ch_refs, ch_ref_bam)
+    ch_polished_genome = RUN_SLR.out.scaffolds
   }
   
   if(params.lift_annotations) {
