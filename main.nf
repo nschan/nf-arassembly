@@ -93,7 +93,7 @@ include { LIFTOFF } from './modules/local/liftoff/main'
 include { QUAST } from './modules/quast/main'
 include { BUSCO } from './modules/busco/main'
 
-/* 
+ /* 
  ===========================================
  ===========================================
  * SUBWORKFLOWS
@@ -101,7 +101,7 @@ include { BUSCO } from './modules/busco/main'
  ===========================================
  */
 
-/*
+ /*
  * COLLECT
  ===========================================
  * Collect reads into single fastq file
@@ -136,7 +136,7 @@ workflow COLLECT {
     stats
  }
 
-/*
+ /*
  * FLYE_ASSEMBLY
  ===========================================
  * Assemble using Flye
@@ -153,12 +153,12 @@ workflow FLYE_ASSEMBLY {
 
   emit: ch_flye_assembly
 }
-/*
+ /*
  ===========================================
  * MAPPING WORKFLOWS
  ===========================================
  */
-/*
+ /*
  * MAP_TO_REF
  ===========================================
  * map to reference genome using minimap2
@@ -181,7 +181,7 @@ workflow MAP_TO_REF {
     ch_aln_to_ref
 }
 
-/*
+ /*
  * MAP_TO_ASSEMBLY
  ===========================================
  * map to flye assembly using minimap2
@@ -235,7 +235,7 @@ workflow MAP_SR {
  ===========================================
  */
 
-/*
+ /*
  * MEDAKA
  ===========================================
  * Run medaka
@@ -339,10 +339,12 @@ def create_shortread_channel(LinkedHashMap row) {
     return shortreads
 }
 
-/*
+ /*
  * SCAFFOLDING
  ===========================================
  * Run ragtag scaffold
+ * Run LINKS
+ * Run SLR
  */
 
  workflow RUN_RAGTAG {
@@ -413,7 +415,7 @@ workflow RUN_SLR {
  ===========================================
  */
 
-/*
+ /*
  * QUAST
  ===========================================
  * Run QUAST
@@ -442,7 +444,7 @@ workflow RUN_QUAST {
     QUAST(quast_in, use_gff = true, use_fasta = true)
 }
 
-/*
+ /*
  * BUSCO
  ===========================================
  * Run BUSCO standalone 
@@ -475,7 +477,7 @@ workflow RUN_LIFTOFF {
     lifted_annotations
 }
 
-/*
+ /*
  ====================================================
  ====================================================
                  MAIN WORKFLOW
@@ -495,12 +497,12 @@ workflow RUN_LIFTOFF {
     * Polish medaka output with shortreads
     * Align long reads to polished assembly
     * Run quast
- * Scaffold with ragtag
+ * Scaffold with ragtag, LINKS or SLR
  ====================================================
  ====================================================
  */
 
-workflow {
+workflow ARASEMMBLY {
  /*
  Define channels
  */
@@ -615,3 +617,14 @@ workflow {
   }
   
 } 
+
+ /*
+ ====================================================
+ ====================================================
+                 RUN PIPELINE
+ ====================================================
+ ====================================================
+ */
+workflow {
+  ARASEMMBLY()
+}
