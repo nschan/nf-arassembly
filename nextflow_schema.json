@@ -39,59 +39,63 @@
     "properties": {
         "samplesheet": {
             "type": "string",
-            "default": "None"
+            "default": "false"
         },
         "enable_conda": {
             "type": "string",
-            "default": "None"
+            "default": "false"
         },
         "collect": {
             "type": "string",
-            "default": "None"
+            "default": "false"
         },
         "skip_flye": {
             "type": "string",
-            "default": "None"
+            "default": "false"
         },
         "skip_alignments": {
             "type": "string",
-            "default": "None"
+            "default": "false"
         },
         "flye_mode": {
             "type": "string",
-            "default": "None"
+            "default": "'--nano-hq'"
         },
         "flye_args": {
             "type": "string",
-            "default": "None"
+            "default": "''"
         },
         "polish_pilon": {
             "type": "string",
-            "default": "None"
+            "default": "false"
         },
         "medaka_model": {
             "type": "string",
-            "default": "None"
+            "default": "'r1041_e82_400bps_hac_v4.2.0'"
         },
         "lift_annotations": {
             "type": "string",
-            "default": "None"
+            "default": "false"
         },
         "out": {
             "type": "string",
-            "default": "None"
+            "default": "'./out'"
         },
         "scaffold_ragtag": {
             "type": "string",
-            "default": null
+            "default": "false"
         },
         "scaffold_links": {
             "type": "string",
-            "default": null
+            "default": "false"
         },
         "scaffold_slr": {
             "type": "string",
-            "default": null
+            "default": "false"
+        },
+        "scaffold_longstitch": {
+            "type": "string",
+            "default": "false"
         }
     }
 }

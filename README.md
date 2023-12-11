@@ -17,6 +17,7 @@ Genome assembly using flye, qc using quast (also works for other species), polis
 | `--scaffold_ragtag` | Scaffolding with ragtag?; default: false |
 | `--scaffold_links` | Scaffolding with LINKS?; default: false |
 | `--scaffold_slr` | Scaffolding with SLR?; default: false |
+| `--scaffold_longstitch` | Scaffolding with SLR?; default: false |
 | `--lift_annotations` | Lift annotations from reference?; default: true |
 | `--out` | Results directory, default: './results'` |
 
@@ -98,6 +99,10 @@ sampleName,reads,assembly.fasta.gz,reference.fasta,reference.gff,reads_on_assemb
 ```
 
 In a case where only single-reads are available, shortread_R should be empty, and paired should be false
+
+## Using liftoff
+
+If `lift_annotations` is used, the annotations from the reference genome will be mapped to assemblies and scaffolds using liftoff. This will happen at each step of the pipeline where a new genome version is created, i.e. after assembly, after polishing and after scaffolding.
 
 # Problems
 
