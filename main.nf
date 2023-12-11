@@ -37,6 +37,7 @@ log.info """\
 ------------------------------------------------------------------------------------------
 Niklas Schandry      niklas@bio.lmu.de      https://gitlab.lrz.de/beckerlab/nf-arassembly                                          
 ------------------------------------------------------------------------------------------
+  Results directory  : ${params.out}
 
   Parameters:
      samplesheet     : ${params.samplesheet}
@@ -44,16 +45,18 @@ Niklas Schandry      niklas@bio.lmu.de      https://gitlab.lrz.de/beckerlab/nf-a
      flye_mode       : ${params.flye_mode}
      medaka_model    : ${params.medaka_model}
      polish_pilon    : ${params.polish_pilon}
-    SCAFFOLDING
+
+    Steps skipped
+     skip_flye       : ${params.skip_flye}
+     skip_alignments : ${params.skip_alignments}
+
+    Scaffolding Tools
       ragtag         : ${params.scaffold_ragtag}
       LINKS          : ${params.scaffold_links}
       SLR            : ${params.scaffold_slr}
       longstitch     : ${params.scaffold_longstitch}
-   Steps skipped:
-     skip_flye       : ${params.skip_flye}
-     skip_alignments : ${params.skip_alignments}
-   Lift annotations  : ${params.lift_annotations}
-   outdir            : ${params.out}
+
+    Annotation lift  : ${params.lift_annotations}
 
 ==========================================================================================
 ==========================================================================================
@@ -191,7 +194,7 @@ workflow MAP_TO_REF {
  /*
  * MAP_TO_ASSEMBLY
  ===========================================
- * map to flye assembly using minimap2
+ * map to assembly using minimap2
  */
 
 workflow MAP_TO_ASSEMBLY {
@@ -540,7 +543,7 @@ workflow RUN_LIFTOFF {
     * Polish medaka output with shortreads
     * Align long reads to polished assembly
     * Run quast
- * Scaffold with ragtag, LINKS or SLR
+ * Scaffold with ragtag, LINKS, SLR or LONGSTITCH
  ====================================================
  ====================================================
  */
