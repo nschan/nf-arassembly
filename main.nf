@@ -14,6 +14,7 @@ params.medaka_model = 'r1041_e82_400bps_hac_v4.2.0'
 params.scaffold_ragtag = false
 params.scaffold_links = false
 params.scaffold_slr = false
+params.scaffold_longstitch = false
 params.lift_annotations = true
 params.out = './results'
 /*
@@ -43,9 +44,11 @@ Niklas Schandry      niklas@bio.lmu.de      https://gitlab.lrz.de/beckerlab/nf-a
      flye_mode       : ${params.flye_mode}
      medaka_model    : ${params.medaka_model}
      polish_pilon    : ${params.polish_pilon}
-     scaffold_ragtag : ${params.scaffold_ragtag}
-     scaffold_links  : ${params.scaffold_links}
-     scaffold_slr    : ${params.scaffold_slr}
+    SCAFFOLDING
+      ragtag         : ${params.scaffold_ragtag}
+      LINKS          : ${params.scaffold_links}
+      SLR            : ${params.scaffold_slr}
+      longstitch     : ${params.scaffold_longstitch}
    Steps skipped:
      skip_flye       : ${params.skip_flye}
      skip_alignments : ${params.skip_alignments}
@@ -85,6 +88,7 @@ include { PILON } from './modules/pilon/main'
 include { RAGTAG_SCAFFOLD } from './modules/local/ragtag/main'
 include { LINKS } from './modules/local/links/main'
 include { SLR } from './modules/local/slr/main'
+include { LONGSTITCH } from './modules/local/longstitch/main'
 
 // Annotation
 include { LIFTOFF } from './modules/local/liftoff/main'
@@ -144,13 +148,16 @@ workflow COLLECT {
 
 workflow FLYE_ASSEMBLY {
   take: in_reads
+        ch_input
 
   main:
     // Asssembly using FLYE
     ch_flye_assembly = Channel.empty()
     FLYE(in_reads, params.flye_mode)
     ch_flye_assembly = FLYE.out.fasta
-
+    if(params.lift_annotations) {
+    RUN_LIFTOFF(FLYE.out.fasta, ch_input)
+  }
   emit: ch_flye_assembly
 }
  /*
@@ -257,7 +264,7 @@ workflow RUN_MEDAKA {
 
 workflow POLISH_MEDAKA {
     take:
-     input_channel
+     ch_input
      in_reads
      pilon_improved
      ch_aln_to_ref
@@ -266,9 +273,11 @@ workflow POLISH_MEDAKA {
       RUN_MEDAKA(in_reads, pilon_improved)
       medaka_assembly = RUN_MEDAKA.out
       MAP_TO_ASSEMBLY(in_reads, medaka_assembly)
-      RUN_QUAST(medaka_assembly, input_channel, ch_aln_to_ref, MAP_TO_ASSEMBLY.out.aln_to_assembly_bam)
+      RUN_QUAST(medaka_assembly, ch_input, ch_aln_to_ref, MAP_TO_ASSEMBLY.out.aln_to_assembly_bam)
       RUN_BUSCO(medaka_assembly)
-    
+      if(params.lift_annotations) {
+        RUN_LIFTOFF(RUN_MEDAKA.out, ch_input)
+      }
     emit:
       medaka_assembly
 }
@@ -294,19 +303,22 @@ workflow RUN_PILON {
 
 workflow POLISH_PILON {
      take:
-       input_channel
+       ch_input
        in_reads
        assembly
        ch_aln_to_ref
 
       main:
-          ch_shortreads = input_channel.map { create_shortread_channel(it) }
+          ch_shortreads = ch_input.map { create_shortread_channel(it) }
           MAP_SR(ch_shortreads, assembly)
           RUN_PILON(assembly, MAP_SR.out.aln_to_assembly_bam_bai)
           pilon_improved = RUN_PILON.out
           MAP_TO_ASSEMBLY(in_reads, pilon_improved)
-          RUN_QUAST(pilon_improved, input_channel, ch_aln_to_ref, MAP_TO_ASSEMBLY.out.aln_to_assembly_bam)
+          RUN_QUAST(pilon_improved, ch_input, ch_aln_to_ref, MAP_TO_ASSEMBLY.out.aln_to_assembly_bam)
           RUN_BUSCO(pilon_improved)
+          if(params.lift_annotations) {
+             RUN_LIFTOFF(RUN_PILON.out, ch_input)
+          }
       
       emit:
         pilon_improved
@@ -349,7 +361,7 @@ def create_shortread_channel(LinkedHashMap row) {
 
  workflow RUN_RAGTAG {
   take:
-     input_channel
+     ch_input
      in_reads
      assembly
      references
@@ -361,8 +373,11 @@ def create_shortread_channel(LinkedHashMap row) {
       ragtag_scaffold_fasta = RAGTAG_SCAFFOLD.out.corrected_assembly
       ragtag_scaffold_agp = RAGTAG_SCAFFOLD.out.corrected_agp
       MAP_TO_ASSEMBLY(in_reads, ragtag_scaffold_fasta)
-      RUN_QUAST(ragtag_scaffold_fasta, input_channel, ch_aln_to_ref, MAP_TO_ASSEMBLY.out.aln_to_assembly_bam)
+      RUN_QUAST(ragtag_scaffold_fasta, ch_input, ch_aln_to_ref, MAP_TO_ASSEMBLY.out.aln_to_assembly_bam)
       RUN_BUSCO(ragtag_scaffold_fasta)
+      if(params.lift_annotations) {
+             RUN_LIFTOFF(RAGTAG_SCAFFOLD.out.corrected_assembly, ch_input)
+      }
 
   emit:
       ragtag_scaffold_fasta
@@ -371,7 +386,7 @@ def create_shortread_channel(LinkedHashMap row) {
 
  workflow RUN_LINKS {
   take:
-     input_channel
+     ch_input
      in_reads
      assembly
      references
@@ -382,8 +397,11 @@ def create_shortread_channel(LinkedHashMap row) {
       LINKS(links_in)
       scaffolds = LINKS.out.scaffolds
       MAP_TO_ASSEMBLY(in_reads, scaffolds)
-      RUN_QUAST(scaffolds, input_channel, ch_aln_to_ref, MAP_TO_ASSEMBLY.out.aln_to_assembly_bam)
+      RUN_QUAST(scaffolds, ch_input, ch_aln_to_ref, MAP_TO_ASSEMBLY.out.aln_to_assembly_bam)
       RUN_BUSCO(scaffolds)
+      if(params.lift_annotations) {
+             RUN_LIFTOFF(LINKS.out.scaffolds, ch_input)
+      }
 
   emit:
      scaffolds
@@ -391,7 +409,7 @@ def create_shortread_channel(LinkedHashMap row) {
 
 workflow RUN_SLR {
   take:
-     input_channel
+     ch_input
      in_reads
      assembly
      references
@@ -402,8 +420,33 @@ workflow RUN_SLR {
       SLR(slr_in)
       scaffolds = SLR.out.scaffolds
       MAP_TO_ASSEMBLY(in_reads, scaffolds)
-      RUN_QUAST(scaffolds, input_channel, ch_aln_to_ref, MAP_TO_ASSEMBLY.out.aln_to_assembly_bam)
+      RUN_QUAST(scaffolds, ch_input, ch_aln_to_ref, MAP_TO_ASSEMBLY.out.aln_to_assembly_bam)
       RUN_BUSCO(scaffolds)
+      if(params.lift_annotations) {
+        RUN_LIFTOFF(SLR.out.scaffolds, ch_input)
+      }
+
+  emit:
+     scaffolds
+}
+workflow RUN_LONGSTITCH {
+  take:
+     ch_input
+     in_reads
+     assembly
+     references
+     ch_aln_to_ref
+  
+  main:
+      longstitch_in = assembly.join(in_reads)
+      LONGSTITCH(longstitch_in)
+      scaffolds = LONGSTITCH.out.scaffolds
+      MAP_TO_ASSEMBLY(in_reads, scaffolds)
+      RUN_QUAST(scaffolds, ch_input, ch_aln_to_ref, MAP_TO_ASSEMBLY.out.aln_to_assembly_bam)
+      RUN_BUSCO(scaffolds)
+      if(params.lift_annotations) {
+        RUN_LIFTOFF(LONGSTITCH.out.scaffolds, ch_input)
+      }
 
   emit:
      scaffolds
@@ -546,7 +589,7 @@ workflow ARASEMMBLY {
     // sample,readpath,assembly,ref_fasta,ref_gff
     ch_assembly = ch_input.map(row -> [row.sample, row.assembly])
   } else {
-    FLYE_ASSEMBLY(COLLECT.out)
+    FLYE_ASSEMBLY(COLLECT.out,ch_input)
     ch_assembly = FLYE_ASSEMBLY.out
   }
 
@@ -594,26 +637,23 @@ workflow ARASEMMBLY {
   } 
 
   /*
-  Scaffolding with ragtag
+  Scaffolding
   */
 
   if(params.scaffold_ragtag) {
     RUN_RAGTAG(ch_input, COLLECT.out, ch_polished_genome, ch_refs, ch_ref_bam)
-    ch_polished_genome = RUN_RAGTAG.out.ragtag_scaffold_fasta
   }
 
   if(params.scaffold_links) {
     RUN_LINKS(ch_input, COLLECT.out, ch_polished_genome, ch_refs, ch_ref_bam)
-    ch_polished_genome = RUN_LINKS.out.scaffolds
   }
 
   if(params.scaffold_slr) {
     RUN_SLR(ch_input, COLLECT.out, ch_polished_genome, ch_refs, ch_ref_bam)
-    ch_polished_genome = RUN_SLR.out.scaffolds
   }
   
-  if(params.lift_annotations) {
-    RUN_LIFTOFF(ch_polished_genome, ch_input)
+  if(params.scaffold_longstitch) {
+    RUN_LONGSTITCH(ch_input, COLLECT.out, ch_polished_genome, ch_refs, ch_ref_bam)
   }
   
 } 

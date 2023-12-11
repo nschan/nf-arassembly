@@ -3,12 +3,10 @@ include { initOptions; saveFiles; getSoftwareName } from './functions'
 params.options = [:]
 options        = initOptions(params.options)
 
-process LINKS {
+process LONGSTITCH {
   tag "$meta"
   label 'process_high'
   
-  container "quay.io/biocontainers/links:2.0.1--h9f5acd7_3"
-
   publishDir "${params.out}",
       mode: params.publish_dir_mode,
       saveAs: { filename -> saveFiles(filename:filename,
@@ -19,15 +17,11 @@ process LINKS {
       tuple val(meta), path(assembly), path(reads)
 
   output:
-      tuple val(meta), path("*.scaffolds.fa"), emit: scaffolds
-      tuple val(meta), path("*.scaffolds"), emit: scaffold_csv
-      tuple val(meta), path("*.gv"), emit: graph
-      tuple val(meta), path("*.log"), emit: log
+      tuple val(meta), path("soft-links/*longstitch-scaffolds.fa"), emit: scaffolds
   
   script:
       def prefix = task.ext.prefix ?: "${meta}"
   """
-  echo "${reads}" > readfile.txt
-  LINKS -f ${assembly} -s readfile.txt -j 3 -b ${meta}_links
+  longstitch tigmint-ntLink-arks draft=${assembly} reads=${reads} t=${task.cpus} G=135e6 out_prefix=${meta}
   """
 }

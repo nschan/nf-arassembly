@@ -28,10 +28,18 @@ process LIFTOFF {
   script:
       def prefix = task.ext.prefix ?: "${meta}"
   """
+  if [[ ${assembly} == *.gz ]]; then
+    zcat ${assembly} > assembly.fasta
+  fi
+
+  if [[${assembly} == *.fa]]; then
+    cp ${assembly} assembly.fasta
+  fi
+
   liftoff \\
     -g ${reference_gff} \\
     -p ${task.cpus} \\
-    ${assembly} \\
+    assembly.fasta  \\
     ${reference_fasta} \\
     -o ${assembly}_liftoff.gff
   """
