@@ -102,6 +102,11 @@ sampleName,reads,assembly.fasta.gz,reference.fasta,reference.gff,reads_on_assemb
 
 In a case where only single-reads are available, shortread_R should be empty, and paired should be false
 
+## Scaffolding
+
+`ragtag`, `LINKS`, `SLR` and `longstitch` can be used for scaffolding.
+The `SLR` container segfaults with illegal instructions, I assume that the container is somehow built wrong. 
+
 ## Using liftoff
 
 If `lift_annotations` is used, the annotations from the reference genome will be mapped to assemblies and scaffolds using liftoff. This will happen at each step of the pipeline where a new genome version is created, i.e. after assembly, after polishing and after scaffolding.
