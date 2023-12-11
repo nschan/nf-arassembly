@@ -582,7 +582,7 @@ workflow RUN_LIFTOFF {
  ====================================================
  */
 
-workflow ARASEMMBLY {
+workflow ARASSEMBLY {
  /*
  Define channels
  */
@@ -671,6 +671,7 @@ workflow ARASEMMBLY {
  ====================================================
  ====================================================
  */
+
 workflow {
-  ARASEMMBLY()
+  ARASSEMBLY()
 }
