@@ -19,7 +19,7 @@ Genome assembly using flye, qc using quast (also works for other species), polis
 | `--scaffold_ragtag` | Scaffolding with ragtag?; default: false |
 | `--scaffold_links` | Scaffolding with LINKS?; default: false |
 | `--scaffold_slr` | Scaffolding with SLR?; default: false |
-| `--scaffold_longstitch` | Scaffolding with SLR?; default: false |
+| `--scaffold_longstitch` | Scaffolding with longstitch?; default: false |
 | `--lift_annotations` | Lift annotations from reference?; default: true |
 | `--out` | Results directory, default: './results'` |
 
