@@ -32,7 +32,7 @@ process LIFTOFF {
     zcat ${assembly} > assembly.fasta
   fi
 
-  if [[${assembly} == *.fa]]; then
+  if [[ ${assembly} == *.fa || ${assembly} == *.fasta ]]; then
     cp ${assembly} assembly.fasta
   fi
 

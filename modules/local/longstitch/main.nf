@@ -22,6 +22,16 @@ process LONGSTITCH {
   script:
       def prefix = task.ext.prefix ?: "${meta}"
   """
-  longstitch tigmint-ntLink-arks draft=${assembly} reads=${reads} t=${task.cpus} G=135e6 out_prefix=${meta}
+  if [[ ${assembly} == *.gz ]]; then
+    zcat ${assembly} > assembly.fasta
+  fi
+
+  if [[ ${assembly} == *.fa || ${assembly} == *.fasta ]]; then
+    cp ${assembly} assembly.fasta
+  fi
+  ln -s assembly.fasta assembly.fa
+  gzip ${reads} > ${reads}.gz
+  ln -s ${reads}.gz reads.fq.gz
+  longstitch tigmint-ntLink-arks draft=assembly reads=reads t=${task.cpus} G=135e6 out_prefix=${assembly}
   """
 }

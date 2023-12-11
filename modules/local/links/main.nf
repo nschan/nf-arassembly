@@ -27,7 +27,7 @@ process LINKS {
   script:
       def prefix = task.ext.prefix ?: "${meta}"
   """
-  echo "${reads}" > readfile.txt
-  LINKS -f ${assembly} -s readfile.txt -j 3 -b ${meta}_links
+  echo "${reads}" > readfile.fof
+  LINKS -f ${assembly} -s readfile.fof -j 3 -b ${meta}_links -d 1000,2000,3000,4000,5000,6000,7000,8000,9000,10000,12000,14000,16000,18000,20000
   """
 }

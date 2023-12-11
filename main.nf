@@ -149,19 +149,53 @@ workflow COLLECT {
  * Assemble using Flye
  */
 
-workflow FLYE_ASSEMBLY {
+workflow ASSEMBLY {
   take: in_reads
         ch_input
 
   main:
-    // Asssembly using FLYE
-    ch_flye_assembly = Channel.empty()
+  
+  ch_refs = ch_input.map(row -> [row.sample, row.ref_fasta])
+
+  if(params.skip_flye ) {
+    // Sample sheet layout when skipping FLYE
+    // sample,readpath,assembly,ref_fasta,ref_gff
+    ch_assembly = ch_input.map(row -> [row.sample, row.assembly])
+  } else {
     FLYE(in_reads, params.flye_mode)
-    ch_flye_assembly = FLYE.out.fasta
-    if(params.lift_annotations) {
+    ch_assembly = FLYE.out.fasta
+  }
+
+  /*
+  Prepare alignments
+  */
+
+  if(params.skip_alignments) {
+    // Sample sheet layout when skipping FLYE and mapping
+    // sample,readpath,assembly,ref_fasta,ref_gff,assembly_bam,assembly_bai,ref_bam
+    ch_ref_bam = ch_input.map(row -> [row.sample, row.ref_bam]) 
+    ch_assembly_bam = ch_input.map(row -> [row.sample, row.assembly_bam]) 
+    ch_assembly_bam_bai = ch_input.map(row -> [row.sample, row.assembly_bam, row.assembly_bai]) 
+  } else {
+    MAP_TO_REF(in_reads, ch_refs)
+    ch_ref_bam = MAP_TO_REF.out  
+
+    MAP_TO_ASSEMBLY(in_reads, ch_assembly)
+    ch_assembly_bam = MAP_TO_ASSEMBLY.out.aln_to_assembly_bam
+    ch_assembly_bam_bai = MAP_TO_ASSEMBLY.out.aln_to_assembly_bam_bai
+  }
+  if(params.lift_annotations) {
     RUN_LIFTOFF(FLYE.out.fasta, ch_input)
   }
-  emit: ch_flye_assembly
+  /*
+  Run QUAST on initial assembly
+  */
+  RUN_QUAST(ch_assembly, ch_input, ch_ref_bam, ch_assembly_bam)
+  RUN_BUSCO(ch_assembly)
+
+  emit: 
+    ch_assembly
+    ch_ref_bam
 }
  /*
  ===========================================
@@ -583,48 +617,17 @@ workflow ARASEMMBLY {
   COLLECT(ch_input)
 
   NANOQ(COLLECT.out)
+
   /*
   Prepare assembly
   */
 
-  if(params.skip_flye ) {
-    // Sample sheet layout when skipping FLYE
-    // sample,readpath,assembly,ref_fasta,ref_gff
-    ch_assembly = ch_input.map(row -> [row.sample, row.assembly])
-  } else {
-    FLYE_ASSEMBLY(COLLECT.out,ch_input)
-    ch_assembly = FLYE_ASSEMBLY.out
-  }
-
-  /*
-  Prepare alignments
-  */
-
-  if(params.skip_alignments) {
-    // Sample sheet layout when skipping FLYE and mapping
-    // sample,readpath,assembly,ref_fasta,ref_gff,assembly_bam,assembly_bai,ref_bam
-    ch_ref_bam = ch_input.map(row -> [row.sample, row.ref_bam]) 
-    ch_assembly_bam = ch_input.map(row -> [row.sample, row.assembly_bam]) 
-    ch_assembly_bam_bai = ch_input.map(row -> [row.sample, row.assembly_bam, row.assembly_bai]) 
-  } else {
-    MAP_TO_REF(COLLECT.out, ch_refs)
-    ch_ref_bam = MAP_TO_REF.out  
-
-    MAP_TO_ASSEMBLY(COLLECT.out, ch_assembly)
-    ch_assembly_bam = MAP_TO_ASSEMBLY.out.aln_to_assembly_bam
-    ch_assembly_bam_bai = MAP_TO_ASSEMBLY.out.aln_to_assembly_bam_bai
-  }
-
-  /*
-  Run QUAST on initial assembly
-  */
-  RUN_QUAST(ch_assembly, ch_input, ch_ref_bam, ch_assembly_bam)
-  RUN_BUSCO(ch_assembly)
-
+  ASSEMBLY(COLLECT.out, ch_input)
+  
   /*
   Polishing with medaka
   */
-
+  ch_ref_bam = ASSEMBLY.out.ch_ref_bam
   ch_medaka_in = ch_assembly
   POLISH_MEDAKA(ch_input, COLLECT.out, ch_medaka_in, ch_ref_bam)
 
