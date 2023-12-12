@@ -1,5 +1,8 @@
 #!/usr/bin/env nextflow
 
+/*
+Parameter setup
+*/
 nextflow.enable.dsl = 2 
 params.publish_dir_mode = 'copy'
 params.samplesheet = false
@@ -17,9 +20,11 @@ params.scaffold_slr = false
 params.scaffold_longstitch = false
 params.lift_annotations = true
 params.out = './results'
+
 /*
- * Print very cool text and parameter info to log. 
- */
+ Print very cool text and parameter info to log. 
+*/
+
 log.info """\
 ==========================================================================================
 ==========================================================================================
@@ -100,7 +105,7 @@ include { LIFTOFF } from './modules/local/liftoff/main'
 include { QUAST } from './modules/quast/main'
 include { BUSCO } from './modules/busco/main'
 
- /* 
+/* 
  ===========================================
  ===========================================
  * SUBWORKFLOWS
@@ -108,7 +113,7 @@ include { BUSCO } from './modules/busco/main'
  ===========================================
  */
 
- /*
+/*
  * COLLECT
  ===========================================
  * Collect reads into single fastq file
@@ -143,10 +148,91 @@ workflow COLLECT {
     stats
  }
 
- /*
- * FLYE_ASSEMBLY
+/*
+ ===========================================
+ * MAPPING WORKFLOWS
+ ===========================================
+ */
+
+/*
+ * MAP_TO_REF
+ ===========================================
+ * map to reference genome using minimap2
+ */
+
+workflow MAP_TO_REF {
+  take: 
+    in_reads
+    ch_refs
+
+  main:
+    // Map reads to reference
+    ch_map_ref_in = in_reads
+              .join(ch_refs)
+    ALIGN(ch_map_ref_in)
+    ch_aln_to_ref = ALIGN.out.alignment
+    BAM_STATS(ch_aln_to_ref)
+
+  emit:
+    ch_aln_to_ref
+}
+
+/*
+ * MAP_TO_ASSEMBLY
+ ===========================================
+ * map to assembly using minimap2
+ */
+
+workflow MAP_TO_ASSEMBLY {
+  take:
+    in_reads
+    genome_assembly
+
+  main:
+    // map reads to assembly
+    map_assembly = in_reads
+                   .join(genome_assembly) 
+    ALIGN(map_assembly)
+    aln_to_assembly_bam = ALIGN.out.alignment
+    BAM_STATS(aln_to_assembly_bam)
+    aln_to_assembly_bai = BAM_STATS.out.bai
+    aln_to_assembly_bam_bai = aln_to_assembly_bam.join(aln_to_assembly_bai)
+
+  emit:
+    aln_to_assembly_bam
+    aln_to_assembly_bai
+    aln_to_assembly_bam_bai
+}
+
+workflow MAP_SR {
+  take:
+    in_reads
+    genome_assembly
+
+  main:
+    // map reads to assembly
+    map_assembly = in_reads
+                   .join(genome_assembly) 
+    ALIGN_SHORT(map_assembly)
+    aln_to_assembly_bam = ALIGN_SHORT.out.alignment
+    BAM_STATS(aln_to_assembly_bam)
+    aln_to_assembly_bai = BAM_STATS.out.bai
+    aln_to_assembly_bam_bai = aln_to_assembly_bam.join(aln_to_assembly_bai)
+
+  emit:
+    aln_to_assembly_bam
+    aln_to_assembly_bai
+    aln_to_assembly_bam_bai
+}
+
+/*
+ ===========================================
+ * ASSEMBLY
  ===========================================
  * Assemble using Flye
+ * Map to reference
+ * Map to assembly
+ * Perform QC via busco and quast
  */
 
 workflow ASSEMBLY {
@@ -197,85 +283,10 @@ workflow ASSEMBLY {
     ch_assembly
     ch_ref_bam
 }
- /*
- ===========================================
- * MAPPING WORKFLOWS
- ===========================================
- */
- /*
- * MAP_TO_REF
- ===========================================
- * map to reference genome using minimap2
- */
-
-workflow MAP_TO_REF {
-  take: 
-    in_reads
-    ch_refs
-
-  main:
-    // Map reads to reference
-    ch_map_ref_in = in_reads
-              .join(ch_refs)
-    ALIGN(ch_map_ref_in)
-    ch_aln_to_ref = ALIGN.out.alignment
-    BAM_STATS(ch_aln_to_ref)
-
-  emit:
-    ch_aln_to_ref
-}
-
- /*
- * MAP_TO_ASSEMBLY
- ===========================================
- * map to assembly using minimap2
- */
-
-workflow MAP_TO_ASSEMBLY {
-  take:
-    in_reads
-    genome_assembly
-
-  main:
-    // map reads to assembly
-    map_assembly = in_reads
-                   .join(genome_assembly) 
-    ALIGN(map_assembly)
-    aln_to_assembly_bam = ALIGN.out.alignment
-    BAM_STATS(aln_to_assembly_bam)
-    aln_to_assembly_bai = BAM_STATS.out.bai
-    aln_to_assembly_bam_bai = aln_to_assembly_bam.join(aln_to_assembly_bai)
-
-  emit:
-    aln_to_assembly_bam
-    aln_to_assembly_bai
-    aln_to_assembly_bam_bai
-}
-
-workflow MAP_SR {
-  take:
-    in_reads
-    genome_assembly
-
-  main:
-    // map reads to assembly
-    map_assembly = in_reads
-                   .join(genome_assembly) 
-    ALIGN_SHORT(map_assembly)
-    aln_to_assembly_bam = ALIGN_SHORT.out.alignment
-    BAM_STATS(aln_to_assembly_bam)
-    aln_to_assembly_bai = BAM_STATS.out.bai
-    aln_to_assembly_bam_bai = aln_to_assembly_bam.join(aln_to_assembly_bai)
-
-  emit:
-    aln_to_assembly_bam
-    aln_to_assembly_bai
-    aln_to_assembly_bam_bai
-}
 
 /*
  ===========================================
- * POLISHING STEPS
+ * POLISHING
  ===========================================
  */
 
@@ -388,12 +399,18 @@ def create_shortread_channel(LinkedHashMap row) {
     return shortreads
 }
 
- /*
+/*
+ ===========================================
  * SCAFFOLDING
+ ===========================================
+ */
+
+/* Workflows for scaffolding tools
  ===========================================
  * Run ragtag scaffold
  * Run LINKS
  * Run SLR
+ * Run LONGSTITCH
  */
 
  workflow RUN_RAGTAG {
@@ -489,7 +506,7 @@ workflow RUN_LONGSTITCH {
      scaffolds
 }
 
-/*
+ /*
  ===========================================
  * QUALITY CONTROL STEPS
  ===========================================
@@ -524,7 +541,7 @@ workflow RUN_QUAST {
     QUAST(quast_in, use_gff = true, use_fasta = true)
 }
 
- /*
+/*
  * BUSCO
  ===========================================
  * Run BUSCO standalone 
@@ -537,11 +554,20 @@ workflow RUN_BUSCO {
 
   main:
     busco_in = assembly
-    /*
-     * Run BUSCO
-     */
+
     BUSCO(busco_in ,"brassicales_odb10", "/dss/dsslegfs01/pn73so/pn73so-dss-0000/becker_common/software/busco_db")
 }
+
+/*
+ ===========================================
+ * ANNOTATIONS
+ ===========================================
+ */
+/*
+ * LIFTOFF
+ ===========================================
+ * Run LIFTOFF to lift annotations from Col-CEN
+ */
 
 workflow RUN_LIFTOFF {
   take:

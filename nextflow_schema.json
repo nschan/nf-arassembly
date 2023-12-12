@@ -39,63 +39,67 @@
     "properties": {
         "samplesheet": {
             "type": "string",
-            "default": "false"
+            "description": "samplesheet"
         },
         "enable_conda": {
-            "type": "string",
-            "default": "false"
+            "type": "boolean",
+            "description": "use conda (not really supported)"
         },
         "collect": {
-            "type": "string",
-            "default": "false"
+            "type": "boolean",
+            "description": "combine reads from multiple fastq files into one?"
         },
         "skip_flye": {
-            "type": "string",
-            "default": "false"
+            "type": "boolean",
+            "description": "skip flye assembly"
         },
         "skip_alignments": {
-            "type": "string",
-            "default": "false"
+            "type": "boolean",
+            "description": "skip alignment to initial assembly and reference"
         },
         "flye_mode": {
             "type": "string",
-            "default": "'--nano-hq'"
+            "default": "'--nano-hq'",
+            "description": "flye mode to use"
         },
         "flye_args": {
             "type": "string",
-            "default": "''"
+            "default": "''",
+            "description": "extra args for flye"
         },
         "polish_pilon": {
-            "type": "string",
-            "default": "false"
+            "type": "boolean",
+            "description": "use pilon to polish with short reads"
         },
         "medaka_model": {
             "type": "string",
-            "default": "'r1041_e82_400bps_hac_v4.2.0'"
+            "default": "'r1041_e82_400bps_hac_v4.2.0'",
+            "description": "medaka model to use"
         },
         "lift_annotations": {
-            "type": "string",
-            "default": "false"
+            "type": "boolean",
+            "description": "run liftoff to lift over annotations"
         },
         "out": {
             "type": "string",
-            "default": "'./out'"
+            "default": "'./out'",
+            "description": "results directory"
         },
         "scaffold_ragtag": {
-            "type": "string",
-            "default": "false"
+            "type": "boolean",
+            "description": "Scaffold with ragtag"
         },
         "scaffold_links": {
-            "type": "string",
-            "default": "false"
+            "type": "boolean",
+            "description": "Scaffold with links"
         },
         "scaffold_slr": {
-            "type": "string",
-            "default": "false"
+            "type": "boolean",
+            "description": "Scaffold with SLR"
         },
         "scaffold_longstitch": {
-            "type": "string",
-            "default": "false"
+            "type": "boolean",
+            "description": "Scaffold with longstitch"
         }
     }
 }

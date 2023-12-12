@@ -14,18 +14,18 @@ Less common options for the pipeline, typically set in a config file.
 
 | Parameter | Description | Type | Default | Required | Hidden |
 |-----------|-----------|-----------|-----------|-----------|-----------|
-| `samplesheet` |  | `string` | false |  |  |
-| `enable_conda` |  | `string` | false |  |  |
-| `collect` |  | `string` | false |  |  |
-| `skip_flye` |  | `string` | false |  |  |
-| `skip_alignments` |  | `string` | false |  |  |
-| `flye_mode` |  | `string` | '--nano-hq' |  |  |
-| `flye_args` |  | `string` | '' |  |  |
-| `polish_pilon` |  | `string` | false |  |  |
-| `medaka_model` |  | `string` | 'r1041_e82_400bps_hac_v4.2.0' |  |  |
-| `lift_annotations` |  | `string` | false |  |  |
-| `out` |  | `string` | './out' |  |  |
-| `scaffold_ragtag` |  | `string` | false |  |  |
-| `scaffold_links` |  | `string` | false |  |  |
-| `scaffold_slr` |  | `string` | false |  |  |
-| `scaffold_longstitch` |  | `string` | false |  |  |
+| `samplesheet` | samplesheet | `string` |  |  |  |
+| `enable_conda` | use conda (not really supported) | `boolean` |  |  |  |
+| `collect` | combine reads from multiple fastq files into one? | `boolean` |  |  |  |
+| `skip_flye` | skip flye assembly | `boolean` |  |  |  |
+| `skip_alignments` | skip alignment to initial assembly and reference | `boolean` |  |  |  |
+| `flye_mode` | flye mode to use | `string` | '--nano-hq' |  |  |
+| `flye_args` | extra args for flye | `string` | '' |  |  |
+| `polish_pilon` | use pilon to polish with short reads | `boolean` |  |  |  |
+| `medaka_model` | medaka model to use | `string` | 'r1041_e82_400bps_hac_v4.2.0' |  |  |
+| `lift_annotations` | run liftoff to lift over annotations | `boolean` |  |  |  |
+| `out` | results directory | `string` | './out' |  |  |
+| `scaffold_ragtag` | Scaffold with ragtag | `boolean` |  |  |  |
+| `scaffold_links` | Scaffold with links | `boolean` |  |  |  |
+| `scaffold_slr` | Scaffold with SLR | `boolean` |  |  |  |
+| `scaffold_longstitch` | Scaffold with longstitch | `boolean` |  |  |  |
