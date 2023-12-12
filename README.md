@@ -6,6 +6,9 @@ Genome assembly using flye, qc using quast (also works for other species), polis
 
 # Parameters
 
+See also [schema.md](schema.md)
+
+
 | Parameter | Effect |
 | --- | --- |
 | `--samplesheet` | Path to samplesheet |
