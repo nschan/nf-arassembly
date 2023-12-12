@@ -14,18 +14,18 @@ Less common options for the pipeline, typically set in a config file.
 
 | Parameter | Description | Type | Default | Required | Hidden |
 |-----------|-----------|-----------|-----------|-----------|-----------|
-| `samplesheet` | samplesheet | `string` |  |  |  |
-| `enable_conda` | use conda (not really supported) | `boolean` |  |  |  |
-| `collect` | combine reads from multiple fastq files into one? | `boolean` |  |  |  |
-| `skip_flye` | skip flye assembly | `boolean` |  |  |  |
-| `skip_alignments` | skip alignment to initial assembly and reference | `boolean` |  |  |  |
+| `samplesheet` | samplesheet | `string` | empty |  |  |
+| `enable_conda` | use conda (not really supported) | `boolean` | false |  |  |
+| `collect` | combine reads from multiple fastq files into one? | `boolean` | false |  |  |
+| `skip_flye` | skip flye assembly | `boolean` | false |  |  |
+| `skip_alignments` | skip alignment to initial assembly and reference | `boolean` | false |  |  |
 | `flye_mode` | flye mode to use | `string` | '--nano-hq' |  |  |
 | `flye_args` | extra args for flye | `string` | '' |  |  |
-| `polish_pilon` | use pilon to polish with short reads | `boolean` |  |  |  |
+| `polish_pilon` | use pilon to polish with short reads | `boolean` | false |  |  |
 | `medaka_model` | medaka model to use | `string` | 'r1041_e82_400bps_hac_v4.2.0' |  |  |
-| `lift_annotations` | run liftoff to lift over annotations | `boolean` |  |  |  |
+| `lift_annotations` | run liftoff to lift over annotations | `boolean` | false |  |  |
 | `out` | results directory | `string` | './out' |  |  |
-| `scaffold_ragtag` | Scaffold with ragtag | `boolean` |  |  |  |
-| `scaffold_links` | Scaffold with links | `boolean` |  |  |  |
-| `scaffold_slr` | Scaffold with SLR | `boolean` |  |  |  |
-| `scaffold_longstitch` | Scaffold with longstitch | `boolean` |  |  |  |
+| `scaffold_ragtag` | Scaffold with ragtag | `boolean` | false |  |  |
+| `scaffold_links` | Scaffold with links | `boolean` | false |  |  |
+| `scaffold_slr` | Scaffold with SLR | `boolean` | false |  |  |
+| `scaffold_longstitch` | Scaffold with longstitch | `boolean` | false |  |  |
