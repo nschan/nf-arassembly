@@ -51,10 +51,10 @@ Niklas Schandry      niklas@bio.lmu.de      https://gitlab.lrz.de/beckerlab/nf-a
      skip_alignments : ${params.skip_alignments}
 
     Scaffolding Tools
-      ragtag         : ${params.scaffold_ragtag}
-      LINKS          : ${params.scaffold_links}
-      SLR            : ${params.scaffold_slr}
-      longstitch     : ${params.scaffold_longstitch}
+     ragtag          : ${params.scaffold_ragtag}
+     LINKS           : ${params.scaffold_links}
+     SLR             : ${params.scaffold_slr}
+     longstitch      : ${params.scaffold_longstitch}
 
     Annotation lift  : ${params.lift_annotations}
 
@@ -628,7 +628,7 @@ workflow ARASSEMBLY {
   Polishing with medaka
   */
   ch_ref_bam = ASSEMBLY.out.ch_ref_bam
-  ch_medaka_in = ch_assembly
+  ch_medaka_in = ASSEMBLY.out.ch_assembly
   POLISH_MEDAKA(ch_input, COLLECT.out, ch_medaka_in, ch_ref_bam)
 
   ch_polished_genome = POLISH_MEDAKA.out
