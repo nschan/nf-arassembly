@@ -8,9 +8,6 @@ process BUSCO {
     label 'process_medium'
 
     conda "bioconda::busco=5.4.7"
-    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/busco:5.4.3--pyhdfd78af_0':
-        'quay.io/biocontainers/busco:5.4.7--pyhdfd78af_0' }"
     
     publishDir "${params.out}",
         mode: params.publish_dir_mode,

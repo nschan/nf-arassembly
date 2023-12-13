@@ -19,6 +19,7 @@ params.scaffold_links = false
 params.scaffold_slr = false
 params.scaffold_longstitch = false
 params.lift_annotations = true
+params.busoc_db="/dss/dsslegfs01/pn73so/pn73so-dss-0000/becker_common/software/busco_db"
 params.out = './results'
 
 /*
@@ -494,12 +495,12 @@ workflow RUN_LONGSTITCH {
   main:
       longstitch_in = assembly.join(in_reads)
       LONGSTITCH(longstitch_in)
-      scaffolds = LONGSTITCH.out.scaffolds
+      scaffolds = LONGSTITCH.out.ntlLinks_arks_scaffolds
       MAP_TO_ASSEMBLY(in_reads, scaffolds)
       RUN_QUAST(scaffolds, ch_input, ch_aln_to_ref, MAP_TO_ASSEMBLY.out.aln_to_assembly_bam)
       RUN_BUSCO(scaffolds)
       if(params.lift_annotations) {
-        RUN_LIFTOFF(LONGSTITCH.out.scaffolds, ch_input)
+        RUN_LIFTOFF(LONGSTITCH.out.ntlLinks_arks_scaffolds, ch_input)
       }
 
   emit:
@@ -555,7 +556,7 @@ workflow RUN_BUSCO {
   main:
     busco_in = assembly
 
-    BUSCO(busco_in ,"brassicales_odb10", "/dss/dsslegfs01/pn73so/pn73so-dss-0000/becker_common/software/busco_db")
+    BUSCO(busco_in, "brassicales_odb10", params.busoc_db)
 }
 
 /*
