@@ -51,10 +51,7 @@ Niklas Schandry      niklas@bio.lmu.de      https://gitlab.lrz.de/beckerlab/nf-a
      flye_mode       : ${params.flye_mode}
      medaka_model    : ${params.medaka_model}
      polish_pilon    : ${params.polish_pilon}
-
-    Steps skipped
-     skip_flye       : ${params.skip_flye}
-     skip_alignments : ${params.skip_alignments}
+     busco db        : ${params.busoc_db}
 
     Scaffolding Tools
      ragtag          : ${params.scaffold_ragtag}
@@ -64,6 +61,9 @@ Niklas Schandry      niklas@bio.lmu.de      https://gitlab.lrz.de/beckerlab/nf-a
 
     Annotation lift  : ${params.lift_annotations}
 
+    Steps skipped
+     skip_flye       : ${params.skip_flye}
+     skip_alignments : ${params.skip_alignments}
 ==========================================================================================
 ==========================================================================================
 """

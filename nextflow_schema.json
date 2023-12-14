@@ -100,6 +100,10 @@
         "scaffold_longstitch": {
             "type": "boolean",
             "description": "Scaffold with longstitch"
+        },
+        "busoc_db": {
+            "type": "string",
+            "default": "/dss/dsslegfs01/pn73so/pn73so-dss-0000/becker_common/software/busco_db"
         }
     }
 }

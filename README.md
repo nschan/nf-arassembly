@@ -17,6 +17,7 @@ See also [schema.md](schema.md)
 | `--flye_args` | Arguments to be passed to flye, default: `none`. Example: `--flye_args '--genome-size 130g --asm-coverage 50'` |
 | `--medaka_model` | Model used by medaka, default: 'r1041_e82_400bps_hac_v4.2.0' |
 | `--polish_pilon` | Polish with short reads using pilon?; default: false |
+| `--busco_db` | Path to local busco db?; default: `/dss/dsslegfs01/pn73so/pn73so-dss-0000/becker_common/software/busco_db` |
 | `--skip_flye` | Skip assembly with flye?, requires different samplesheet (!); default: false |
 | `--skip_alignments` | Skip alignments? requires different samplesheet (!); default: false |
 | `--scaffold_ragtag` | Scaffolding with ragtag?; default: false |
