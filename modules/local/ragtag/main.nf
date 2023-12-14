@@ -32,7 +32,10 @@ process RAGTAG_SCAFFOLD {
   ragtag.py scaffold ${assembly} ${reference} \\
     -o "${assembly}_corrected_${reference}" \\
     -t $task.cpus \\
-    -f 15000 \\
+    -f 5000 \\
+    -w \\
+    -C \\
+    -r \\
     --remove-small
 
   mv ${assembly}_corrected_${reference}/ragtag.scaffold.fasta ${assembly}_corrected_${reference}/${assembly}_corrected_${reference}.fasta
