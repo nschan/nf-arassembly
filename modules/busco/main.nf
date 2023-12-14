@@ -6,7 +6,6 @@ options        = initOptions(params.options)
 process BUSCO {
     tag "$meta"
     label 'process_medium'
-    errorStrategy 'ignore'
     conda "bioconda::busco=5.5.0"
     
     publishDir "${params.out}",
