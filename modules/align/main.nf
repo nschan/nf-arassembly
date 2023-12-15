@@ -20,7 +20,8 @@ process ALIGN {
 
     script:
         """
-        minimap2 -ax map-ont ${reference} ${reads}  > ${meta}.sam
+        minimap2 -t $task.cpus \\
+            -ax map-ont ${reference} ${reads}  > ${meta}.sam
         """
 }
 
@@ -41,7 +42,9 @@ process ALIGN_TO_BAM {
 
     script:
         """
-        minimap2 -ax map-ont ${reference} ${reads} | samtools sort -o ${meta}_${reference}.bam
+        minimap2 -t $task.cpus \\
+            -ax map-ont ${reference} ${reads} \\
+            | samtools sort -o ${meta}_${reference}.bam
         """
 }
 
@@ -65,6 +68,8 @@ process ALIGN_SHORT_TO_BAM {
      def reads1 = [], reads2 = []
      paired ? [reads].flatten().each{reads1 << it} : reads.eachWithIndex{ v, ix -> ( ix & 1 ? reads2 : reads1) << v }
         """
-        minimap2 -ax sr ${reference} ${reads1.join(",")} ${reads2.join(",")} | samtools sort -o ${meta}_${reference}_shortreads.bam
+        minimap2 -t $task.cpus \\
+        -ax sr ${reference} ${reads1.join(",")} ${reads2.join(",")} \\
+        | samtools sort -o ${meta}_${reference}_shortreads.bam
         """
 }
