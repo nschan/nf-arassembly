@@ -29,5 +29,6 @@ process LINKS {
   """
   echo "${reads}" > readfile.fof
   LINKS -f ${assembly} -s readfile.fof -j 3 -b ${meta}_links -d 1000,2000,3000,4000,5000,6000,7000,8000,9000,10000,12000,14000,16000,18000,20000
+  sed -i 's/\\(scaffold[0-9]*\\).*/\\1/' ${meta}_links.scaffolds.fa
   """
 }
