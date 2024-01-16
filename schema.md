@@ -22,7 +22,7 @@ Less common options for the pipeline, typically set in a config file.
 | `flye_mode` | flye mode to use | `string` | '--nano-hq' |  |  |
 | `flye_args` | extra args for flye | `string` | '' |  |  |
 | `polish_pilon` | use pilon to polish with short reads | `boolean` |  |  |  |
-| `medaka_model` | medaka model to use | `string` | 'r1041_e82_400bps_hac_v4.2.0' |  |  |
+| `medaka_model` | medaka model to use | `string` | 'r1041_e82_400bps_hac@v4.2.0:consesus' |  |  |
 | `lift_annotations` | run liftoff to lift over annotations | `boolean` |  |  |  |
 | `out` | results directory | `string` | './out' |  |  |
 | `scaffold_ragtag` | Scaffold with ragtag | `boolean` |  |  |  |

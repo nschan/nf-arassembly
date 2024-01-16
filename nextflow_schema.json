@@ -73,7 +73,7 @@
         },
         "medaka_model": {
             "type": "string",
-            "default": "'r1041_e82_400bps_hac_v4.2.0'",
+            "default": "'r1041_e82_400bps_hac@v4.2.0:consesus'",
             "description": "medaka model to use"
         },
         "lift_annotations": {
