@@ -22,23 +22,25 @@ process RAGTAG_SCAFFOLD {
       tuple val(meta), path(assembly), path(reference)
   
   output:
-      tuple val(meta), path("${assembly}_corrected_${reference}/*.fasta"), emit: corrected_assembly
-      tuple val(meta), path("${assembly}_corrected_${reference}/*.agp"),   emit: corrected_agp
-      tuple val(meta), path("${assembly}_corrected_${reference}/*.stats"), emit: corrected_stats
+      tuple val(meta), path("${assembly}_ragtag_${reference}/*.fasta"), emit: corrected_assembly
+      tuple val(meta), path("${assembly}_ragtag_${reference}/*.agp"),   emit: corrected_agp
+      tuple val(meta), path("${assembly}_ragtag_${reference}/*.stats"), emit: corrected_stats
   
   script:
       def prefix = task.ext.prefix ?: "${meta}"
   """
-  ragtag.py scaffold ${reference} ${assembly} \\
-    -o "${assembly}_corrected_${reference}" \\
+  zcat ${assembly} > ${meta}.fa
+  ragtag.py scaffold ${reference} ${meta}.fa \\
+    -o "${assembly}_ragtag_${reference}" \\
     -t $task.cpus \\
     -f 5000 \\
     -w \\
     -C \\
+    -u \\
     -r 
 
-  mv ${assembly}_corrected_${reference}/ragtag.scaffold.fasta ${assembly}_corrected_${reference}/${assembly}_corrected_${reference}.fasta
-  mv ${assembly}_corrected_${reference}/ragtag.scaffold.agp ${assembly}_corrected_${reference}/${assembly}_corrected_${reference}.agp
-  mv ${assembly}_corrected_${reference}/ragtag.scaffold.stats ${assembly}_corrected_${reference}/${assembly}_corrected_${reference}.stats
+  mv ${assembly}_ragtag_${reference}/ragtag.scaffold.fasta ${assembly}_ragtag_${reference}/${assembly}_ragtag_${reference}.fasta
+  mv ${assembly}_ragtag_${reference}/ragtag.scaffold.agp ${assembly}_ragtag_${reference}/${assembly}_ragtag_${reference}.agp
+  mv ${assembly}_ragtag_${reference}/ragtag.scaffold.stats ${assembly}_ragtag_${reference}/${assembly}_ragtag_${reference}.stats
   """
 }

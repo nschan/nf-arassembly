@@ -60,9 +60,9 @@ process BUSCO {
     cd "\$INPUT_SEQS"
     for FASTA in ../tmp_input/*; do
         if [ "\${FASTA##*.}" == 'gz' ]; then
-            gzip -cdf "\$FASTA" > \$( basename "\$FASTA" .gz )
+            gzip -cdf "\$FASTA" | fold -w 120 > \$( basename "\$FASTA" .gz )
         else
-            ln -s "\$FASTA" .
+            cat "\$FASTA" | fold -w 120 > ./\$( basename "\$FASTA")
         fi
     done
     cd ..
