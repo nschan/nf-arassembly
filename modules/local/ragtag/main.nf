@@ -29,14 +29,13 @@ process RAGTAG_SCAFFOLD {
   script:
       def prefix = task.ext.prefix ?: "${meta}"
   """
-  ragtag.py scaffold ${assembly} ${reference} \\
+  ragtag.py scaffold ${reference} ${assembly} \\
     -o "${assembly}_corrected_${reference}" \\
     -t $task.cpus \\
     -f 5000 \\
     -w \\
     -C \\
-    -r \\
-    --remove-small
+    -r 
 
   mv ${assembly}_corrected_${reference}/ragtag.scaffold.fasta ${assembly}_corrected_${reference}/${assembly}_corrected_${reference}.fasta
   mv ${assembly}_corrected_${reference}/ragtag.scaffold.agp ${assembly}_corrected_${reference}/${assembly}_corrected_${reference}.agp
