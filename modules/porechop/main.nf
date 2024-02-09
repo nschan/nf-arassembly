@@ -8,7 +8,12 @@ process PORECHOP {
     label 'process_medium'
 
     conda "bioconda::porechop=0.2.4"
-
+    publishDir "${params.out}",
+        mode: params.publish_dir_mode,
+        saveAs: { filename -> saveFiles(filename:filename,
+                                        options:params.options, 
+                                        publish_dir:"${task.process}".replace(':','/').toLowerCase(), 
+                                        publish_id:meta) }
     input:
     tuple val(meta), path(reads)
 
