@@ -77,6 +77,7 @@ Niklas Schandry      niklas@bio.lmu.de      https://gitlab.lrz.de/beckerlab/nf-a
 
 // Preprocessing
 include { COLLECT_READS } from './modules/local/collect_reads/main'
+include { PORECHOP } from './modules/porechop/main'
 
 // Read statistics
 include { NANOQ } from './modules/nanoq/main'
@@ -133,6 +134,18 @@ workflow COLLECT {
   
   emit:
     in_reads
+ }
+ workflow CHOP {
+
+  take: in_reads
+
+  main:
+  
+  PORECHOP(in_reads)
+  chopped_reads = PORECHOP.out.reads
+  
+  emit:
+    chopped_reads
  }
 
  workflow RUN_NANOQ {
@@ -590,6 +603,8 @@ workflow RUN_LIFTOFF {
                  MAIN WORKFLOW
  ====================================================
  * Collect fastq files
+ * PORECHOP
+ * NANOQ
  * Assemble using flye
       (Enter here: skip_flye)
  * Align to reference 
@@ -643,20 +658,22 @@ workflow ARASSEMBLY {
 
   COLLECT(ch_input)
 
-  NANOQ(COLLECT.out)
+  CHOP(COLLECT.out)
+
+  NANOQ(CHOP.out)
 
   /*
   Prepare assembly
   */
 
-  ASSEMBLY(COLLECT.out, ch_input)
+  ASSEMBLY(CHOP.out, ch_input)
   
   /*
   Polishing with medaka
   */
   ch_ref_bam = ASSEMBLY.out.ch_ref_bam
   ch_medaka_in = ASSEMBLY.out.ch_assembly
-  POLISH_MEDAKA(ch_input, COLLECT.out, ch_medaka_in, ch_ref_bam)
+  POLISH_MEDAKA(ch_input, CHOP.out, ch_medaka_in, ch_ref_bam)
 
   ch_polished_genome = POLISH_MEDAKA.out
 
@@ -665,7 +682,7 @@ workflow ARASSEMBLY {
   */
 
   if(params.polish_pilon) {
-    POLISH_PILON(ch_input, COLLECT.out, ch_polished_genome, ch_ref_bam)
+    POLISH_PILON(ch_input, CHOP.out, ch_polished_genome, ch_ref_bam)
     ch_polished_genome = POLISH_PILON.out.pilon_improved
   } 
 
@@ -674,19 +691,19 @@ workflow ARASSEMBLY {
   */
 
   if(params.scaffold_ragtag) {
-    RUN_RAGTAG(ch_input, COLLECT.out, ch_polished_genome, ch_refs, ch_ref_bam)
+    RUN_RAGTAG(ch_input, CHOP.out, ch_polished_genome, ch_refs, ch_ref_bam)
   }
 
   if(params.scaffold_links) {
-    RUN_LINKS(ch_input, COLLECT.out, ch_polished_genome, ch_refs, ch_ref_bam)
+    RUN_LINKS(ch_input, CHOP.out, ch_polished_genome, ch_refs, ch_ref_bam)
   }
 
   if(params.scaffold_slr) {
-    RUN_SLR(ch_input, COLLECT.out, ch_polished_genome, ch_refs, ch_ref_bam)
+    RUN_SLR(ch_input, CHOP.out, ch_polished_genome, ch_refs, ch_ref_bam)
   }
   
   if(params.scaffold_longstitch) {
-    RUN_LONGSTITCH(ch_input, COLLECT.out, ch_polished_genome, ch_refs, ch_ref_bam)
+    RUN_LONGSTITCH(ch_input, CHOP.out, ch_polished_genome, ch_refs, ch_ref_bam)
   }
   
 } 
