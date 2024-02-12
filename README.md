@@ -2,7 +2,7 @@
 
 Assembly pipeline for arabidopsis genomes from nanopore sequencing.
 
-Genome assembly using flye, qc using quast (also works for other species), polish with pilon and / or medaka, scaffold using ragtag, SLR, LINKS or longstitch.
+Genome assembly using porechop, flye, qc using quast (also works for other species), polish with pilon and / or medaka, scaffold using ragtag, LINKS or longstitch.
 
 # Parameters
 
@@ -30,10 +30,12 @@ See also [schema.md](schema.md)
 # Procedure
 
 This pipeline will in a first step extract all fastq.gz files in the readpath folder into a single fastq file. This can be skipped using `--collect false`.
-
-The pipeline then assembles reads into an assembly using flye. 
-Then minimap2 aligns reads to the new assembly, and the reference.
-These alignments, together with the assembly and reference genome & annotation will then be used as inputs for QUAST.
+Barcodes and adaptors will be removed using porechop.
+Read QC is done via nanoq.
+Assemblies are performed with flye.
+Polishing is done using medaka, and scaffolding via links, longstitch, ragtag and / or SLR. Optional short-read polishing can be done using pilon.
+Annotations are created using liftoff. 
+Quality of each stage is assessed using QUAST and BUSCO (standalone).
 QUAST will run with the following additional parameters:
 
 ```
