@@ -31,8 +31,16 @@ process LONGSTITCH {
     cp ${assembly} assembly.fasta
   fi
   ln -s assembly.fasta assembly.fa
-  gzip -c ${reads} > ${reads}.gz
-  ln -s ${reads}.gz reads.fq.gz
+
+  if [[ ${reads} == *.fa || ${reads} == *.fasta ]]; then
+    gzip -c ${reads} > ${reads}.gz
+    ln -s ${reads}.gz reads.fq.gz
+  fi
+
+  if [[ ${reads} == *.gz ]]; then
+    cp ${reads} reads.fq.gz
+  fi
+
   longstitch tigmint-ntLink-arks draft=assembly reads=reads t=${task.cpus} G=135e6 out_prefix=${assembly}
   cp assembly.k32.w100.tigmint-ntLink-arks.longstitch-scaffolds.fa ${assembly}.tigmint-ntLink-arks.longstitch-scaffolds.fa
   cp assembly.k32.w100.tigmint-ntLink.longstitch-scaffolds.fa ${assembly}.tigmint-ntLink.longstitch-scaffolds.fa
