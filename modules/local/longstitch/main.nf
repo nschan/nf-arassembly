@@ -17,8 +17,8 @@ process LONGSTITCH {
       tuple val(meta), path(assembly), path(reads)
 
   output:
-      tuple val(meta), path("${assembly}.tigmint-ntLink-arks.longstitch-scaffolds.fa"), emit: ntlLinks_arks_scaffolds
-      tuple val(meta), path("${assembly}.tigmint-ntLink.longstitch-scaffolds.fa"), emit: ntlLinks_scaffolds
+      tuple val(meta), path("${meta}.tigmint-ntLink-arks.longstitch-scaffolds.fa"), emit: ntlLinks_arks_scaffolds
+      tuple val(meta), path("${meta}.tigmint-ntLink.longstitch-scaffolds.fa"), emit: ntlLinks_scaffolds
   
   script:
       def prefix = task.ext.prefix ?: "${meta}"
@@ -41,8 +41,8 @@ process LONGSTITCH {
     cp ${reads} reads.fq.gz
   fi
 
-  longstitch tigmint-ntLink-arks draft=assembly reads=reads t=${task.cpus} G=135e6 out_prefix=${assembly}
-  cat assembly.k32.w100.tigmint-ntLink-arks.longstitch-scaffolds.fa | sed 's/\\(scaffold[0-9]*\\),.*/\\1/' > ${assembly}.tigmint-ntLink-arks.longstitch-scaffolds.fa
-  cat assembly.k32.w100.tigmint-ntLink-arks.longstitch-scaffolds.fa | sed 's/\\(scaffold[0-9]*\\),.*/\\1/' > ${assembly}.tigmint-ntLink.longstitch-scaffolds.fa
+  longstitch tigmint-ntLink-arks draft=assembly reads=reads t=${task.cpus} G=135e6 out_prefix=${prefix}
+  cat assembly.k32.w100.tigmint-ntLink-arks.longstitch-scaffolds.fa | sed 's/\\(scaffold[0-9]*\\),.*/\\1/' > ${prefix}.tigmint-ntLink-arks.longstitch-scaffolds.fa
+  cat assembly.k32.w100.tigmint-ntLink-arks.longstitch-scaffolds.fa | sed 's/\\(scaffold[0-9]*\\),.*/\\1/' > ${prefix}.tigmint-ntLink.longstitch-scaffolds.fa
   """
 }
