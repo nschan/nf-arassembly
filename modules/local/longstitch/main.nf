@@ -24,11 +24,11 @@ process LONGSTITCH {
       def prefix = task.ext.prefix ?: "${meta}"
   """
   if [[ ${assembly} == *.gz ]]; then
-    zcat ${assembly} > assembly.fasta
+    zcat ${assembly} | fold -w 120 > assembly.fasta
   fi
 
   if [[ ${assembly} == *.fa || ${assembly} == *.fasta ]]; then
-    cp ${assembly} assembly.fasta
+    cat ${assembly}| fold -w 120 > assembly.fasta
   fi
   ln -s assembly.fasta assembly.fa
 
@@ -42,7 +42,7 @@ process LONGSTITCH {
   fi
 
   longstitch tigmint-ntLink-arks draft=assembly reads=reads t=${task.cpus} G=135e6 out_prefix=${assembly}
-  cp assembly.k32.w100.tigmint-ntLink-arks.longstitch-scaffolds.fa ${assembly}.tigmint-ntLink-arks.longstitch-scaffolds.fa
-  cp assembly.k32.w100.tigmint-ntLink.longstitch-scaffolds.fa ${assembly}.tigmint-ntLink.longstitch-scaffolds.fa
+  cat assembly.k32.w100.tigmint-ntLink-arks.longstitch-scaffolds.fa | sed 's/\\(scaffold[0-9]*\\),.*/\\1/' > ${assembly}.tigmint-ntLink-arks.longstitch-scaffolds.fa
+  cat assembly.k32.w100.tigmint-ntLink-arks.longstitch-scaffolds.fa | sed 's/\\(scaffold[0-9]*\\),.*/\\1/' > ${assembly}.tigmint-ntLink.longstitch-scaffolds.fa
   """
 }
