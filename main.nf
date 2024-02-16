@@ -8,6 +8,7 @@ params.publish_dir_mode = 'copy'
 params.samplesheet = false
 params.enable_conda = false
 params.collect = false
+params.porechop = false
 params.skip_flye = false
 params.skip_alignments = false
 params.flye_mode = '--nano-hq'
@@ -48,6 +49,7 @@ Niklas Schandry      niklas@bio.lmu.de      https://gitlab.lrz.de/beckerlab/nf-a
   Parameters:
      samplesheet     : ${params.samplesheet}
      collect         : ${params.collect}
+     porechop        : ${params.porechop}
      flye_mode       : ${params.flye_mode}
      medaka_model    : ${params.medaka_model}
      polish_pilon    : ${params.polish_pilon}
@@ -141,8 +143,13 @@ workflow COLLECT {
 
   main:
   
-  PORECHOP(in_reads)
-  chopped_reads = PORECHOP.out.reads
+  if(params.porechop) {
+    PORECHOP(in_reads)
+    chopped_reads = PORECHOP.out.reads
+  } else {
+    chopped_reads = in_reads
+  }
+  
   
   emit:
     chopped_reads

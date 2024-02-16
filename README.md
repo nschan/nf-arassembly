@@ -12,30 +12,33 @@ See also [schema.md](schema.md)
 | Parameter | Effect |
 | --- | --- |
 | `--samplesheet` | Path to samplesheet |
-| `--collect` | Are the provided reads a folder (true) or a single fq files (default, false) |
-| `--flye_mode` | The mode to be used by flye; default: "--nano-hq" |
+| `--collect` | Are the provided reads a folder (`true`) or a single fq files (default: `false` ) |
+| `--porechop` | Run porechop? (default: `false`) |
+| `--flye_mode` | The mode to be used by flye; default: `"--nano-hq"` |
 | `--flye_args` | Arguments to be passed to flye, default: `none`. Example: `--flye_args '--genome-size 130g --asm-coverage 50'` |
-| `--medaka_model` | Model used by medaka, default: 'r1041_e82_400bps_hac@v4.2.0:consesus' |
-| `--polish_pilon` | Polish with short reads using pilon?; default: false |
+| `--medaka_model` | Model used by medaka, default: `'r1041_e82_400bps_hac@v4.2.0:consesus'` |
+| `--polish_pilon` | Polish with short reads using pilon? Sefault: `false` |
 | `--busco_db` | Path to local busco db?; default: `/dss/dsslegfs01/pn73so/pn73so-dss-0000/becker_common/software/busco_db` |
-| `--skip_flye` | Skip assembly with flye?, requires different samplesheet (!); default: false |
-| `--skip_alignments` | Skip alignments? requires different samplesheet (!); default: false |
-| `--scaffold_ragtag` | Scaffolding with ragtag?; default: false |
-| `--scaffold_links` | Scaffolding with LINKS?; default: false |
-| `--scaffold_slr` | Scaffolding with SLR?; default: false |
-| `--scaffold_longstitch` | Scaffolding with longstitch?; default: false |
-| `--lift_annotations` | Lift annotations from reference?; default: true |
-| `--out` | Results directory, default: './results'` |
+| `--skip_flye` | Skip assembly with flye?, requires different samplesheet (!); Default: `false` |
+| `--skip_alignments` | Skip alignments? requires different samplesheet (!); Default: `false` |
+| `--scaffold_ragtag` | Scaffolding with ragtag? Default: `false` |
+| `--scaffold_links` | Scaffolding with LINKS? Default: `false` |
+| `--scaffold_slr` | Scaffolding with SLR? Default: `false` |
+| `--scaffold_longstitch` | Scaffolding with longstitch? Default: `false` |
+| `--lift_annotations` | Lift annotations from reference using liftoff? Default: `true` |
+| `--out` | Results directory, default: `'./results'` |
 
 # Procedure
 
-This pipeline will in a first step extract all fastq.gz files in the readpath folder into a single fastq file. This can be skipped using `--collect false`.
-Barcodes and adaptors will be removed using porechop.
-Read QC is done via nanoq.
-Assemblies are performed with flye.
-Polishing is done using medaka, and scaffolding via links, longstitch, ragtag and / or SLR. Optional short-read polishing can be done using pilon.
-Annotations are created using liftoff. 
-Quality of each stage is assessed using QUAST and BUSCO (standalone).
+  * Extract all fastq.gz files in the readpath folder into a single fastq file. By default this is skipped, enable with `--collect`.
+  * Barcodes and adaptors will be removed using porechop. By default this is skipped, enable with `--porechop`.
+  * Read QC is done via nanoq.
+  * Assemblies are performed with flye.
+  * Polishing is done using medaka, and scaffolding via links, longstitch, ragtag and / or SLR. 
+  * Optional short-read polishing can be done using pilon. By default this is not done, enable with `--polish_pilon`, requires different samplesheet with shortreads.
+  * Annotations are created using liftoff. 
+  * Quality of each stage is assessed using QUAST and BUSCO (standalone).
+
 QUAST will run with the following additional parameters:
 
 ```
@@ -47,12 +50,12 @@ QUAST will run with the following additional parameters:
 ```
 
 Subsequently, the assembly will be polished using first pilon and then medaka, QUAST will again be used to assess the polished genomes.
-If --skip_pilon is used the genome will only be polished using medaka
+If `--polish_pilon` is used the genome will in addition be polished using short reads.
 
 
 # Usage
 
-## Full Pipeline
+## Standard Pipeline
 
 The samplesheet _must_ adhere to this format, including the header row. Please note the absence of spaces after the commas:
 
@@ -97,20 +100,21 @@ sampleName,reads,assembly.fasta.gz,reference.fasta,reference.gff,reads_on_assemb
 ## Polishing with pilon
 
 The assemblies can optionally be polished using available short-reads using pilon.
-`--polish_pilon true`
+`--polish_pilon`
 
-This requires additional information in the samplesheet, shortread_F, shortread_R and paired
+This requires additional information in the samplesheet: `shortread_F`, `shortread_R` and `paired`:
 
 ```
-sample,readpath,assembly,ref_fasta,ref_gff,assembly_bam,assembly_bai,ref_bam,shortread_F,shortread_R,paired
-sampleName,reads,assembly.fasta.gz,reference.fasta,reference.gff,reads_on_assembly.bam,reads_on_assembly.bai,reads_on_reference.bam,short_F1.fastq,short_F2.fastq,true
+sample,readpath,ref_fasta,ref_gff,shortread_F,shortread_R,paired
+sampleName,reads,assembly.fasta.gz,reference.fasta,reference.gff,short_F1.fastq,short_F2.fastq,true
 ```
 
-In a case where only single-reads are available, shortread_R should be empty, and paired should be false
+In a case where only single-reads are available, `shortread_R` should be empty, and `paired` should be false
 
 ## Scaffolding
 
 `ragtag`, `LINKS`, `SLR` and `longstitch` can be used for scaffolding.
+
 The `SLR` container segfaults with illegal instructions, I assume that the container is somehow built wrong. 
 
 ## Using liftoff
