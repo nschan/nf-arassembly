@@ -128,12 +128,19 @@ workflow COLLECT {
 
   main:
   
-    in_reads = ch_input.map(row -> [row.sample, row.readpath])
+    ch_input
+      .map { row -> [row.sample, row.readpath] }
+      .set { in_reads }
+
     if(params.collect) {
       COLLECT_READS(in_reads)
-      in_reads = COLLECT_READS.out.combined_reads
+
+      COLLECT_READS
+        .out
+        .combined_reads
+        .set { in_reads }
     }
-  
+
   emit:
     in_reads
  }
@@ -145,9 +152,13 @@ workflow COLLECT {
   
   if(params.porechop) {
     PORECHOP(in_reads)
-    chopped_reads = PORECHOP.out.reads
+    PORECHOP
+      .out
+      .reads
+      .set { chopped_reads }
   } else {
-    chopped_reads = in_reads
+    in_reads
+      .set { chopped_reads }
   }
   
   
@@ -161,8 +172,16 @@ workflow COLLECT {
   main:
   
   NANOQ(in_reads)
-  report = NANOQ.out.report
-  stats = NANOQ.out.stats
+
+  NANOQ
+    .out
+    .report
+    .set { report }
+
+  NANOQ
+    .out
+    .stats
+    .set { stats }
 
   emit:
     report
@@ -188,10 +207,17 @@ workflow MAP_TO_REF {
 
   main:
     // Map reads to reference
-    ch_map_ref_in = in_reads
-              .join(ch_refs)
+    in_reads
+      .join(ch_refs)
+      .set { ch_map_ref_in }
+
     ALIGN(ch_map_ref_in)
-    ch_aln_to_ref = ALIGN.out.alignment
+
+    ALIGN
+      .out
+      .alignment
+      .set { ch_aln_to_ref }
+
     BAM_STATS(ch_aln_to_ref)
 
   emit:
@@ -211,13 +237,27 @@ workflow MAP_TO_ASSEMBLY {
 
   main:
     // map reads to assembly
-    map_assembly = in_reads
-                   .join(genome_assembly) 
+    in_reads
+      .join(genome_assembly)
+      .set { map_assembly }
+
     ALIGN(map_assembly)
-    aln_to_assembly_bam = ALIGN.out.alignment
+
+    ALIGN
+      .out
+      .alignment
+      .set { aln_to_assembly_bam }
+
     BAM_STATS(aln_to_assembly_bam)
-    aln_to_assembly_bai = BAM_STATS.out.bai
-    aln_to_assembly_bam_bai = aln_to_assembly_bam.join(aln_to_assembly_bai)
+
+    BAM_STATS
+      .out
+      .bai
+      .set { aln_to_assembly_bai }
+
+    aln_to_assembly_bam
+      .join(aln_to_assembly_bai)
+      .set { aln_to_assembly_bam_bai }
 
   emit:
     aln_to_assembly_bam
@@ -232,13 +272,27 @@ workflow MAP_SR {
 
   main:
     // map reads to assembly
-    map_assembly = in_reads
-                   .join(genome_assembly) 
+    in_reads
+      .join(genome_assembly)
+      .set { map_assembly }
+
     ALIGN_SHORT(map_assembly)
-    aln_to_assembly_bam = ALIGN_SHORT.out.alignment
+
+    ALIGN_SHORT
+      .out
+      .alignment
+      .set { aln_to_assembly_bam }
+
     BAM_STATS(aln_to_assembly_bam)
-    aln_to_assembly_bai = BAM_STATS.out.bai
-    aln_to_assembly_bam_bai = aln_to_assembly_bam.join(aln_to_assembly_bai)
+
+    BAM_STATS
+      .out
+      .bai
+      .set { aln_to_assembly_bai }
+
+    aln_to_assembly_bam.
+      join(aln_to_assembly_bai)
+      .set { aln_to_assembly_bam_bai }
 
   emit:
     aln_to_assembly_bam
@@ -262,15 +316,24 @@ workflow ASSEMBLY {
 
   main:
   
-  ch_refs = ch_input.map(row -> [row.sample, row.ref_fasta])
+  ch_input
+    .map { row -> [row.sample, row.ref_fasta] }
+    .set { ch_refs }
 
   if(params.skip_flye ) {
     // Sample sheet layout when skipping FLYE
     // sample,readpath,assembly,ref_fasta,ref_gff
-    ch_assembly = ch_input.map(row -> [row.sample, row.assembly])
+    ch_input
+      .map { row -> [row.sample, row.assembly] }
+      .set { ch_assembly }
   } else {
+    // Run flye
     FLYE(in_reads, params.flye_mode)
-    ch_assembly = FLYE.out.fasta
+
+    FLYE
+      .out
+      .fasta
+      .set { ch_assembly }
   }
 
   /*
@@ -280,16 +343,35 @@ workflow ASSEMBLY {
   if(params.skip_alignments) {
     // Sample sheet layout when skipping FLYE and mapping
     // sample,readpath,assembly,ref_fasta,ref_gff,assembly_bam,assembly_bai,ref_bam
-    ch_ref_bam = ch_input.map(row -> [row.sample, row.ref_bam]) 
-    ch_assembly_bam = ch_input.map(row -> [row.sample, row.assembly_bam]) 
-    ch_assembly_bam_bai = ch_input.map(row -> [row.sample, row.assembly_bam, row.assembly_bai]) 
+    ch_input
+      .map { row -> [row.sample, row.ref_bam] }
+      .set { ch_ref_bam }
+
+    ch_input
+      .map { row -> [row.sample, row.assembly_bam] }
+      .set { ch_assembly_bam }
+
+    ch_input
+      .map { row -> [row.sample, row.assembly_bam, row.assembly_bai] }
+      .set { ch_assembly_bam_bai } 
+
   } else {
     MAP_TO_REF(in_reads, ch_refs)
-    ch_ref_bam = MAP_TO_REF.out  
+
+    MAP_TO_REF
+      .out
+      .set { ch_ref_bam }
 
     MAP_TO_ASSEMBLY(in_reads, ch_assembly)
-    ch_assembly_bam = MAP_TO_ASSEMBLY.out.aln_to_assembly_bam
-    ch_assembly_bam_bai = MAP_TO_ASSEMBLY.out.aln_to_assembly_bam_bai
+    MAP_TO_ASSEMBLY
+      .out
+      .aln_to_assembly_bam
+      .set { ch_assembly_bam }
+
+    MAP_TO_ASSEMBLY
+      .out
+      .aln_to_assembly_bam_bai
+      .set { ch_assembly_bam_bai }
   }
   if(params.lift_annotations) {
     RUN_LIFTOFF(FLYE.out.fasta, ch_input)
@@ -298,6 +380,7 @@ workflow ASSEMBLY {
   Run QUAST on initial assembly
   */
   RUN_QUAST(ch_assembly, ch_input, ch_ref_bam, ch_assembly_bam)
+  
   RUN_BUSCO(ch_assembly)
 
   emit: 
@@ -323,9 +406,16 @@ workflow RUN_MEDAKA {
      assembly
   
   main:
-      medaka_in = in_reads.join(assembly)
+      in_reads
+        .join(assembly)
+        .set { medaka_in }
+
       MEDAKA(medaka_in, params.medaka_model)
-      medaka_out = MEDAKA.out.assembly
+
+      MEDAKA
+        .out
+        .assembly
+        .set { medaka_out }
   
   emit:
       medaka_out
@@ -340,15 +430,18 @@ workflow POLISH_MEDAKA {
 
     main:
       RUN_MEDAKA(in_reads, pilon_improved)
-      medaka_assembly = RUN_MEDAKA.out
-      MAP_TO_ASSEMBLY(in_reads, medaka_assembly)
-      RUN_QUAST(medaka_assembly, ch_input, ch_aln_to_ref, MAP_TO_ASSEMBLY.out.aln_to_assembly_bam)
-      RUN_BUSCO(medaka_assembly)
+      
+      MAP_TO_ASSEMBLY(in_reads, RUN_MEDAKA.out)
+
+      RUN_QUAST(RUN_MEDAKA.out, ch_input, ch_aln_to_ref, MAP_TO_ASSEMBLY.out.aln_to_assembly_bam)
+
+      RUN_BUSCO(RUN_MEDAKA.out)
+
       if(params.lift_annotations) {
         RUN_LIFTOFF(RUN_MEDAKA.out, ch_input)
       }
     emit:
-      medaka_assembly
+      RUN_MEDAKA.out
 }
 
  /*
@@ -363,7 +456,10 @@ workflow RUN_PILON {
       aln_to_assembly_bam_bai
 
     main:
-      pilon_in = assembly_in.join(aln_to_assembly_bam_bai)
+      assembly_in
+        .join(aln_to_assembly_bam_bai)
+        .set { pilon_in }
+
       PILON(pilon_in, "bam")
     
     emit:
@@ -378,13 +474,24 @@ workflow POLISH_PILON {
        ch_aln_to_ref
 
       main:
-          ch_shortreads = ch_input.map { create_shortread_channel(it) }
+          ch_input
+            .map { create_shortread_channel(it) }
+            .set { ch_shortreads }
+
           MAP_SR(ch_shortreads, assembly)
+
           RUN_PILON(assembly, MAP_SR.out.aln_to_assembly_bam_bai)
-          pilon_improved = RUN_PILON.out
+
+          RUN_PILON
+            .out
+            .set { pilon_improved }
+
           MAP_TO_ASSEMBLY(in_reads, pilon_improved)
+
           RUN_QUAST(pilon_improved, ch_input, ch_aln_to_ref, MAP_TO_ASSEMBLY.out.aln_to_assembly_bam)
+
           RUN_BUSCO(pilon_improved)
+
           if(params.lift_annotations) {
              RUN_LIFTOFF(RUN_PILON.out, ch_input)
           }
@@ -443,13 +550,28 @@ def create_shortread_channel(LinkedHashMap row) {
      ch_aln_to_ref
   
   main:
-      ragtag_in = assembly.join(references)
+      assembly
+        .join(references)
+        .set { ragtag_in }
+
       RAGTAG_SCAFFOLD(ragtag_in)
-      ragtag_scaffold_fasta = RAGTAG_SCAFFOLD.out.corrected_assembly
-      ragtag_scaffold_agp = RAGTAG_SCAFFOLD.out.corrected_agp
+
+      RAGTAG_SCAFFOLD
+        .out
+        .corrected_assembly
+        .set { ragtag_scaffold_fasta }
+
+      RAGTAG_SCAFFOLD
+        .out
+        .corrected_agp
+        .set { ragtag_scaffold_agp }
+
       MAP_TO_ASSEMBLY(in_reads, ragtag_scaffold_fasta)
+
       RUN_QUAST(ragtag_scaffold_fasta, ch_input, ch_aln_to_ref, MAP_TO_ASSEMBLY.out.aln_to_assembly_bam)
+
       RUN_BUSCO(ragtag_scaffold_fasta)
+
       if(params.lift_annotations) {
              RUN_LIFTOFF(RAGTAG_SCAFFOLD.out.corrected_assembly, ch_input)
       }
@@ -468,12 +590,23 @@ def create_shortread_channel(LinkedHashMap row) {
      ch_aln_to_ref
   
   main:
-      links_in = assembly.join(in_reads)
+      assembly
+        .join(in_reads)
+        .set { links_in }
+
       LINKS(links_in)
-      scaffolds = LINKS.out.scaffolds
+
+      LINKS
+        .out
+        .scaffolds
+        .set { scaffolds }
+
       MAP_TO_ASSEMBLY(in_reads, scaffolds)
+
       RUN_QUAST(scaffolds, ch_input, ch_aln_to_ref, MAP_TO_ASSEMBLY.out.aln_to_assembly_bam)
+
       RUN_BUSCO(scaffolds)
+
       if(params.lift_annotations) {
              RUN_LIFTOFF(LINKS.out.scaffolds, ch_input)
       }
@@ -491,12 +624,23 @@ workflow RUN_SLR {
      ch_aln_to_ref
   
   main:
-      slr_in = assembly.join(in_reads)
+      assembly
+        .join(in_reads)
+        .set { slr_in }
+
       SLR(slr_in)
-      scaffolds = SLR.out.scaffolds
+
+      SLR
+        .out
+        .scaffolds
+        .set{ scaffolds }
+      
       MAP_TO_ASSEMBLY(in_reads, scaffolds)
+
       RUN_QUAST(scaffolds, ch_input, ch_aln_to_ref, MAP_TO_ASSEMBLY.out.aln_to_assembly_bam)
+
       RUN_BUSCO(scaffolds)
+
       if(params.lift_annotations) {
         RUN_LIFTOFF(SLR.out.scaffolds, ch_input)
       }
@@ -513,12 +657,22 @@ workflow RUN_LONGSTITCH {
      ch_aln_to_ref
   
   main:
-      longstitch_in = assembly.join(in_reads)
+      assembly
+        .join(in_reads)
+        .set { longstitch_in }
       LONGSTITCH(longstitch_in)
-      scaffolds = LONGSTITCH.out.ntlLinks_arks_scaffolds
+
+      LONGSTITCH
+        .out
+        .ntlLinks_arks_scaffolds
+        .set { scaffolds }
+
       MAP_TO_ASSEMBLY(in_reads, scaffolds)
+
       RUN_QUAST(scaffolds, ch_input, ch_aln_to_ref, MAP_TO_ASSEMBLY.out.aln_to_assembly_bam)
+
       RUN_BUSCO(scaffolds)
+
       if(params.lift_annotations) {
         RUN_LIFTOFF(LONGSTITCH.out.ntlLinks_arks_scaffolds, ch_input)
       }
@@ -551,11 +705,15 @@ workflow RUN_QUAST {
      * This makes use of the input channel to obtain the reference and reference annotations
      * See quast module for details
      */
-    ch_input_references = ch_input.map(row -> [row.sample, row.ref_fasta, row.ref_gff])
-    quast_in = flye_assembly
-               .join(ch_input_references)
-               .join(aln_to_ref)
-               .join(aln_to_assembly)
+    ch_input
+      .map { row -> [row.sample, row.ref_fasta, row.ref_gff] }
+      .set { ch_input_references }
+
+    flye_assembly
+      .join(ch_input_references)
+      .join(aln_to_ref)
+      .join(aln_to_assembly)
+      .set { quast_in }
     /*
      * Run QUAST
      */
@@ -574,9 +732,7 @@ workflow RUN_BUSCO {
     assembly
 
   main:
-    busco_in = assembly
-
-    BUSCO(busco_in, "brassicales_odb10", params.busoc_db)
+    BUSCO(assembly, "brassicales_odb10", params.busoc_db)
 }
 
 /*
@@ -596,9 +752,17 @@ workflow RUN_LIFTOFF {
     inputs
   
   main:
-    liftoff_in = assembly.join(inputs.map(row -> [row.sample, row.ref_fasta, row.ref_gff]))
+    assembly
+      .join(
+        inputs
+        .map { row -> [row.sample, row.ref_fasta, row.ref_gff] } )
+      .set { liftoff_in }
+
     LIFTOFF(liftoff_in)
-    lifted_annotations = LIFTOFF.out
+    
+    LIFTOFF
+      .out
+      .set { lifted_annotations }
 
   emit:
     lifted_annotations
@@ -631,7 +795,7 @@ workflow RUN_LIFTOFF {
  ====================================================
  */
 
-workflow ARASSEMBLY {
+workflow ASSEMBLE {
  /*
  Define channels
  */
@@ -653,8 +817,11 @@ workflow ARASSEMBLY {
   if(params.samplesheet) {
     ch_input = Channel.fromPath(params.samplesheet) 
                       .splitCsv(header:true) 
-    ch_refs = ch_input.map(row -> [row.sample, row.ref_fasta])
-                      }
+
+    ch_input
+      .map { row -> [row.sample, row.ref_fasta] }
+      .set { ch_refs }
+    }
   else {
     exit 1, 'Input samplesheet not specified!'
   }
@@ -678,11 +845,21 @@ workflow ARASSEMBLY {
   /*
   Polishing with medaka
   */
-  ch_ref_bam = ASSEMBLY.out.ch_ref_bam
-  ch_medaka_in = ASSEMBLY.out.ch_assembly
+  ASSEMBLY
+    .out
+    .ch_ref_bam
+    .set { ch_ref_bam }
+    
+  ASSEMBLY
+    .out
+    .ch_assembly
+    .set { ch_medaka_in }
+    
   POLISH_MEDAKA(ch_input, CHOP.out, ch_medaka_in, ch_ref_bam)
 
-  ch_polished_genome = POLISH_MEDAKA.out
+  POLISH_MEDAKA
+    .out
+    .set { ch_polished_genome }
 
   /*
   Polishing with short reads using pulon
@@ -690,7 +867,10 @@ workflow ARASSEMBLY {
 
   if(params.polish_pilon) {
     POLISH_PILON(ch_input, CHOP.out, ch_polished_genome, ch_ref_bam)
-    ch_polished_genome = POLISH_PILON.out.pilon_improved
+    POLISH_PILON
+      .out
+      .pilon_improved
+      .set { ch_polished_genome }
   } 
 
   /*
@@ -724,5 +904,5 @@ workflow ARASSEMBLY {
  */
 
 workflow {
-  ARASSEMBLY()
+  ASSEMBLE()
 }
