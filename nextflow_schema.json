@@ -43,7 +43,7 @@
         },
         "enable_conda": {
             "type": "boolean",
-            "description": "use conda (not really supported)"
+            "description": "use conda (not supported)"
         },
         "collect": {
             "type": "boolean",
@@ -103,7 +103,12 @@
         },
         "busoc_db": {
             "type": "string",
-            "default": "/dss/dsslegfs01/pn73so/pn73so-dss-0000/becker_common/software/busco_db"
+            "default": "/dss/dsslegfs01/pn73so/pn73so-dss-0000/becker_common/software/busco_db",
+            "description": "path to busco db"
+        },
+        "porechop": {
+            "type": "boolean",
+            "description": "run porechop"
         }
     }
 }

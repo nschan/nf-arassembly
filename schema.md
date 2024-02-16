@@ -15,7 +15,7 @@ Less common options for the pipeline, typically set in a config file.
 | Parameter | Description | Type | Default | Required | Hidden |
 |-----------|-----------|-----------|-----------|-----------|-----------|
 | `samplesheet` | samplesheet | `string` |  |  |  |
-| `enable_conda` | use conda (not really supported) | `boolean` |  |  |  |
+| `enable_conda` | use conda (not supported) | `boolean` |  |  |  |
 | `collect` | combine reads from multiple fastq files into one? | `boolean` |  |  |  |
 | `skip_flye` | skip flye assembly | `boolean` |  |  |  |
 | `skip_alignments` | skip alignment to initial assembly and reference | `boolean` |  |  |  |
@@ -29,4 +29,5 @@ Less common options for the pipeline, typically set in a config file.
 | `scaffold_links` | Scaffold with links | `boolean` |  |  |  |
 | `scaffold_slr` | Scaffold with SLR | `boolean` |  |  |  |
 | `scaffold_longstitch` | Scaffold with longstitch | `boolean` |  |  |  |
-| `busoc_db` |  | `string` | /dss/dsslegfs01/pn73so/pn73so-dss-0000/becker_common/software/busco_db |  |  |
+| `busoc_db` | path to busco db | `string` | /dss/dsslegfs01/pn73so/pn73so-dss-0000/becker_common/software/busco_db |  |  |
+| `porechop` | run porechop | `boolean` |  |  |  |
