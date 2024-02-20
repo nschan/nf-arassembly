@@ -39,6 +39,12 @@ See also [schema.md](schema.md)
   * Annotations are created using liftoff. 
   * Quality of each stage is assessed using QUAST and BUSCO (standalone).
 
+# Graph
+
+![Tubemap](nf-arassembly.tubes.png)
+
+# Additional information
+
 QUAST will run with the following additional parameters:
 
 ```
