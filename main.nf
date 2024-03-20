@@ -813,8 +813,9 @@ workflow ASSEMBLE {
   */
 
   if(params.samplesheet) {
-    ch_input = Channel.fromPath(params.samplesheet) 
-                      .splitCsv(header:true) 
+    Channel.fromPath(params.samplesheet) 
+           .splitCsv(header:true) 
+           .set { ch_input }
 
     ch_input
       .map { row -> [row.sample, row.ref_fasta] }
