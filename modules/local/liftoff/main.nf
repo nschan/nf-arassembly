@@ -22,7 +22,7 @@ process LIFTOFF {
       tuple val(meta), path(assembly), path(reference_fasta), path(reference_gff)
   
   output:
-      tuple val(meta), path("${assembly}_liftoff.gff"), emit: lifted_annotations
+      tuple val(meta), path("*_liftoff.gff"), emit: lifted_annotations
 
   
   script:
@@ -41,6 +41,6 @@ process LIFTOFF {
     -p ${task.cpus} \\
     assembly.fasta  \\
     ${reference_fasta} \\
-    -o ${assembly}_liftoff.gff
+    -o ${assembly.baseName}_liftoff.gff
   """
 }
