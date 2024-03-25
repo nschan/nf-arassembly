@@ -32,7 +32,7 @@ process LONGSTITCH {
   fi
   ln -s assembly.fasta assembly.fa
 
-  if [[ ${reads} == *.fa || ${reads} == *.fasta ]]; then
+  if [[ ${reads} == *.fa || ${reads} == *.fasta || ${reads} == *.fq || ${reads} == *.fastq ]]; then
     gzip -c ${reads} > ${reads}.gz
     ln -s ${reads}.gz reads.fq.gz
   fi
