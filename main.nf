@@ -737,8 +737,7 @@ workflow RUN_BUSCO {
  ===========================================
  * ANNOTATIONS
  ===========================================
- */
-/*
+
  * LIFTOFF
  ===========================================
  * Run LIFTOFF to lift annotations from Col-CEN
