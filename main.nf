@@ -541,7 +541,7 @@ def create_shortread_channel(LinkedHashMap row) {
 
  workflow RUN_RAGTAG {
   take:
-     ch_input
+     inputs
      in_reads
      assembly
      references
@@ -566,12 +566,12 @@ def create_shortread_channel(LinkedHashMap row) {
 
       MAP_TO_ASSEMBLY(in_reads, ragtag_scaffold_fasta)
 
-      RUN_QUAST(ragtag_scaffold_fasta, ch_input, ch_aln_to_ref, MAP_TO_ASSEMBLY.out.aln_to_assembly_bam)
+      RUN_QUAST(ragtag_scaffold_fasta, inputs, ch_aln_to_ref, MAP_TO_ASSEMBLY.out.aln_to_assembly_bam)
 
       RUN_BUSCO(ragtag_scaffold_fasta)
 
       if(params.lift_annotations) {
-             RUN_LIFTOFF(RAGTAG_SCAFFOLD.out.corrected_assembly, ch_input)
+             RUN_LIFTOFF(RAGTAG_SCAFFOLD.out.corrected_assembly, inputs)
       }
 
   emit:
@@ -581,7 +581,7 @@ def create_shortread_channel(LinkedHashMap row) {
 
  workflow RUN_LINKS {
   take:
-     ch_input
+     inputs
      in_reads
      assembly
      references
@@ -601,12 +601,12 @@ def create_shortread_channel(LinkedHashMap row) {
 
       MAP_TO_ASSEMBLY(in_reads, scaffolds)
 
-      RUN_QUAST(scaffolds, ch_input, ch_aln_to_ref, MAP_TO_ASSEMBLY.out.aln_to_assembly_bam)
+      RUN_QUAST(scaffolds, inputs, ch_aln_to_ref, MAP_TO_ASSEMBLY.out.aln_to_assembly_bam)
 
       RUN_BUSCO(scaffolds)
 
       if(params.lift_annotations) {
-             RUN_LIFTOFF(LINKS.out.scaffolds, ch_input)
+             RUN_LIFTOFF(LINKS.out.scaffolds, inputs)
       }
 
   emit:
@@ -615,7 +615,7 @@ def create_shortread_channel(LinkedHashMap row) {
 
 workflow RUN_SLR {
   take:
-     ch_input
+     inputs
      in_reads
      assembly
      references
@@ -635,12 +635,12 @@ workflow RUN_SLR {
       
       MAP_TO_ASSEMBLY(in_reads, scaffolds)
 
-      RUN_QUAST(scaffolds, ch_input, ch_aln_to_ref, MAP_TO_ASSEMBLY.out.aln_to_assembly_bam)
+      RUN_QUAST(scaffolds, inputs, ch_aln_to_ref, MAP_TO_ASSEMBLY.out.aln_to_assembly_bam)
 
       RUN_BUSCO(scaffolds)
 
       if(params.lift_annotations) {
-        RUN_LIFTOFF(SLR.out.scaffolds, ch_input)
+        RUN_LIFTOFF(SLR.out.scaffolds, inputs)
       }
 
   emit:
@@ -648,7 +648,7 @@ workflow RUN_SLR {
 }
 workflow RUN_LONGSTITCH {
   take:
-     ch_input
+     inputs
      in_reads
      assembly
      references
@@ -667,12 +667,12 @@ workflow RUN_LONGSTITCH {
 
       MAP_TO_ASSEMBLY(in_reads, scaffolds)
 
-      RUN_QUAST(scaffolds, ch_input, ch_aln_to_ref, MAP_TO_ASSEMBLY.out.aln_to_assembly_bam)
+      RUN_QUAST(scaffolds, inputs, ch_aln_to_ref, MAP_TO_ASSEMBLY.out.aln_to_assembly_bam)
 
       RUN_BUSCO(scaffolds)
 
       if(params.lift_annotations) {
-        RUN_LIFTOFF(LONGSTITCH.out.ntlLinks_arks_scaffolds, ch_input)
+        RUN_LIFTOFF(LONGSTITCH.out.ntlLinks_arks_scaffolds, inputs)
       }
 
   emit:
@@ -693,8 +693,8 @@ workflow RUN_LONGSTITCH {
 
 workflow RUN_QUAST {
   take: 
-    flye_assembly
-    ch_input
+    assembly
+    inputs
     aln_to_ref
     aln_to_assembly
 
@@ -703,12 +703,12 @@ workflow RUN_QUAST {
      * This makes use of the input channel to obtain the reference and reference annotations
      * See quast module for details
      */
-    ch_input
+    inputs
       .map { row -> [row.sample, row.ref_fasta, row.ref_gff] }
-      .set { ch_input_references }
+      .set { inputs_references }
 
-    flye_assembly
-      .join(ch_input_references)
+    assembly
+      .join(inputs_references)
       .join(aln_to_ref)
       .join(aln_to_assembly)
       .set { quast_in }
@@ -798,15 +798,15 @@ workflow ASSEMBLE {
  Define channels
  */
 
- ch_input = Channel.empty()
- ch_refs = Channel.empty()
- ch_aln_to_ref = Channel.empty()
- ch_assembly = Channel.empty()
- ch_assembly_bam = Channel.empty()
- ch_assembly_bam_bai = Channel.empty()
- ch_medaka_in = Channel.empty()
- ch_polished_genome = Channel.empty()
- ch_short_reads = Channel.empty()
+  Channel.empty().set { ch_input }
+  Channel.empty().set { ch_refs }
+  Channel.empty().set { ch_aln_to_ref }
+  Channel.empty().set { ch_assembly }
+  Channel.empty().set { ch_assembly_bam }
+  Channel.empty().set { ch_assembly_bam_bai }
+  Channel.empty().set { ch_medaka_in }
+  Channel.empty().set { ch_polished_genome }
+  Channel.empty().set { ch_short_reads }
 
   /*
   Check samplesheet
