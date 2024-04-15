@@ -36,6 +36,8 @@ process QUAST {
     prefix   = task.ext.prefix ?: 'quast'
     def features  = use_gff ? "--features $gff" : ''
     def reference = use_fasta ? "-r $fasta" : ''
+    def reference_bam = params.use_ref ? "-ref-bam ${ref_bam}" : ''
+
     """
     quast.py \\
         --output-dir $meta \\
@@ -45,7 +47,7 @@ process QUAST {
         ${consensus.join(' ')} \\
         --glimmer \\
         --conserved-genes-finding \\
-        --ref-bam ${ref_bam} \\
+        $reference_bam \\
         --bam ${bam} \\
         --large \\
         ${args}

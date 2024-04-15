@@ -9,6 +9,7 @@ params.samplesheet = false
 params.enable_conda = false
 params.collect = false
 params.porechop = false
+params.use_ref = true
 params.skip_flye = false
 params.skip_alignments = false
 params.flye_mode = '--nano-hq'
@@ -21,7 +22,7 @@ params.scaffold_links = false
 params.scaffold_longstitch = false
 params.lift_annotations = true
 params.busoc_db = "/dss/dsslegfs01/pn73so/pn73so-dss-0000/becker_common/software/busco_db"
-params.busco_lineage =" brassicales_odb10"
+params.busco_lineage = "brassicales_odb10"
 params.out = './results'
 
 /*
@@ -54,6 +55,7 @@ Niklas Schandry                                      niklas@bio.lmu.de          
      polish_pilon    : ${params.polish_pilon}
      busco db        : ${params.busoc_db}
      busco lineage   : ${params.busco_lineage}
+     use reference   : ${params.use_ref}
 
     Scaffolding Tools
      ragtag          : ${params.scaffold_ragtag}
@@ -315,9 +317,13 @@ workflow ASSEMBLY {
 
   main:
   
-  ch_input
-    .map { row -> [row.sample, row.ref_fasta] }
-    .set { ch_refs }
+  Channel.empty().set { ch_refs }
+
+  if (params.use_ref) {
+    ch_input
+      .map { row -> [row.sample, row.ref_fasta] }
+      .set { ch_refs }
+  }
 
   if(params.skip_flye ) {
     // Sample sheet layout when skipping FLYE
@@ -355,11 +361,15 @@ workflow ASSEMBLY {
       .set { ch_assembly_bam_bai } 
 
   } else {
-    MAP_TO_REF(in_reads, ch_refs)
+    Channel.empty().set { ch_ref_bam }
+    
+    if(params.use_ref) {
+      MAP_TO_REF(in_reads, ch_refs)
 
-    MAP_TO_REF
-      .out
-      .set { ch_ref_bam }
+      MAP_TO_REF
+        .out
+        .set { ch_ref_bam }
+    }
 
     MAP_TO_ASSEMBLY(in_reads, ch_assembly)
     MAP_TO_ASSEMBLY
@@ -378,6 +388,7 @@ workflow ASSEMBLY {
   /*
   Run QUAST on initial assembly
   */
+
   RUN_QUAST(ch_assembly, ch_input, ch_ref_bam, ch_assembly_bam)
   
   RUN_BUSCO(ch_assembly)
@@ -424,11 +435,11 @@ workflow POLISH_MEDAKA {
     take:
      ch_input
      in_reads
-     pilon_improved
+     assembly
      ch_aln_to_ref
 
     main:
-      RUN_MEDAKA(in_reads, pilon_improved)
+      RUN_MEDAKA(in_reads, assembly)
       
       MAP_TO_ASSEMBLY(in_reads, RUN_MEDAKA.out)
 
@@ -717,7 +728,7 @@ workflow RUN_QUAST {
     /*
      * Run QUAST
      */
-    QUAST(quast_in, use_gff = true, use_fasta = true)
+    QUAST(quast_in, use_gff = params.use_ref, use_fasta = false)
 }
 
 /*
@@ -801,7 +812,7 @@ workflow ASSEMBLE {
 
   Channel.empty().set { ch_input }
   Channel.empty().set { ch_refs }
-  Channel.empty().set { ch_aln_to_ref }
+  Channel.empty().set { ch_ref_bam }
   Channel.empty().set { ch_assembly }
   Channel.empty().set { ch_assembly_bam }
   Channel.empty().set { ch_assembly_bam_bai }
@@ -817,10 +828,12 @@ workflow ASSEMBLE {
     Channel.fromPath(params.samplesheet) 
            .splitCsv(header:true) 
            .set { ch_input }
-
+    if(params.use_ref) {
     ch_input
       .map { row -> [row.sample, row.ref_fasta] }
       .set { ch_refs }
+    }
+
     }
   else {
     exit 1, 'Input samplesheet not specified!'
@@ -845,10 +858,13 @@ workflow ASSEMBLE {
   /*
   Polishing with medaka
   */
-  ASSEMBLY
-    .out
-    .ch_ref_bam
-    .set { ch_ref_bam }
+  if (params.use_ref) {
+    ASSEMBLY
+      .out
+      .ch_ref_bam
+      .set { ch_ref_bam }
+  }
+
 
   ASSEMBLY
     .out

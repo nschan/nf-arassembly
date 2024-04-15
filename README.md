@@ -14,11 +14,13 @@ See also [schema.md](schema.md)
 | `--samplesheet` | Path to samplesheet |
 | `--collect` | Are the provided reads a folder (`true`) or a single fq files (default: `false` ) |
 | `--porechop` | Run porechop? (default: `false`) |
+| `--use_ref` | Use a refence genome? (default: `true`) |
 | `--flye_mode` | The mode to be used by flye; default: `"--nano-hq"` |
 | `--flye_args` | Arguments to be passed to flye, default: `none`. Example: `--flye_args '--genome-size 130g --asm-coverage 50'` |
 | `--medaka_model` | Model used by medaka, default: `'r1041_e82_400bps_hac@v4.2.0:consesus'` |
 | `--polish_pilon` | Polish with short reads using pilon? Sefault: `false` |
 | `--busco_db` | Path to local busco db?; default: `/dss/dsslegfs01/pn73so/pn73so-dss-0000/becker_common/software/busco_db` |
+| `--busco_lineage` | Busco lineage to use; default: `brassicales_odb10` |
 | `--skip_flye` | Skip assembly with flye?, requires different samplesheet (!); Default: `false` |
 | `--skip_alignments` | Skip alignments? requires different samplesheet (!); Default: `false` |
 | `--scaffold_ragtag` | Scaffolding with ragtag? Default: `false` |
@@ -34,7 +36,7 @@ See also [schema.md](schema.md)
   * Barcodes and adaptors will be removed using porechop. By default this is skipped, enable with `--porechop`.
   * Read QC is done via nanoq.
   * Assemblies are performed with flye.
-  * Polishing is done using medaka, and scaffolding via links, longstitch, ragtag and / or SLR. 
+  * Polishing is done using medaka, and scaffolding via links, longstitch and / or ragtag. 
   * Optional short-read polishing can be done using pilon. By default this is not done, enable with `--polish_pilon`, requires different samplesheet with shortreads.
   * Annotations are created using liftoff. 
   * Quality of each stage is assessed using QUAST and BUSCO (standalone).
@@ -51,13 +53,7 @@ QUAST will run with the following additional parameters:
         --eukaryote \\
         --glimmer \\
         --conserved-genes-finding \\
-        --ref-bam ${ref_bam} \\
-        --bam ${bam} 
 ```
-
-Subsequently, the assembly will be polished using first pilon and then medaka, QUAST will again be used to assess the polished genomes.
-If `--polish_pilon` is used the genome will in addition be polished using short reads.
-
 
 # Usage
 
@@ -76,6 +72,11 @@ nextflow run nf-arassembly --samplesheet 'path/to/sample_sheet.csv' \
                            --out './results' \
                            -profile charliecloud,biohpc_gen
 ```
+
+## No refence genome
+
+If there is no reference genome available use `--use_ref false` to disable the reference genome.
+Liftoff should not be used without a reference, QUAST will no longer compare to reference. 
 
 ## Skipping Flye
 
@@ -119,30 +120,9 @@ In a case where only single-reads are available, `shortread_R` should be empty, 
 
 ## Scaffolding
 
-`ragtag`, `LINKS`, `SLR` and `longstitch` can be used for scaffolding.
-
-The `SLR` container segfaults with illegal instructions, I assume that the container is somehow built wrong. 
+`ragtag`, `LINKS`, and `longstitch` can be used for scaffolding.
 
 ## Using liftoff
 
-If `lift_annotations` is used, the annotations from the reference genome will be mapped to assemblies and scaffolds using liftoff. This will happen at each step of the pipeline where a new genome version is created, i.e. after assembly, after polishing and after scaffolding.
-
-# Problems
-
-Presumably, something like this will happen:
-
-```
-Error executing process > 'ALIGN_TO_REF (TestSample)'
-
-Caused by:
-  Charliecloud failed to pull image
-  command: ch-image pull -s /dss/dsslegfs01/pn73so/pn73so-dss-0000/becker_common/charliecloud/storage/0.30 gitlab.lrz.de:5005/beckerlab/container-playground/minimap2-samtools:74bccfe8 > /dev/null
-  status : 1
-  message:
-    pulling image:    gitlab.lrz.de:5005/beckerlab/container-playground/minimap2-samtools:74bccfe8
-    requesting arch:  amd64
-    error: unauthorized or not in registry: gitlab.lrz.de:5005/beckerlab/container-playground/minimap2-samtools:74bccfe8
-    hint: if your registry needs authentication, use --auth
-```
-
-Follow the "hint" and just copy the `ch-image pull -s ...` line (excluding `> /dev/null`) and append `--auth` to pull the container, authenticate with lrz credentials, then retry.
+If `lift_annotations` is used, the annotations from the reference genome will be mapped to assemblies and scaffolds using liftoff.
+This will happen at each step of the pipeline where a new genome fasta is created, i.e. after assembly, after polishing and after scaffolding.
