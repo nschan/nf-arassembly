@@ -1,3 +1,5 @@
+[![DOI](https://zenodo.org/badge/786746077.svg)](https://zenodo.org/doi/10.5281/zenodo.10972895)
+
 # nf-arassembly
 
 Assembly pipeline for arabidopsis genomes from nanopore sequencing. Should also work for other species.
