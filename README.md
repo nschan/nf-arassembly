@@ -1,8 +1,8 @@
 # nf-arassembly
 
-Assembly pipeline for arabidopsis genomes from nanopore sequencing.
+Assembly pipeline for arabidopsis genomes from nanopore sequencing. Should also work for other species.
 
-Genome assembly using porechop, flye, qc using quast (also works for other species), polish with pilon and / or medaka, scaffold using ragtag, LINKS or longstitch.
+Genome assembly using porechop, flye, qc using quast, polish with pilon and / or medaka, scaffold using ragtag, LINKS or longstitch.
 
 # Parameters
 
