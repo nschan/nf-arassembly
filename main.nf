@@ -17,7 +17,7 @@ params.polish_pilon = false
 params.medaka_model = 'r1041_e82_400bps_hac_v4.2.0'
 params.scaffold_ragtag = false
 params.scaffold_links = false
-params.scaffold_slr = false
+//params.scaffold_slr = false
 params.scaffold_longstitch = false
 params.lift_annotations = true
 params.busoc_db="/dss/dsslegfs01/pn73so/pn73so-dss-0000/becker_common/software/busco_db"
@@ -56,7 +56,6 @@ Niklas Schandry                                      niklas@bio.lmu.de          
     Scaffolding Tools
      ragtag          : ${params.scaffold_ragtag}
      LINKS           : ${params.scaffold_links}
-     SLR             : ${params.scaffold_slr}
      longstitch      : ${params.scaffold_longstitch}
 
     Annotation lift  : ${params.lift_annotations}
@@ -882,11 +881,11 @@ workflow ASSEMBLE {
   if(params.scaffold_links) {
     RUN_LINKS(ch_input, CHOP.out, ch_polished_genome, ch_refs, ch_ref_bam)
   }
-
+  /*
   if(params.scaffold_slr) {
     RUN_SLR(ch_input, CHOP.out, ch_polished_genome, ch_refs, ch_ref_bam)
   }
-  
+  */
   if(params.scaffold_longstitch) {
     RUN_LONGSTITCH(ch_input, CHOP.out, ch_polished_genome, ch_refs, ch_ref_bam)
   }

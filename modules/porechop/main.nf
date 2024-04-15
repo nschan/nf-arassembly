@@ -7,7 +7,6 @@ process PORECHOP {
     tag "$meta"
     label 'process_medium'
 
-    conda "bioconda::porechop=0.2.4"
     publishDir "${params.out}",
         mode: params.publish_dir_mode,
         saveAs: { filename -> saveFiles(filename:filename,
@@ -33,7 +32,7 @@ process PORECHOP {
     
     [[ -f ${prefix}.fastq.gz   ]] || ln -s $reads ${prefix}.fastq.gz
 
-    porechop \\
+    micromamba run -n base porechop \\
         -i ${prefix}.fastq.gz \\
         -t $task.cpus \\
         $args \\
