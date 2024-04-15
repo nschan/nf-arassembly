@@ -20,7 +20,8 @@ params.scaffold_links = false
 //params.scaffold_slr = false
 params.scaffold_longstitch = false
 params.lift_annotations = true
-params.busoc_db="/dss/dsslegfs01/pn73so/pn73so-dss-0000/becker_common/software/busco_db"
+params.busoc_db = "/dss/dsslegfs01/pn73so/pn73so-dss-0000/becker_common/software/busco_db"
+params.busco_lineage =" brassicales_odb10"
 params.out = './results'
 
 /*
@@ -52,6 +53,7 @@ Niklas Schandry                                      niklas@bio.lmu.de          
      medaka_model    : ${params.medaka_model}
      polish_pilon    : ${params.polish_pilon}
      busco db        : ${params.busoc_db}
+     busco lineage   : ${params.busco_lineage}
 
     Scaffolding Tools
      ragtag          : ${params.scaffold_ragtag}
@@ -611,7 +613,7 @@ def create_shortread_channel(LinkedHashMap row) {
   emit:
      scaffolds
 }
-
+/*
 workflow RUN_SLR {
   take:
      inputs
@@ -645,6 +647,7 @@ workflow RUN_SLR {
   emit:
      scaffolds
 }
+*/
 workflow RUN_LONGSTITCH {
   take:
      inputs
@@ -729,7 +732,7 @@ workflow RUN_BUSCO {
     assembly
 
   main:
-    BUSCO(assembly, "brassicales_odb10", params.busoc_db)
+    BUSCO(assembly, params.busco_lineage, params.busoc_db)
 }
 
 /*

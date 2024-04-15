@@ -28,7 +28,7 @@ process PORECHOP {
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta}"
     """
-    ## To ensure ID matches rest of pipeline based on meta.id rather than input file name
+    ## To ensure ID matches rest of pipeline based on id rather than input file name
     
     [[ -f ${prefix}.fastq.gz   ]] || ln -s $reads ${prefix}.fastq.gz
 
