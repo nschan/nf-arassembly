@@ -93,10 +93,6 @@
             "type": "boolean",
             "description": "Scaffold with links"
         },
-        "scaffold_slr": {
-            "type": "boolean",
-            "description": "Scaffold with SLR"
-        },
         "scaffold_longstitch": {
             "type": "boolean",
             "description": "Scaffold with longstitch"
@@ -109,6 +105,19 @@
         "porechop": {
             "type": "boolean",
             "description": "run porechop"
+        },
+        "use_ref": {
+            "type": "boolean",
+            "description": "Use a reference genome",
+            "default": true
+        },
+        "busco_lineage": {
+            "type": "string",
+            "description": "busco lineage to use",
+            "default": "\"brassicales_odb10\""
         }
-    }
+    },
+    "required": [
+        "samplesheet"
+    ]
 }

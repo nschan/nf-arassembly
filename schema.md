@@ -14,7 +14,7 @@ Less common options for the pipeline, typically set in a config file.
 
 | Parameter | Description | Type | Default | Required | Hidden |
 |-----------|-----------|-----------|-----------|-----------|-----------|
-| `samplesheet` | samplesheet | `string` |  |  |  |
+| `samplesheet` | samplesheet | `string` |  | True |  |
 | `enable_conda` | use conda (not supported) | `boolean` |  |  |  |
 | `collect` | combine reads from multiple fastq files into one? | `boolean` |  |  |  |
 | `skip_flye` | skip flye assembly | `boolean` |  |  |  |
@@ -27,7 +27,8 @@ Less common options for the pipeline, typically set in a config file.
 | `out` | results directory | `string` | './out' |  |  |
 | `scaffold_ragtag` | Scaffold with ragtag | `boolean` |  |  |  |
 | `scaffold_links` | Scaffold with links | `boolean` |  |  |  |
-| `scaffold_slr` | Scaffold with SLR | `boolean` |  |  |  |
 | `scaffold_longstitch` | Scaffold with longstitch | `boolean` |  |  |  |
 | `busoc_db` | path to busco db | `string` | /dss/dsslegfs01/pn73so/pn73so-dss-0000/becker_common/software/busco_db |  |  |
 | `porechop` | run porechop | `boolean` |  |  |  |
+| `use_ref` | Use a reference genome | `boolean` | True |  |  |
+| `busco_lineage` | busco lineage to use | `string` | "brassicales_odb10" |  |  |

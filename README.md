@@ -2,10 +2,14 @@
 
 # nf-arassembly
 
-Assembly pipeline for arabidopsis genomes from nanopore sequencing. Should also work for other species.
+Assembly pipeline for arabidopsis genomes from nanopore sequencing written in [`nextflow`](https://nextflow.io/). Should also work for other species.
 
-Genome assembly using porechop, flye, qc using quast, polish with pilon and / or medaka, scaffold using ragtag, LINKS or longstitch.
-
+Genome assembly based on:
+  * [`porechop`](https://github.com/rrwick/Porechop) for read trimming,
+  * [`flye`](https://github.com/fenderglass/Flye) for assembly, 
+  * polishing using [`medaka`](https://github.com/nanoporetech/medaka) and / or [`pilon`](https://github.com/broadinstitute/pilon)
+  * scaffolding using [`LINKS`](https://github.com/bcgsc/LINKS), [`longstitch`](https://github.com/bcgsc/longstitch) or [`ragtag`](https://github.com/malonge/RagTag) (reference based)
+  * quality control of assemblies with [`QUAST`](https://github.com/ablab/quast) and [`BUSCO`](https://gitlab.com/ezlab/busco), 
 # Parameters
 
 See also [schema.md](schema.md)
@@ -15,49 +19,44 @@ See also [schema.md](schema.md)
 | --- | --- |
 | `--samplesheet` | Path to samplesheet |
 | `--collect` | Are the provided reads a folder (`true`) or a single fq files (default: `false` ) |
-| `--porechop` | Run porechop? (default: `false`) |
 | `--use_ref` | Use a refence genome? (default: `true`) |
-| `--flye_mode` | The mode to be used by flye; default: `"--nano-hq"` |
-| `--flye_args` | Arguments to be passed to flye, default: `none`. Example: `--flye_args '--genome-size 130g --asm-coverage 50'` |
-| `--medaka_model` | Model used by medaka, default: `'r1041_e82_400bps_hac@v4.2.0:consesus'` |
-| `--polish_pilon` | Polish with short reads using pilon? Sefault: `false` |
-| `--busco_db` | Path to local busco db?; default: `/dss/dsslegfs01/pn73so/pn73so-dss-0000/becker_common/software/busco_db` |
-| `--busco_lineage` | Busco lineage to use; default: `brassicales_odb10` |
-| `--skip_flye` | Skip assembly with flye?, requires different samplesheet (!); Default: `false` |
-| `--skip_alignments` | Skip alignments? requires different samplesheet (!); Default: `false` |
-| `--scaffold_ragtag` | Scaffolding with ragtag? Default: `false` |
-| `--scaffold_links` | Scaffolding with LINKS? Default: `false` |
-| `--scaffold_slr` | Scaffolding with SLR? Default: `false` |
-| `--scaffold_longstitch` | Scaffolding with longstitch? Default: `false` |
-| `--lift_annotations` | Lift annotations from reference using liftoff? Default: `true` |
+| `--porechop` | Run [`porechop`](https://github.com/rrwick/Porechop)? (default: `false`) |
+| `--flye_mode` | The mode to be used by [`flye`](https://github.com/fenderglass/Flye); default: `"--nano-hq"` |
+| `--flye_args` | Arguments to be passed to [`flye`](https://github.com/fenderglass/Flye), default: `none`. Example: `--flye_args '--genome-size 130g --asm-coverage 50'` |
+| `--medaka_model` | Model used by [`medaka`](https://github.com/nanoporetech/medaka), default: 'r1041_e82_400bps_hac@v4.2.0:consesus'` |
+| `--polish_pilon` | Polish with short reads using [`pilon`](https://github.com/broadinstitute/pilon)? Sefault: `false` |
+| `--busco_db` | Path to local [`BUSCO`](https://gitlab.com/ezlab/busco) db?; default: `/dss/dsslegfs01/pn73so/pn73so-dss-0000/becker_common/software/busco_db` |
+| `--busco_lineage` | [`BUSCO`](https://gitlab.com/ezlab/busco) lineage to use; default: `brassicales_odb10` |
+| `--scaffold_ragtag` | Scaffolding with [`ragtag`](https://github.com/malonge/RagTag)? Default: `false` |
+| `--scaffold_links` | Scaffolding with [`LINKS`](https://github.com/bcgsc/LINKS)? Default: `false` |
+| `--scaffold_longstitch` | Scaffolding with [`longstitch`](https://github.com/bcgsc/longstitch)? Default: `false` |
+| `--lift_annotations` | Lift annotations from reference using [`liftoff`](https://github.com/agshumate/Liftoff)? Default: `true` |
+| `--skip_flye` | Skip assembly with [`flye`](https://github.com/fenderglass/Flye)?, requires different samplesheet (!); Default: `false` |
+| `--skip_alignments` | Skip alignments with [`minimap2`](https://github.com/lh3/minimap2)? requires different samplesheet (!); Default: `false` |
 | `--out` | Results directory, default: `'./results'` |
 
 # Procedure
 
   * Extract all fastq.gz files in the readpath folder into a single fastq file. By default this is skipped, enable with `--collect`.
-  * Barcodes and adaptors will be removed using porechop. By default this is skipped, enable with `--porechop`.
-  * Read QC is done via nanoq.
-  * Assemblies are performed with flye.
-  * Polishing is done using medaka, and scaffolding via links, longstitch and / or ragtag. 
-  * Optional short-read polishing can be done using pilon. By default this is not done, enable with `--polish_pilon`, requires different samplesheet with shortreads.
-  * Annotations are created using liftoff. 
-  * Quality of each stage is assessed using QUAST and BUSCO (standalone).
+  * Barcodes and adaptors will be removed using [`porechop`](https://github.com/rrwick/Porechop). By default this is skipped, enable with `--porechop`.
+  * Read QC is done via [`nanoq`](https://github.com/esteinig/nanoq).
+  * Assemblies are performed with [`flye`](https://github.com/fenderglass/Flye).
+  * Polishing is done using medaka, and scaffolding via [`LINKS`](https://github.com/bcgsc/LINKS), [`longstitch`](https://github.com/bcgsc/longstitch) and / or [`ragtag`](https://github.com/malonge/RagTag). 
+  * Optional short-read polishing can be done using [`pilon`](https://github.com/broadinstitute/pilon). By default this is not done, enable with `--polish_pilon`, requires different samplesheet with shortreads.
+  * Annotations are lifted from reference using [`liftoff`](https://github.com/agshumate/Liftoff). 
+  * Quality of each stage is assessed using [`QUAST`](https://github.com/ablab/quast) and [`BUSCO`](https://gitlab.com/ezlab/busco) (standalone).
 
 # Graph
 
 ![Tubemap](nf-arassembly.tubes.png)
 
-# Additional information
-
-QUAST will run with the following additional parameters:
-
-```
-        --eukaryote \\
-        --glimmer \\
-        --conserved-genes-finding \\
-```
-
 # Usage
+
+Clone this repo:
+
+```
+git clone https://github.com/nschan/nf-arassembly/
+```
 
 ## Standard Pipeline
 
@@ -108,7 +107,7 @@ sampleName,reads,assembly.fasta.gz,reference.fasta,reference.gff,reads_on_assemb
 
 ## Polishing with pilon
 
-The assemblies can optionally be polished using available short-reads using pilon.
+The assemblies can optionally be polished using available short-reads using [`pilon`](https://github.com/broadinstitute/pilon).
 `--polish_pilon`
 
 This requires additional information in the samplesheet: `shortread_F`, `shortread_R` and `paired`:
@@ -122,9 +121,19 @@ In a case where only single-reads are available, `shortread_R` should be empty, 
 
 ## Scaffolding
 
-`ragtag`, `LINKS`, and `longstitch` can be used for scaffolding.
+[`LINKS`](https://github.com/bcgsc/LINKS), [`longstitch`](https://github.com/bcgsc/longstitch) and / or [`ragtag`](https://github.com/malonge/RagTag) can be used for scaffolding.
 
 ## Using liftoff
 
-If `lift_annotations` is used, the annotations from the reference genome will be mapped to assemblies and scaffolds using liftoff.
+If `lift_annotations` is used (default), the annotations from the reference genome will be mapped to assemblies and scaffolds using liftoff.
 This will happen at each step of the pipeline where a new genome fasta is created, i.e. after assembly, after polishing and after scaffolding.
+
+# Additional information
+
+[`QUAST`](https://github.com/ablab/quast) will run with the following additional parameters:
+
+```
+        --eukaryote \\
+        --glimmer \\
+        --conserved-genes-finding \\
+```
