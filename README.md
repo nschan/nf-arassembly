@@ -107,7 +107,7 @@ graph TD
   ragtag[RagTag] --> raliftoff[Annotation:Liftoff]
   ragtag --> raQC[QC: BUSCO & QUAST]
   end
-  Assembly --> Scaffold
+  Assembly -.-> Scaffold
   Polish -.-> Scaffold
 ```
 
