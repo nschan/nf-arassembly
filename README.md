@@ -60,6 +60,8 @@ git clone https://github.com/nschan/nf-arassembly/
 
 ## Standard Pipeline
 
+The standard pipeline assumes nanopore reads (10.14).
+
 The samplesheet _must_ adhere to this format, including the header row. Please note the absence of spaces after the commas:
 
 ```
@@ -78,6 +80,21 @@ nextflow run nf-arassembly --samplesheet 'path/to/sample_sheet.csv' \
 
 If there is no reference genome available use `--use_ref false` to disable the reference genome.
 Liftoff should not be used without a reference, QUAST will no longer compare to reference. 
+
+## Usage with PacBio reads
+
+When pac-bio reads are used, i changing flye mode and skipping medaka.
+
+```
+--flye_mode '--pacbio-raw' --polish_medaka false
+```
+
+or, if HiFi reads are used:
+
+```
+--flye_mode '--pacbio-hifi' --polish_medaka false
+```
+
 
 ## Skipping Flye
 
@@ -128,7 +145,7 @@ In a case where only single-reads are available, `shortread_R` should be empty, 
 If `lift_annotations` is used (default), the annotations from the reference genome will be mapped to assemblies and scaffolds using liftoff.
 This will happen at each step of the pipeline where a new genome fasta is created, i.e. after assembly, after polishing and after scaffolding.
 
-# Additional information
+## QUAST
 
 [`QUAST`](https://github.com/ablab/quast) will run with the following additional parameters:
 
@@ -137,3 +154,7 @@ This will happen at each step of the pipeline where a new genome fasta is create
         --glimmer \\
         --conserved-genes-finding \\
 ```
+
+# Acknowledgements
+
+This pipeline builds on [modules](https://github.com/nf-core/modules) developed by [`nf-core`](https://nf-co.re). 

@@ -15,6 +15,7 @@ params.skip_alignments = false
 params.flye_mode = '--nano-hq'
 params.flye_args = ''
 params.polish_pilon = false
+params.polish_medaka = true
 params.medaka_model = 'r1041_e82_400bps_hac_v4.2.0'
 params.scaffold_ragtag = false
 params.scaffold_links = false
@@ -51,6 +52,7 @@ Niklas Schandry                                      niklas@bio.lmu.de          
      collect         : ${params.collect}
      porechop        : ${params.porechop}
      flye_mode       : ${params.flye_mode}
+     polish_medaka   : ${params.polish_medaka}
      medaka_model    : ${params.medaka_model}
      polish_pilon    : ${params.polish_pilon}
      busco db        : ${params.busoc_db}
@@ -869,13 +871,15 @@ workflow ASSEMBLE {
   ASSEMBLY
     .out
     .ch_assembly
-    .set { ch_medaka_in }
-    
-  POLISH_MEDAKA(ch_input, CHOP.out, ch_medaka_in, ch_ref_bam)
-
-  POLISH_MEDAKA
-    .out
     .set { ch_polished_genome }
+
+  if(params.polish_medaka) {
+    POLISH_MEDAKA(ch_input, CHOP.out, ch_polished_genome, ch_ref_bam)
+
+    POLISH_MEDAKA
+      .out
+      .set { ch_polished_genome }
+  }
 
   /*
   Polishing with short reads using pulon
