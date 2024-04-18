@@ -10,6 +10,7 @@ Genome assembly based on:
   * polishing using [`medaka`](https://github.com/nanoporetech/medaka) and / or [`pilon`](https://github.com/broadinstitute/pilon)
   * scaffolding using [`LINKS`](https://github.com/bcgsc/LINKS), [`longstitch`](https://github.com/bcgsc/longstitch) or [`ragtag`](https://github.com/malonge/RagTag) (reference based)
   * quality control of assemblies with [`QUAST`](https://github.com/ablab/quast) and [`BUSCO`](https://gitlab.com/ezlab/busco), 
+
 # Parameters
 
 See also [schema.md](schema.md)
@@ -47,6 +48,70 @@ See also [schema.md](schema.md)
   * Quality of each stage is assessed using [`QUAST`](https://github.com/ablab/quast) and [`BUSCO`](https://gitlab.com/ezlab/busco) (standalone).
 
 # Graph
+
+```mermaid
+graph TD
+  fastq[Reads fastq] -.-> porechop["porechop"]
+  fastq -.-> Readqc
+  porechop -.-> Readqc
+  subgraph k-mers
+  direction TB
+  jellyfish --> genomescope
+  end
+  subgraph Readqc[Read QC]
+  nanoq
+  end
+  fastq -.-> k-mers
+  porechop -.-> k-mers
+  porechop -.-> Assembly
+  fastq -.-> Assembly
+  subgraph Assembly
+  direction LR
+  assembler[Flye]
+  assembler --> asqc[QC: BUSCO & QUAST]
+  assembler --> asliftoff[Annotation:Liftoff]
+  end
+  subgraph Polish
+  direction LR
+  subgraph Medaka
+  medaka[medaka] 
+  medaka --> meliftoff[Annotation:Liftoff]
+  medaka --> meqc[QC: BUSCO & QUAST]
+  end
+  subgraph Pilon
+  pilon[pilon] 
+  pilon --> piliftoff[Annotation:Liftoff]
+  pilon --> piqc[QC: BUSCO & QUAST]
+  end
+  Medaka -.-> Pilon
+  end
+  Assembly -.-> Polish
+  subgraph Scaffold
+  direction TB
+  Longstitch
+  Links
+  RagTag
+  end
+  subgraph Longstitch
+  direction TB
+  longstitch[Longstitch] --> lsliftoff[Annotation:Liftoff]
+  longstitch --> lsQC[QC: BUSCO & QUAST]
+  end
+  subgraph Links
+  direction TB
+  links[Links] --> liliftoff[Annotation:Liftoff]
+  links --> liQC[QC: BUSCO & QUAST]
+  end
+  subgraph RagTag
+  direction TB
+  ragtag[RagTag] --> raliftoff[Annotation:Liftoff]
+  ragtag --> raQC[QC: BUSCO & QUAST]
+  end
+  Assembly --> Scaffold
+  Polish -.-> Scaffold
+```
+
+# Tubemap
 
 ![Tubemap](nf-arassembly.tubes.png)
 

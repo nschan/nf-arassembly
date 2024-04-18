@@ -9,6 +9,12 @@ params.samplesheet = false
 params.enable_conda = false
 params.collect = false
 params.porechop = false
+//Jellyfish params
+params.jelly_is_reads = true
+params.kmer_length = 21
+params.read_length = 3000
+params.dump = false
+//
 params.use_ref = true
 params.skip_flye = false
 params.skip_alignments = false
@@ -19,7 +25,6 @@ params.polish_medaka = true
 params.medaka_model = 'r1041_e82_400bps_hac_v4.2.0'
 params.scaffold_ragtag = false
 params.scaffold_links = false
-//params.scaffold_slr = false
 params.scaffold_longstitch = false
 params.lift_annotations = true
 params.busoc_db = "/dss/dsslegfs01/pn73so/pn73so-dss-0000/becker_common/software/busco_db"
@@ -86,6 +91,13 @@ include { PORECHOP } from './modules/porechop/main'
 
 // Read statistics
 include { NANOQ } from './modules/nanoq/main'
+
+// Jellyfish
+include { COUNT } from './modules/jellyfish/main.nf'
+include { DUMP } from './modules/jellyfish/main.nf'
+include { HISTO } from './modules/jellyfish/main.nf'
+include { STATS } from './modules/jellyfish/main.nf'
+include { GENOMESCOPE } from './modules/genomescope/main.nf'
 
 // Alignment
 include { ALIGN_TO_BAM as ALIGN } from './modules/align/main'
@@ -190,6 +202,31 @@ workflow COLLECT {
     report
     stats
  }
+
+ workflow JELLYFISH {
+    take:
+        samples // id, fasta
+    
+    main: 
+        COUNT(samples)
+        COUNT
+          .out
+          .set { kmers }
+          
+        if(params.dump) {
+          DUMP(kmers)
+        }
+
+        HISTO(kmers)
+        if(params.is_reads) {
+          HISTO
+            .out
+            .map { it -> [it[0], it[1], params.kmer_length, params.read_length] }
+            .set { genomescope_in }
+          GENOMESCOPE(genomescope_in)
+        }
+        STATS(kmers)
+}
 
 /*
  ===========================================
@@ -626,41 +663,7 @@ def create_shortread_channel(LinkedHashMap row) {
   emit:
      scaffolds
 }
-/*
-workflow RUN_SLR {
-  take:
-     inputs
-     in_reads
-     assembly
-     references
-     ch_aln_to_ref
-  
-  main:
-      assembly
-        .join(in_reads)
-        .set { slr_in }
 
-      SLR(slr_in)
-
-      SLR
-        .out
-        .scaffolds
-        .set{ scaffolds }
-      
-      MAP_TO_ASSEMBLY(in_reads, scaffolds)
-
-      RUN_QUAST(scaffolds, inputs, ch_aln_to_ref, MAP_TO_ASSEMBLY.out.aln_to_assembly_bam)
-
-      RUN_BUSCO(scaffolds)
-
-      if(params.lift_annotations) {
-        RUN_LIFTOFF(SLR.out.scaffolds, inputs)
-      }
-
-  emit:
-     scaffolds
-}
-*/
 workflow RUN_LONGSTITCH {
   take:
      inputs
@@ -850,6 +853,8 @@ workflow ASSEMBLE {
   CHOP(COLLECT.out)
 
   NANOQ(CHOP.out)
+
+  JELLYFISH(CHOP.out)
 
   /*
   Prepare assembly
