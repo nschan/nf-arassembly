@@ -4,12 +4,17 @@
 
 Assembly pipeline for arabidopsis genomes from nanopore sequencing written in [`nextflow`](https://nextflow.io/). Should also work for other species.
 
-Genome assembly based on:
-  * [`porechop`](https://github.com/rrwick/Porechop) for read trimming,
-  * [`flye`](https://github.com/fenderglass/Flye) for assembly, 
-  * polishing using [`medaka`](https://github.com/nanoporetech/medaka) and / or [`pilon`](https://github.com/broadinstitute/pilon)
-  * scaffolding using [`LINKS`](https://github.com/bcgsc/LINKS), [`longstitch`](https://github.com/bcgsc/longstitch) or [`ragtag`](https://github.com/malonge/RagTag) (reference based)
-  * quality control of assemblies with [`QUAST`](https://github.com/ablab/quast) and [`BUSCO`](https://gitlab.com/ezlab/busco), 
+# Procedure
+
+  * Extract all fastq.gz files in the readpath folder into a single fastq file. By default this is skipped, enable with `--collect`.
+  * Barcodes and adaptors will be removed using [`porechop`](https://github.com/rrwick/Porechop). By default this is skipped, enable with `--porechop`.
+  * Read QC is done via [`nanoq`](https://github.com/esteinig/nanoq).
+  * k-mer based assessment of the reads via [`Jellyfish`](https://github.com/gmarcais/Jellyfish) and [`genomescope`](https://github.com/schatzlab/genomescope/)
+  * Assemblies are performed with [`flye`](https://github.com/fenderglass/Flye).
+  * Polishing is done using medaka, and scaffolding via [`LINKS`](https://github.com/bcgsc/LINKS), [`longstitch`](https://github.com/bcgsc/longstitch) and / or [`ragtag`](https://github.com/malonge/RagTag). 
+  * Optional short-read polishing can be done using [`pilon`](https://github.com/broadinstitute/pilon). By default this is not done, enable with `--polish_pilon`, requires different samplesheet with shortreads.
+  * Annotations are lifted from reference using [`liftoff`](https://github.com/agshumate/Liftoff). 
+  * Quality of each stage is assessed using [`QUAST`](https://github.com/ablab/quast) and [`BUSCO`](https://gitlab.com/ezlab/busco) (standalone).
 
 # Parameters
 
@@ -22,9 +27,14 @@ See also [schema.md](schema.md)
 | `--collect` | Are the provided reads a folder (`true`) or a single fq files (default: `false` ) |
 | `--use_ref` | Use a refence genome? (default: `true`) |
 | `--porechop` | Run [`porechop`](https://github.com/rrwick/Porechop)? (default: `false`) |
+| `--jelly_is_reads` | use `-C` with [`Jellyfish`](https://github.com/gmarcais/Jellyfish)? (default: `true`) |
+| `--kmer_length` | kmer size for [`Jellyfish`](https://github.com/gmarcais/Jellyfish)? (default: 21) |
+| `--read_length` | Read length for [`genomescope`](https://github.com/schatzlab/genomescope/)? Since long reads are of variable length, I use median length (default: 3000) |
+| `--porechop` | Run [`porechop`](https://github.com/rrwick/Porechop)? (default: `false`) |
 | `--flye_mode` | The mode to be used by [`flye`](https://github.com/fenderglass/Flye); default: `"--nano-hq"` |
 | `--flye_args` | Arguments to be passed to [`flye`](https://github.com/fenderglass/Flye), default: `none`. Example: `--flye_args '--genome-size 130g --asm-coverage 50'` |
-| `--medaka_model` | Model used by [`medaka`](https://github.com/nanoporetech/medaka), default: 'r1041_e82_400bps_hac@v4.2.0:consesus'` |
+| `--polish_medaka` | Polish using [`medaka`](https://github.com/nanoporetech/medaka), default: `true` |
+| `--medaka_model` | Model used by [`medaka`](https://github.com/nanoporetech/medaka), default: 'r1041_e82_400bps_hac@v4.2.0:consesus' |
 | `--polish_pilon` | Polish with short reads using [`pilon`](https://github.com/broadinstitute/pilon)? Sefault: `false` |
 | `--busco_db` | Path to local [`BUSCO`](https://gitlab.com/ezlab/busco) db?; default: `/dss/dsslegfs01/pn73so/pn73so-dss-0000/becker_common/software/busco_db` |
 | `--busco_lineage` | [`BUSCO`](https://gitlab.com/ezlab/busco) lineage to use; default: `brassicales_odb10` |
@@ -35,17 +45,6 @@ See also [schema.md](schema.md)
 | `--skip_flye` | Skip assembly with [`flye`](https://github.com/fenderglass/Flye)?, requires different samplesheet (!); Default: `false` |
 | `--skip_alignments` | Skip alignments with [`minimap2`](https://github.com/lh3/minimap2)? requires different samplesheet (!); Default: `false` |
 | `--out` | Results directory, default: `'./results'` |
-
-# Procedure
-
-  * Extract all fastq.gz files in the readpath folder into a single fastq file. By default this is skipped, enable with `--collect`.
-  * Barcodes and adaptors will be removed using [`porechop`](https://github.com/rrwick/Porechop). By default this is skipped, enable with `--porechop`.
-  * Read QC is done via [`nanoq`](https://github.com/esteinig/nanoq).
-  * Assemblies are performed with [`flye`](https://github.com/fenderglass/Flye).
-  * Polishing is done using medaka, and scaffolding via [`LINKS`](https://github.com/bcgsc/LINKS), [`longstitch`](https://github.com/bcgsc/longstitch) and / or [`ragtag`](https://github.com/malonge/RagTag). 
-  * Optional short-read polishing can be done using [`pilon`](https://github.com/broadinstitute/pilon). By default this is not done, enable with `--polish_pilon`, requires different samplesheet with shortreads.
-  * Annotations are lifted from reference using [`liftoff`](https://github.com/agshumate/Liftoff). 
-  * Quality of each stage is assessed using [`QUAST`](https://github.com/ablab/quast) and [`BUSCO`](https://gitlab.com/ezlab/busco) (standalone).
 
 # Graph
 
