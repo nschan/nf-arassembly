@@ -19,8 +19,7 @@ process GENOMESCOPE {
         tuple val(meta), path("*_genomescope.txt"), emit: summary
         tuple val(meta), path("*_plot.log.png"), emit: plot_log
         tuple val(meta), path("*_plot.png"), emit: plot
-
-    def complement = params.is_reads ? '-C' : ''
+        tuple val(meta), env(est_hap_len), emit: estimated_hap_len
 
     script:
         """
@@ -28,5 +27,10 @@ process GENOMESCOPE {
         mv genomescope/summary.txt ${meta}_genomescope.txt
         mv genomescope/plot.log.png ${meta}_plot.log.png
         mv genomescope/plot.png ${meta}_plot.png
+        est_hap_len=\$(cat ${meta}_genomescope.txt \\
+            | grep 'Haploid Length' \\
+            | sed 's@ bp@@g' \\
+            | sed 's@,@@g' \\
+            | awk '{printf "%i", (\$4+\$5)/2 }')
         """
 }
