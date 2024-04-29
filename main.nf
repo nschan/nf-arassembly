@@ -12,17 +12,19 @@ params.porechop = false
 //Jellyfish params
 params.jelly_is_reads = true
 params.kmer_length = 21
-params.read_length = 3000
+params.read_length = null
 params.dump = false
+
 //
 params.use_ref = true
 params.skip_flye = false
-params.skip_alignments = false
+params.genome_size = null
 params.flye_mode = '--nano-hq'
 params.flye_args = ''
 params.polish_pilon = false
 params.polish_medaka = true
 params.medaka_model = 'r1041_e82_400bps_hac_v4.2.0'
+params.skip_alignments = false
 params.scaffold_ragtag = false
 params.scaffold_links = false
 params.scaffold_longstitch = false
@@ -56,6 +58,8 @@ Niklas Schandry                                      niklas@bio.lmu.de          
      samplesheet     : ${params.samplesheet}
      collect         : ${params.collect}
      porechop        : ${params.porechop}
+     read_length     : ${params.read_length}
+     genome_size     : ${params.genome_size}
      flye_mode       : ${params.flye_mode}
      polish_medaka   : ${params.polish_medaka}
      medaka_model    : ${params.medaka_model}
@@ -198,14 +202,21 @@ workflow COLLECT {
     .stats
     .set { stats }
 
+  NANOQ
+    .out
+    .stats
+    .set { median_length }
+
   emit:
     report
     stats
+    median_length
  }
 
  workflow JELLYFISH {
     take:
         samples // id, fasta
+        nanoq_out
     
     main: 
         COUNT(samples)
@@ -218,14 +229,26 @@ workflow COLLECT {
         }
 
         HISTO(kmers)
-        if(params.is_reads) {
-          HISTO
+        if(!params.read_length == null) {
+            HISTO
             .out
             .map { it -> [it[0], it[1], params.kmer_length, params.read_length] }
             .set { genomescope_in }
-          GENOMESCOPE(genomescope_in)
+        } 
+        if(params.read_length == null) {
+            HISTO
+            .out
+            .map { it -> [it[0], it[1], params.kmer_length] }
+            .join( nanoq_out )
+            .set { genomescope_in }
         }
+        GENOMESCOPE(genomescope_in)
+
         STATS(kmers)
+        GENOMESCOPE.out.estimated_hap_len
+          .set{ hap_len }
+
+    emit: hap_len
 }
 
 /*
@@ -353,6 +376,7 @@ workflow MAP_SR {
 workflow ASSEMBLY {
   take: in_reads
         ch_input
+        genomescope_out
 
   main:
   
@@ -372,7 +396,17 @@ workflow ASSEMBLY {
       .set { ch_assembly }
   } else {
     // Run flye
-    FLYE(in_reads, params.flye_mode)
+    if(!params.genome_size == null) {
+      in_reads
+        .map { it -> [it[0], it[1], params.genome_size] }
+        .set { flye_in }
+    }
+    if(params.genome_size == null) {
+      in_reads
+        .join(genomescope_out)
+        .set { flye_in }
+    }
+    FLYE(flye_in, params.flye_mode)
 
     FLYE
       .out
@@ -854,13 +888,13 @@ workflow ASSEMBLE {
 
   NANOQ(CHOP.out)
 
-  JELLYFISH(CHOP.out)
+  JELLYFISH(CHOP.out, NANOQ.out.median_length)
 
   /*
   Prepare assembly
   */
 
-  ASSEMBLY(CHOP.out, ch_input)
+  ASSEMBLY(CHOP.out, ch_input, JELLYFISH.out.hap_len)
   
   /*
   Polishing with medaka
@@ -909,11 +943,6 @@ workflow ASSEMBLE {
   if(params.scaffold_links) {
     RUN_LINKS(ch_input, CHOP.out, ch_polished_genome, ch_refs, ch_ref_bam)
   }
-  /*
-  if(params.scaffold_slr) {
-    RUN_SLR(ch_input, CHOP.out, ch_polished_genome, ch_refs, ch_ref_bam)
-  }
-  */
   if(params.scaffold_longstitch) {
     RUN_LONGSTITCH(ch_input, CHOP.out, ch_polished_genome, ch_refs, ch_ref_bam)
   }

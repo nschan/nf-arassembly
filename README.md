@@ -27,11 +27,10 @@ See also [schema.md](schema.md)
 | `--collect` | Are the provided reads a folder (`true`) or a single fq files (default: `false` ) |
 | `--use_ref` | Use a refence genome? (default: `true`) |
 | `--porechop` | Run [`porechop`](https://github.com/rrwick/Porechop)? (default: `false`) |
-| `--jelly_is_reads` | use `-C` with [`Jellyfish`](https://github.com/gmarcais/Jellyfish)? (default: `true`) |
 | `--kmer_length` | kmer size for [`Jellyfish`](https://github.com/gmarcais/Jellyfish)? (default: 21) |
-| `--read_length` | Read length for [`genomescope`](https://github.com/schatzlab/genomescope/)? Since long reads are of variable length, I use median length (default: 3000) |
-| `--porechop` | Run [`porechop`](https://github.com/rrwick/Porechop)? (default: `false`) |
+| `--read_length` | Read length for [`genomescope`](https://github.com/schatzlab/genomescope/)? If this is `null` (default), the median read length estimated by [`nanoq`](https://github.com/esteinig/nanoq). will be used. If this is not `null`, the given value will be used for _all_ samples. |
 | `--flye_mode` | The mode to be used by [`flye`](https://github.com/fenderglass/Flye); default: `"--nano-hq"` |
+| `--genome_size` | Expected genome size for [`flye`](https://github.com/fenderglass/Flye). If this is `null` (default), the haploid genome size for each sample will be estimated via [`genomescope`](https://github.com/schatzlab/genomescope/). If this is not `null`, the given value will be used for _all_ samples. |
 | `--flye_args` | Arguments to be passed to [`flye`](https://github.com/fenderglass/Flye), default: `none`. Example: `--flye_args '--genome-size 130g --asm-coverage 50'` |
 | `--polish_medaka` | Polish using [`medaka`](https://github.com/nanoporetech/medaka), default: `true` |
 | `--medaka_model` | Model used by [`medaka`](https://github.com/nanoporetech/medaka), default: 'r1041_e82_400bps_hac@v4.2.0:consesus' |
@@ -50,9 +49,10 @@ See also [schema.md](schema.md)
 
 ```mermaid
 graph TD
-  fastq[Reads fastq] -.-> porechop["porechop"]
-  fastq -.-> Readqc
-  porechop -.-> Readqc
+  fastq[Reads fastq] --> porechop("porechop")
+  porechop --> clean_reads(clean reads)
+  fastq -. skip porechop .-> clean_reads
+  clean_reads --> Readqc
   subgraph k-mers
   direction TB
   jellyfish --> genomescope
@@ -60,31 +60,31 @@ graph TD
   subgraph Readqc[Read QC]
   nanoq
   end
-  fastq -.-> k-mers
-  porechop -.-> k-mers
-  porechop -.-> Assembly
-  fastq -.-> Assembly
+  clean_reads --> k-mers
+  nanoq -. median read length .-> jellyfish
+  clean_reads --> Assembly
   subgraph Assembly
-  direction LR
+  direction TB
   assembler[Flye]
-  assembler --> asqc[QC: BUSCO & QUAST]
-  assembler --> asliftoff[Annotation:Liftoff]
+  assembler --> asqc(QC: BUSCO & QUAST)
+  assembler --> asliftoff(Annotation:Liftoff)
   end
+  genomescope -. estimated genome size .-> Assembly
   subgraph Polish
   direction LR
   subgraph Medaka
   medaka[medaka] 
-  medaka --> meliftoff[Annotation:Liftoff]
-  medaka --> meqc[QC: BUSCO & QUAST]
+  medaka --> meliftoff(Annotation:Liftof)
+  medaka --> meqc(QC: BUSCO & QUAST)
   end
   subgraph Pilon
   pilon[pilon] 
-  pilon --> piliftoff[Annotation:Liftoff]
-  pilon --> piqc[QC: BUSCO & QUAST]
+  pilon --> piliftoff(Annotation:Liftoff)
+  pilon --> piqc(QC: BUSCO & QUAST)
   end
   Medaka -.-> Pilon
   end
-  Assembly -.-> Polish
+  Assembly --> Polish
   subgraph Scaffold
   direction TB
   Longstitch
@@ -93,21 +93,21 @@ graph TD
   end
   subgraph Longstitch
   direction TB
-  longstitch[Longstitch] --> lsliftoff[Annotation:Liftoff]
-  longstitch --> lsQC[QC: BUSCO & QUAST]
+  longstitch[Longstitch] --> lsliftoff(Annotation:Liftoff)
+  longstitch --> lsQC(QC: BUSCO & QUAST)
   end
   subgraph Links
   direction TB
-  links[Links] --> liliftoff[Annotation:Liftoff]
-  links --> liQC[QC: BUSCO & QUAST]
+  links[Links] --> liliftoff(Annotation:Liftoff)
+  links --> liQC(QC: BUSCO & QUAST)
   end
   subgraph RagTag
   direction TB
-  ragtag[RagTag] --> raliftoff[Annotation:Liftoff]
-  ragtag --> raQC[QC: BUSCO & QUAST]
+  ragtag[RagTag] --> raliftoff(Annotation:Liftoff)
+  ragtag --> raQC(QC: BUSCO & QUAST)
   end
-  Assembly -.-> Scaffold
-  Polish -.-> Scaffold
+  Assembly -. skip polishing .-> Scaffold
+  Polish --> Scaffold
 ```
 
 # Tubemap

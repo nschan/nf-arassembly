@@ -18,8 +18,6 @@ process COUNT {
     output:
         tuple val(meta), path("*.jf"), emit: kmers
 
-    def complement = params.jelly_is_reads ? '-C' : ''
-
     script:
         """
         if [[ ${fasta} == *.gz ]]; then
@@ -34,7 +32,7 @@ process COUNT {
         jellyfish count \\
          -m ${params.kmer_length} \\
          -s 140M \\
-         $complement \\
+         -C \\
          -t $task.cpus ${fasta.baseName}.fasta 
          
         mv mer_counts.jf ${meta}_mer_counts.jf

@@ -18,7 +18,7 @@ process FLYE {
         'quay.io/biocontainers/flye:2.9--py39h6935b12_1' }"
 
     input:
-    tuple val(meta), path(reads)
+    tuple val(meta), path(reads), val(genome_size)
     val mode
 
     output:
@@ -44,9 +44,9 @@ process FLYE {
     flye \\
         $mode \\
         $reads \\
+        --genome-size $genome_size \\
         --out-dir . \\
-        --threads \\
-        $task.cpus \\
+        --threads $task.cpus \\
         $flye_args
 
     gzip -c assembly.fasta > ${prefix}.assembly.fasta.gz
