@@ -16,9 +16,7 @@ process SAMTOOLS_STATS {
     tuple val(meta), path("*.stats"), emit: stats
 
     script:
-    def software = getSoftwareName(task.process)
     """
     samtools stats $bam > ${bam}.stats
-    echo \$(samtools --version 2>&1) | sed 's/^.*samtools //; s/Using.*\$//' > ${software}.version.txt
     """
 }

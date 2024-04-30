@@ -27,7 +27,6 @@ workflow BAM_SORT_SAMTOOLS {
     stats    = BAM_STATS_SAMTOOLS.out.stats       // channel: [ val(meta), [ stats ] ]
     flagstat = BAM_STATS_SAMTOOLS.out.flagstat    // channel: [ val(meta), [ flagstat ] ]
     idxstats = BAM_STATS_SAMTOOLS.out.idxstats    // channel: [ val(meta), [ idxstats ] ]
-    samtools_version  = SAMTOOLS_SORT.out.version //    path
 }
 
 workflow BAM_INDEX_STATS_SAMTOOLS {
@@ -44,7 +43,6 @@ workflow BAM_INDEX_STATS_SAMTOOLS {
     stats    = BAM_STATS_SAMTOOLS.out.stats       // channel: [ val(meta), [ stats ] ]
     flagstat = BAM_STATS_SAMTOOLS.out.flagstat    // channel: [ val(meta), [ flagstat ] ]
     idxstats = BAM_STATS_SAMTOOLS.out.idxstats    // channel: [ val(meta), [ idxstats ] ]
-    //samtools_version  = SAMTOOLS_SORT.out.version //    path
 }
 
 
@@ -63,5 +61,4 @@ workflow BAM_GET_UNMAPPED_SAMTOOLS {
     flagstat = BAM_STATS_SAMTOOLS.out.flagstat    // channel: [ val(meta), [ flagstat ] ]
     idxstats = BAM_STATS_SAMTOOLS.out.idxstats    // channel: [ val(meta), [ idxstats ] ]
     unmapped = SAMTOOLS_GET_UNMAPPED.out.unmapped_fq  // channel: [ val (meata), [unmapped_R1, unmapped_R2]]
-    //samtools_version  = SAMTOOLS_SORT.out.version //    path
 }
