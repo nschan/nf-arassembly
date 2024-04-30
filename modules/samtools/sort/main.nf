@@ -14,7 +14,6 @@ process SAMTOOLS_SORT {
 
     output:
     tuple val(meta), path("*.bam"), emit: bam
-    path  "*.version.txt"         , emit: version
 
     script:
     def prefix   = options.suffix ? "${meta}${options.suffix}" : "${meta}"

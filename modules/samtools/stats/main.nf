@@ -14,7 +14,6 @@ process SAMTOOLS_STATS {
 
     output:
     tuple val(meta), path("*.stats"), emit: stats
-    path  "*.version.txt"           , emit: version
 
     script:
     def software = getSoftwareName(task.process)

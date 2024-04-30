@@ -14,8 +14,6 @@ process SAMTOOLS_GET_UNMAPPED {
 
     output:
     tuple val(meta), path("*fastq.gz"), emit: unmapped_fq
-    path  "*.version.txt"              , emit: version
-
     script:
     """
     samtools fastq -f 4 $bam \

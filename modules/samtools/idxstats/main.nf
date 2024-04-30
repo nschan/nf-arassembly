@@ -14,7 +14,6 @@ process SAMTOOLS_IDXSTATS {
 
     output:
     tuple val(meta), path("*.idxstats"), emit: idxstats
-    path  "*.version.txt"              , emit: version
 
     script:
     """
