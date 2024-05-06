@@ -27,7 +27,7 @@ process QUAST {
     prefix   = task.ext.prefix ?: 'quast'
     def features  = use_gff ? "--features $gff" : ''
     def reference = use_fasta ? "-r $fasta" : ''
-    def reference_bam = params.use_ref ? "-ref-bam ${ref_bam}" : ''
+    def reference_bam = params.use_ref ? "--ref-bam ${ref_bam}" : ''
 
     """
     quast.py \\

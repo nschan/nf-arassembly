@@ -1,11 +1,9 @@
 process RAGTAG_SCAFFOLD {
   tag "$meta"
   label 'process_high'
-  
   conda "bioconda::ragtag=2.1.0"
-
   publishDir(
-    path: "${params.out}"/"${task.process}".replace(':','/').toLowerCase(), 
+    path: { "${params.out}/${task.process}".replace(':','/').toLowerCase() }, 
     mode: 'copy',
     overwrite: true,
     saveAs: { fn -> fn.substring(fn.lastIndexOf('/')+1) }
