@@ -27,7 +27,7 @@ process PORECHOP {
     
     [[ -f ${prefix}.fastq.gz   ]] || ln -s $reads ${prefix}.fastq.gz
 
-    micromamba run -n base porechop \\
+    porechop \\
         -i ${prefix}.fastq.gz \\
         -t $task.cpus \\
         $args \\
