@@ -7,32 +7,8 @@
 
 accessions=(
     Bor-4
-    Borky-1
-    Bozen-1_2
-    Faeb-2
-    IP_Hue-3
-    IP_Var-0
-    Istisu-1
-    Shigu-2
-    T960
-    Tac-0
-    Ts-1
-    Ukidi-07
-    Kidr
-    Vimmerby
-    T840
-    Castelfed-1-199
-    Hadd-3
     Col-0
     Paw-26
-    Rak-2
-    Kastel-1
-    Tu-B1-2
-    WI-0
-    DraIV3-7
-    Giffo-1
-    Dra2-1
-    Borky-1-new
 )
 
 stages=(
@@ -43,9 +19,9 @@ stages=(
     run_ragtag
 )
 
-dest_base="/dss/dsslegfs01/pn73so/pn73so-dss-0000/becker_common/Duncan/assemblies/"
+dest_base="/some/directory/"
 
-results_base="/dss/lxclscratch/0A/ra34bin/assembly_chop/results/arassembly/"
+results_base="/scratch/results/arassembly/"
 for acc in "${accessions[@]}"; do
     for stage in "${stages[@]}"; do
 
