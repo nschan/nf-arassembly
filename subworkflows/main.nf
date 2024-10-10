@@ -25,6 +25,7 @@ include { BAM_INDEX_STATS_SAMTOOLS as BAM_STATS } from '../modules/bam_sort_stat
 
 // Assembly 
 include { FLYE } from '../modules/flye/main'    
+include { HIFIASM, HIFIASM_UL } from '../modules/hifiasm/main'
 
 // Polishing
 include { MEDAKA } from '../modules/medaka/main'
@@ -62,7 +63,7 @@ workflow COLLECT {
   main:
   
     ch_input
-      .map { row -> [row.sample, row.readpath] }
+      .map { row -> [row.sample, row.ontreads] }
       .set { in_reads }
 
     if(params.collect) {
@@ -125,6 +126,30 @@ workflow COLLECT {
     report
     stats
     median_length
+ }
+ 
+ /*
+ nanopore specific read preparation workfflow
+ */
+
+ workflow PREPARE_ONT {
+  take: inputs
+
+  main:
+    COLLECT(inputs)
+
+    CHOP(COLLECT.out)
+
+    trimmed_reads = CHOP.out
+
+    NANOQ(trimmed_reads)
+
+    trimmed_med_len = NANOQ.out.median_length
+
+  emit:
+      trimmed
+      trimmed_med_len
+
  }
 
  workflow JELLYFISH {
@@ -283,14 +308,13 @@ workflow MAP_SR {
  ===========================================
 */
 
-workflow ASSEMBLY {
+workflow ASSEMBLE_ONT {
   take: 
-    in_reads
+    ont_reads
     ch_input
     genomescope_out
-
+    
   main:
-  
     Channel.empty().set { ch_refs }
 
     if (params.use_ref) {
@@ -301,22 +325,22 @@ workflow ASSEMBLY {
 
     if(params.skip_flye ) {
       // Sample sheet layout when skipping FLYE
-      // sample,readpath,assembly,ref_fasta,ref_gff
+      // sample,ontreads,assembly,ref_fasta,ref_gff
       ch_input
         .map { row -> [row.sample, row.assembly] }
         .set { ch_assembly }
     } else {
       // Run flye
       if(!params.genome_size == null) {
-        in_reads
+        ont_reads
           .map { it -> [it[0], it[1], params.genome_size] }
           .set { flye_in }
       }
       if(params.genome_size == null) {
-        in_reads
+        ont_reads
           .join(genomescope_out)
           .set { flye_in }
-      }
+      } 
       FLYE(flye_in, params.flye_mode)
 
       FLYE
@@ -331,7 +355,7 @@ workflow ASSEMBLY {
 
     if(params.skip_alignments) {
       // Sample sheet layout when skipping FLYE and mapping
-      // sample,readpath,assembly,ref_fasta,ref_gff,assembly_bam,assembly_bai,ref_bam
+      // sample,ontreads,assembly,ref_fasta,ref_gff,assembly_bam,assembly_bai,ref_bam
       ch_input
         .map { row -> [row.sample, row.ref_bam] }
         .set { ch_ref_bam }
@@ -348,14 +372,14 @@ workflow ASSEMBLY {
       Channel.empty().set { ch_ref_bam }
 
       if(params.use_ref) {
-        MAP_TO_REF(in_reads, ch_refs)
+        MAP_TO_REF(ont_reads, ch_refs)
 
         MAP_TO_REF
           .out
           .set { ch_ref_bam }
       }
 
-      MAP_TO_ASSEMBLY(in_reads, ch_assembly)
+      MAP_TO_ASSEMBLY(ont_reads, ch_assembly)
       MAP_TO_ASSEMBLY
         .out
         .aln_to_assembly_bam
@@ -380,6 +404,104 @@ workflow ASSEMBLY {
   emit: 
     ch_assembly
     ch_ref_bam
+}
+
+workflow ASSEMBLE_HIFI {
+  take: 
+    hifi_reads // normal mode: meta, hifireads; UL mode: meta, hifireads, ontreads
+    ch_input
+        
+  main:
+    Channel.empty().set { ch_refs }
+
+    if (params.use_ref) {
+      ch_input
+        .map { row -> [row.sample, row.ref_fasta] }
+        .set { ch_refs }
+    }
+    if(params.hifi_ont) {
+
+      HIFIASM_UL(hifi_reads, params.hifi_args)
+
+      HIFIASM_UL
+          .out
+          .primary_contigs_fasta
+          .set { ch_assembly }
+
+    } else {
+
+      HIFIASM(hifi_reads, params.hifi_args)
+
+      HIFIASM
+          .out
+          .primary_contigs_fasta
+          .set { ch_assembly }
+
+    }
+
+    /*
+    Prepare alignments
+    */
+
+    if(params.skip_alignments) {
+      // Sample sheet layout when skipping FLYE and mapping
+      // sample,ontreads,assembly,ref_fasta,ref_gff,assembly_bam,assembly_bai,ref_bam
+      ch_input
+        .map { row -> [row.sample, row.ref_bam] }
+        .set { ch_ref_bam }
+
+      ch_input
+        .map { row -> [row.sample, row.assembly_bam] }
+        .set { ch_assembly_bam }
+
+      ch_input
+        .map { row -> [row.sample, row.assembly_bam, row.assembly_bai] }
+        .set { ch_assembly_bam_bai } 
+
+    } else {
+      Channel.empty().set { ch_ref_bam }
+
+    if(params.hifi_ont) {
+      hifi_reads
+        .map { it -> [it[0], it[1]]}
+        .set { ch_reads }
+    } else {
+      hifi_reads
+        .set { ch_reads }
+    }
+
+    if(params.use_ref) {
+        MAP_TO_REF(ch_reads, ch_refs)
+
+        MAP_TO_REF
+          .out
+          .set { ch_ref_bam }
+      }
+
+      MAP_TO_ASSEMBLY(ch_reads, ch_assembly)
+      MAP_TO_ASSEMBLY
+        .out
+        .aln_to_assembly_bam
+        .set { ch_assembly_bam }
+
+      MAP_TO_ASSEMBLY
+        .out
+        .aln_to_assembly_bam_bai
+        .set { ch_assembly_bam_bai }
+    }
+    if(params.lift_annotations) {
+      RUN_LIFTOFF(ch_assembly, ch_input)
+    }
+    /*
+    Run QUAST on initial assembly
+    */
+
+    RUN_QUAST(ch_assembly, ch_input, ch_ref_bam, ch_assembly_bam)
+
+    RUN_BUSCO(ch_assembly)
+
+    emit:
+      ch_assembly
 }
 
 /*
@@ -760,13 +882,11 @@ workflow ASSEMBLE {
            .splitCsv(header:true) 
            .set { ch_input }
     if(params.use_ref) {
-    ch_input
-      .map { row -> [row.sample, row.ref_fasta] }
-      .set { ch_refs }
+      ch_input
+        .map { row -> [row.sample, row.ref_fasta] }
+        .set { ch_refs }
     }
-
-    }
-  else {
+  } else {
     exit 1, 'Input samplesheet not specified!'
   }
 
@@ -774,38 +894,63 @@ workflow ASSEMBLE {
   Prepare reads
   */
 
-  COLLECT(ch_input)
+  PREPARE_ONT(ch_input)
 
-  CHOP(COLLECT.out)
-
-  NANOQ(CHOP.out)
-
-  JELLYFISH(CHOP.out, NANOQ.out.median_length)
+  JELLYFISH(PREPARE_ONT.out.trimmed, PREPARE_ONT.out.trimmed_med_len)
 
   /*
   Prepare assembly
   */
 
-  ASSEMBLY(CHOP.out, ch_input, JELLYFISH.out.hap_len)
+  ASSEMBLE_ONT(PREPARE_ONT.out.trimmed, ch_input, JELLYFISH.out.hap_len)
   
-  /*
-  Polishing with medaka
-  */
   if (params.use_ref) {
-    ASSEMBLY
+    ASSEMBLE_ONT
       .out
       .ch_ref_bam
       .set { ch_ref_bam }
   }
 
-
-  ASSEMBLY
+  ASSEMBLE_ONT
     .out
     .ch_assembly
     .set { ch_polished_genome }
 
+  /*
+  Optional HiFi assembly
+  */
+
+  if(params.hifi) {
+    ch_input
+      .map { it -> [it.sample, it.hifireads] }
+      .set { ch_hifireads }
+    if (params.hifi_ont) {
+      ch_input
+       .map { it -> [it.sample, it.hifireads, it.ontreads] }
+       .set { ch_hifireads }
+    }
+    ASSEMBLE_HIFI(ch_hifireads, ch_input)
+  
+    ASSEMBLE_HIFI
+      .out
+      .ch_assembly
+      .set { ch_hifi_assembly }
+
+    if (params.hifi_ont) {
+      ch_hifi_assembly 
+        .set { ch_polished_genome }
+    }
+  }
+  
+  /*
+  Polishing with medaka; ONT only
+  */
+
   if(params.polish_medaka) {
-    POLISH_MEDAKA(ch_input, CHOP.out, ch_polished_genome, ch_ref_bam)
+    
+    if(params.hifi_ont) error 'Medaka should not be used on ONT-HiFi hybrid assemblies'
+
+    POLISH_MEDAKA(ch_input, PREPARE_ONT.out.trimmed, ch_polished_genome, ch_ref_bam)
 
     POLISH_MEDAKA
       .out
@@ -817,7 +962,7 @@ workflow ASSEMBLE {
   */
 
   if(params.polish_pilon) {
-    POLISH_PILON(ch_input, CHOP.out, ch_polished_genome, ch_ref_bam)
+    POLISH_PILON(ch_input, PREPARE_ONT.out.trimmed, ch_polished_genome, ch_ref_bam)
     POLISH_PILON
       .out
       .pilon_improved
@@ -829,14 +974,18 @@ workflow ASSEMBLE {
   */
 
   if(params.scaffold_ragtag) {
-    RUN_RAGTAG(ch_input, CHOP.out, ch_polished_genome, ch_refs, ch_ref_bam)
+    if(params.hifi && !params.hifi_ont) {
+      RUN_RAGTAG(ch_input, PREPARE_ONT.out.trimmed, ch_polished_genome, ch_hifi_assembly, ch_ref_bam)
+    } else {
+      RUN_RAGTAG(ch_input, PREPARE_ONT.out.trimmed, ch_polished_genome, ch_refs, ch_ref_bam)
+    }
   }
 
   if(params.scaffold_links) {
-    RUN_LINKS(ch_input, CHOP.out, ch_polished_genome, ch_refs, ch_ref_bam)
+    RUN_LINKS(ch_input, PREPARE_ONT.out.trimmed, ch_polished_genome, ch_refs, ch_ref_bam)
   }
   if(params.scaffold_longstitch) {
-    RUN_LONGSTITCH(ch_input, CHOP.out, ch_polished_genome, ch_refs, ch_ref_bam)
+    RUN_LONGSTITCH(ch_input, PREPARE_ONT.out.trimmed, ch_polished_genome, ch_refs, ch_ref_bam)
   }
   
 } 

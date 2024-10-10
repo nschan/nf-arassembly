@@ -3,6 +3,7 @@
 # nf-arassembly
 
 Assembly pipeline for arabidopsis genomes from nanopore sequencing written in [`nextflow`](https://nextflow.io/). Should also work for other species.
+Experimental support for combinations of ONT and pacbio HiFi data.
 
 # Procedure
 
@@ -10,7 +11,7 @@ Assembly pipeline for arabidopsis genomes from nanopore sequencing written in [`
   * Barcodes and adaptors will be removed using [`porechop`](https://github.com/rrwick/Porechop). By default this is skipped, enable with `--porechop`.
   * Read QC is done via [`nanoq`](https://github.com/esteinig/nanoq).
   * k-mer based assessment of the reads via [`Jellyfish`](https://github.com/gmarcais/Jellyfish) and [`genomescope`](https://github.com/schatzlab/genomescope/)
-  * Assemblies are performed with [`flye`](https://github.com/fenderglass/Flye).
+  * Assemblies are performed with [`flye`](https://github.com/fenderglass/Flye) or [`hifiasm`](https://github.com/chhylp123/hifiasm)
   * Polishing is done using medaka, and scaffolding via [`LINKS`](https://github.com/bcgsc/LINKS), [`longstitch`](https://github.com/bcgsc/longstitch) and / or [`ragtag`](https://github.com/malonge/RagTag). 
   * Optional short-read polishing can be done using [`pilon`](https://github.com/broadinstitute/pilon). By default this is not done, enable with `--polish_pilon`, requires different samplesheet with shortreads.
   * Annotations are lifted from reference using [`liftoff`](https://github.com/agshumate/Liftoff). 
@@ -29,6 +30,9 @@ See also [schema.md](schema.md)
 | `--porechop` | Run [`porechop`](https://github.com/rrwick/Porechop)? (default: `false`) |
 | `--kmer_length` | kmer size for [`Jellyfish`](https://github.com/gmarcais/Jellyfish)? (default: 21) |
 | `--read_length` | Read length for [`genomescope`](https://github.com/schatzlab/genomescope/)? If this is `null` (default), the median read length estimated by [`nanoq`](https://github.com/esteinig/nanoq). will be used. If this is not `null`, the given value will be used for _all_ samples. |
+| `--hifi` | Additional pacbio hifi reads are available? default: `false`|
+| `--hifi_ont` | Use hifi and ONT reads with `hifiasm --ul`? default: `false`|
+| `--hifi_args` | Extra arguments passed to [`hifiasm`](https://github.com/chhylp123/hifiasm). default: `''`|
 | `--flye_mode` | The mode to be used by [`flye`](https://github.com/fenderglass/Flye); default: `"--nano-hq"` |
 | `--genome_size` | Expected genome size for [`flye`](https://github.com/fenderglass/Flye). If this is `null` (default), the haploid genome size for each sample will be estimated via [`genomescope`](https://github.com/schatzlab/genomescope/). If this is not `null`, the given value will be used for _all_ samples. |
 | `--flye_args` | Arguments to be passed to [`flye`](https://github.com/fenderglass/Flye), default: `none`. Example: `--flye_args '--genome-size 130g --asm-coverage 50'` |
@@ -129,7 +133,7 @@ The standard pipeline assumes nanopore reads (10.14).
 The samplesheet _must_ adhere to this format, including the header row. Please note the absence of spaces after the commas:
 
 ```
-sample,readpath,ref_fasta,ref_gff
+sample,ontreads,ref_fasta,ref_gff
 sampleName,path/to/reads,path/to/reference.fasta,path/to/reference.gff
 ```
 
@@ -138,6 +142,15 @@ To run the pipeline with a samplesheet on biohpc_gen:
 nextflow run nf-arassembly --samplesheet 'path/to/sample_sheet.csv' \
                            --out './results' \
                            -profile charliecloud,biohpc_gen
+```
+
+## Additional hifireads
+
+The pipeline expects ONT and HiFi reads:
+
+```
+sample,ontreads,hifireads,ref_fasta,ref_gff
+sampleName,path/to/ontreads,path/to/hifireads.fq.gz,path/to/reference.fasta,path/to/reference.gff
 ```
 
 ## No refence genome
