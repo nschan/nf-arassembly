@@ -3,7 +3,7 @@
 # nf-arassembly
 
 Assembly pipeline for arabidopsis genomes from nanopore sequencing written in [`nextflow`](https://nextflow.io/). Should also work for other species.
-Experimental support for combinations of ONT and pacbio HiFi data.
+The focus of this pipeline is ONT reads, however there is [experimental support](#additional-hifireads) for combinations of ONT and pacbio HiFi data, or exclusive HiFi data.
 
 # Procedure
 
@@ -33,6 +33,7 @@ See also [schema.md](schema.md)
 | `--hifi` | Additional pacbio hifi reads are available? default: `false`|
 | `--hifi_ont` | Use hifi and ONT reads with `hifiasm --ul`? default: `false`|
 | `--hifi_args` | Extra arguments passed to [`hifiasm`](https://github.com/chhylp123/hifiasm). default: `''`|
+| `--hifiasm` | If *only* HiFi reads are available, this can be used to perform an assembly with [`hifiasm`](https://github.com/chhylp123/hifiasm). default: `false`|
 | `--flye_mode` | The mode to be used by [`flye`](https://github.com/fenderglass/Flye); default: `"--nano-hq"` |
 | `--genome_size` | Expected genome size for [`flye`](https://github.com/fenderglass/Flye). If this is `null` (default), the haploid genome size for each sample will be estimated via [`genomescope`](https://github.com/schatzlab/genomescope/). If this is not `null`, the given value will be used for _all_ samples. |
 | `--flye_args` | Arguments to be passed to [`flye`](https://github.com/fenderglass/Flye), default: `none`. Example: `--flye_args '--genome-size 130g --asm-coverage 50'` |
@@ -146,12 +147,16 @@ nextflow run nf-arassembly --samplesheet 'path/to/sample_sheet.csv' \
 
 ## Additional hifireads
 
-The pipeline expects ONT and HiFi reads:
+The pipeline expects ONT and HiFi reads in the samplesheet like this:
 
 ```
 sample,ontreads,hifireads,ref_fasta,ref_gff
 sampleName,path/to/ontreads,path/to/hifireads.fq.gz,path/to/reference.fasta,path/to/reference.gff
 ```
+
+There are two options when using `--hifi`, which are controlled by `--hifi_ont`:
+ - If `--hifi_ont` is `false`, HiFi reads will be assembled via `hifiasm`, and used as a **scaffold** for the ONT reads assembled with `flye`, if `--scaffold_ragtag` is enabled. This will overide the standard procedure used in this pipeline, where the scaffolding would be done against the provided reference genome.
+ - If `--hifi_ont` is `true`,  `hifiasm` will be used with `--ul` and the ONT reads will be used along the HiFi reads to assemble. 
 
 ## No refence genome
 
@@ -160,7 +165,7 @@ Liftoff should not be used without a reference, QUAST will no longer compare to 
 
 ## Usage with PacBio reads
 
-When pac-bio reads are used, i changing flye mode and skipping medaka.
+When pac-bio reads are used exclusively, and `flye` should be used for assembly, i suggest changing flye mode and skipping medaka.
 
 ```
 --flye_mode '--pacbio-raw' --polish_medaka false
@@ -171,6 +176,8 @@ or, if HiFi reads are used:
 ```
 --flye_mode '--pacbio-hifi' --polish_medaka false
 ```
+
+Alternatively, `hifiasm` can be used for assembly instead of flye using `--hifiasm`.
 
 
 ## Skipping Flye
@@ -207,7 +214,7 @@ The assemblies can optionally be polished using available short-reads using [`pi
 This requires additional information in the samplesheet: `shortread_F`, `shortread_R` and `paired`:
 
 ```
-sample,readpath,ref_fasta,ref_gff,shortread_F,shortread_R,paired
+sample,ontreads,ref_fasta,ref_gff,shortread_F,shortread_R,paired
 sampleName,reads,assembly.fasta.gz,reference.fasta,reference.gff,short_F1.fastq,short_F2.fastq,true
 ```
 

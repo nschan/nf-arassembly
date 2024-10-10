@@ -23,6 +23,7 @@ params.flye_mode = '--nano-hq'
 params.flye_args = ''
 params.hifi = false
 params.hifi_ont = false
+params.hifiasm = false
 params.hifi_args = ''
 params.polish_pilon = false
 params.polish_medaka = true

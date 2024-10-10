@@ -419,24 +419,21 @@ workflow ASSEMBLE_HIFI {
         .map { row -> [row.sample, row.ref_fasta] }
         .set { ch_refs }
     }
-    if(params.hifi_ont) {
 
+    if(params.hifi_ont) {
       HIFIASM_UL(hifi_reads, params.hifi_args)
 
       HIFIASM_UL
-          .out
-          .primary_contigs_fasta
-          .set { ch_assembly }
-
+        .out
+        .primary_contigs_fasta
+        .set { ch_assembly }
     } else {
-
       HIFIASM(hifi_reads, params.hifi_args)
 
       HIFIASM
-          .out
-          .primary_contigs_fasta
-          .set { ch_assembly }
-
+        .out
+        .primary_contigs_fasta
+        .set { ch_assembly }
     }
 
     /*
@@ -461,16 +458,16 @@ workflow ASSEMBLE_HIFI {
     } else {
       Channel.empty().set { ch_ref_bam }
 
-    if(params.hifi_ont) {
-      hifi_reads
-        .map { it -> [it[0], it[1]]}
-        .set { ch_reads }
-    } else {
-      hifi_reads
-        .set { ch_reads }
-    }
+      if(params.hifi_ont) {
+        hifi_reads
+          .map { it -> [it[0], it[1]]}
+          .set { ch_reads }
+      } else {
+        hifi_reads
+          .set { ch_reads }
+      }
 
-    if(params.use_ref) {
+      if(params.use_ref) {
         MAP_TO_REF(ch_reads, ch_refs)
 
         MAP_TO_REF
@@ -489,19 +486,20 @@ workflow ASSEMBLE_HIFI {
         .aln_to_assembly_bam_bai
         .set { ch_assembly_bam_bai }
     }
+
     if(params.lift_annotations) {
       RUN_LIFTOFF(ch_assembly, ch_input)
     }
-    /*
-    Run QUAST on initial assembly
-    */
 
+  /*
+  Run QUAST on initial assembly
+  */
     RUN_QUAST(ch_assembly, ch_input, ch_ref_bam, ch_assembly_bam)
 
     RUN_BUSCO(ch_assembly)
 
-    emit:
-      ch_assembly
+  emit:
+    ch_assembly
 }
 
 /*
@@ -899,23 +897,22 @@ workflow ASSEMBLE {
   JELLYFISH(PREPARE_ONT.out.trimmed, PREPARE_ONT.out.trimmed_med_len)
 
   /*
-  Prepare assembly
+  Assemble with flye, unless --hifi_ont is set
   */
-
-  ASSEMBLE_ONT(PREPARE_ONT.out.trimmed, ch_input, JELLYFISH.out.hap_len)
-  
-  if (params.use_ref) {
+  if (!params.hifi_ont && !params.hifiasm) {
+    ASSEMBLE_ONT(PREPARE_ONT.out.trimmed, ch_input, JELLYFISH.out.hap_len)
     ASSEMBLE_ONT
       .out
-      .ch_ref_bam
-      .set { ch_ref_bam }
+      .ch_assembly
+      .set { ch_polished_genome }
+    if (params.use_ref) {
+      ASSEMBLE_ONT
+        .out
+        .ch_ref_bam
+        .set { ch_ref_bam }
   }
-
-  ASSEMBLE_ONT
-    .out
-    .ch_assembly
-    .set { ch_polished_genome }
-
+  }
+ 
   /*
   Optional HiFi assembly
   */
@@ -936,7 +933,7 @@ workflow ASSEMBLE {
       .ch_assembly
       .set { ch_hifi_assembly }
 
-    if (params.hifi_ont) {
+    if (params.hifi_ont || params.hifiasm) {
       ch_hifi_assembly 
         .set { ch_polished_genome }
     }
@@ -949,6 +946,7 @@ workflow ASSEMBLE {
   if(params.polish_medaka) {
     
     if(params.hifi_ont) error 'Medaka should not be used on ONT-HiFi hybrid assemblies'
+    if(params.hifiasn)  error 'Medaka should not be used on hifiasm assemblies'
 
     POLISH_MEDAKA(ch_input, PREPARE_ONT.out.trimmed, ch_polished_genome, ch_ref_bam)
 
