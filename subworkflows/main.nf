@@ -25,7 +25,7 @@ include { BAM_INDEX_STATS_SAMTOOLS as BAM_STATS } from '../modules/bam_sort_stat
 
 // Assembly 
 include { FLYE } from '../modules/flye/main'    
-include { HIFIASM, HIFIASM_UL } from '../modules/hifiasm/main'
+include { HIFIASM; HIFIASM_UL } from '../modules/hifiasm/main'
 
 // Polishing
 include { MEDAKA } from '../modules/medaka/main'
@@ -140,9 +140,9 @@ workflow COLLECT {
 
     CHOP(COLLECT.out)
 
-    trimmed_reads = CHOP.out
+    trimmed = CHOP.out
 
-    NANOQ(trimmed_reads)
+    NANOQ(trimmed)
 
     trimmed_med_len = NANOQ.out.median_length
 
@@ -891,10 +891,20 @@ workflow ASSEMBLE {
   /*
   Prepare reads
   */
+  if(!params.hifiasm) {
+    PREPARE_ONT(ch_input)
+    JELLYFISH(PREPARE_ONT.out.trimmed, PREPARE_ONT.out.trimmed_med_len)
+    PREPARE_ONT.out.trimmed.set { ch_reads }
+  } 
 
-  PREPARE_ONT(ch_input)
+  if(params.hifiasm) {
+    ch_input
+      .map { it -> [it.sample, it.hifireads] }
+      .set { ch_reads }
+  }
 
-  JELLYFISH(PREPARE_ONT.out.trimmed, PREPARE_ONT.out.trimmed_med_len)
+
+
 
   /*
   Assemble with flye, unless --hifi_ont or --hifiasm is set
@@ -960,7 +970,7 @@ workflow ASSEMBLE {
   */
 
   if(params.polish_pilon) {
-    POLISH_PILON(ch_input, PREPARE_ONT.out.trimmed, ch_polished_genome, ch_ref_bam)
+    POLISH_PILON(ch_input, ch_reads, ch_polished_genome, ch_ref_bam)
     POLISH_PILON
       .out
       .pilon_improved
@@ -973,17 +983,17 @@ workflow ASSEMBLE {
 
   if(params.scaffold_ragtag) {
     if(params.hifi && !params.hifi_ont) {
-      RUN_RAGTAG(ch_input, PREPARE_ONT.out.trimmed, ch_polished_genome, ch_hifi_assembly, ch_ref_bam)
+      RUN_RAGTAG(ch_input, ch_reads, ch_polished_genome, ch_hifi_assembly, ch_ref_bam)
     } else {
-      RUN_RAGTAG(ch_input, PREPARE_ONT.out.trimmed, ch_polished_genome, ch_refs, ch_ref_bam)
+      RUN_RAGTAG(ch_input, ch_reads, ch_polished_genome, ch_refs, ch_ref_bam)
     }
   }
 
   if(params.scaffold_links) {
-    RUN_LINKS(ch_input, PREPARE_ONT.out.trimmed, ch_polished_genome, ch_refs, ch_ref_bam)
+    RUN_LINKS(ch_input, ch_reads, ch_polished_genome, ch_refs, ch_ref_bam)
   }
   if(params.scaffold_longstitch) {
-    RUN_LONGSTITCH(ch_input, PREPARE_ONT.out.trimmed, ch_polished_genome, ch_refs, ch_ref_bam)
+    RUN_LONGSTITCH(ch_input, ch_reads, ch_polished_genome, ch_refs, ch_ref_bam)
   }
   
 } 

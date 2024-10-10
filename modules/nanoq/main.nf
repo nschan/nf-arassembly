@@ -18,6 +18,6 @@ process NANOQ {
     script:
         """
         nanoq -i ${reads} -j -r ${meta}_report.json -s -H -vvv > ${meta}_stats.json
-        median=\$(cat ${meta}_report.json | grep -o '"median_length":[0-9]*' | grep -o [0-9]*)
+        median=\$(cat ${meta}_report.json | grep -o '"median_length":[0-9]*' | grep -o '[0-9]*')
         """
 }
