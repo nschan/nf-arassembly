@@ -72,7 +72,8 @@ This pipelines comes with some profiles, which can be used via `-profile`. Since
 
 ```mermaid
 graph TD
-  fastq[Reads fastq] --> porechop("porechop")
+  hifi[HiFi reads] --> Hifiassembly
+  fastq[ONT Reads fastq] --> porechop("porechop")
   porechop --> clean_reads(clean reads)
   fastq -. skip porechop .-> clean_reads
   clean_reads --> Readqc
@@ -86,11 +87,17 @@ graph TD
   clean_reads --> k-mers
   nanoq -. median read length .-> jellyfish
   clean_reads --> Assembly
-  subgraph Assembly
+  subgraph Assembly[flye assembly]
   direction TB
-  assembler[Flye]
+  assembler[flye]
   assembler --> asqc(QC: BUSCO & QUAST)
   assembler --> asliftoff(Annotation:Liftoff)
+  end
+  subgraph Hifiassembly
+  direction TB
+  assembler2[hifiasm]
+  assembler2 --> asqc2(QC: BUSCO & QUAST)
+  assembler2 --> asliftoff2(Annotation:Liftoff)
   end
   genomescope -. estimated genome size .-> Assembly
   subgraph Polish
