@@ -897,7 +897,7 @@ workflow ASSEMBLE {
   JELLYFISH(PREPARE_ONT.out.trimmed, PREPARE_ONT.out.trimmed_med_len)
 
   /*
-  Assemble with flye, unless --hifi_ont is set
+  Assemble with flye, unless --hifi_ont or --hifiasm is set
   */
   if (!params.hifi_ont && !params.hifiasm) {
     ASSEMBLE_ONT(PREPARE_ONT.out.trimmed, ch_input, JELLYFISH.out.hap_len)
@@ -946,7 +946,7 @@ workflow ASSEMBLE {
   if(params.polish_medaka) {
     
     if(params.hifi_ont) error 'Medaka should not be used on ONT-HiFi hybrid assemblies'
-    if(params.hifiasn)  error 'Medaka should not be used on hifiasm assemblies'
+    if(params.hifiasm)  error 'Medaka should not be used on HiFi assemblies'
 
     POLISH_MEDAKA(ch_input, PREPARE_ONT.out.trimmed, ch_polished_genome, ch_ref_bam)
 

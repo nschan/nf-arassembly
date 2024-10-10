@@ -21,7 +21,6 @@ The focus of this pipeline is ONT reads, however there is [experimental support]
 
 See also [schema.md](schema.md)
 
-
 | Parameter | Effect |
 | --- | --- |
 | `--samplesheet` | Path to samplesheet |
@@ -30,13 +29,13 @@ See also [schema.md](schema.md)
 | `--porechop` | Run [`porechop`](https://github.com/rrwick/Porechop)? (default: `false`) |
 | `--kmer_length` | kmer size for [`Jellyfish`](https://github.com/gmarcais/Jellyfish)? (default: 21) |
 | `--read_length` | Read length for [`genomescope`](https://github.com/schatzlab/genomescope/)? If this is `null` (default), the median read length estimated by [`nanoq`](https://github.com/esteinig/nanoq). will be used. If this is not `null`, the given value will be used for _all_ samples. |
-| `--hifi` | Additional pacbio hifi reads are available? default: `false`|
-| `--hifi_ont` | Use hifi and ONT reads with `hifiasm --ul`? default: `false`|
-| `--hifi_args` | Extra arguments passed to [`hifiasm`](https://github.com/chhylp123/hifiasm). default: `''`|
-| `--hifiasm` | If *only* HiFi reads are available, this can be used to perform an assembly with [`hifiasm`](https://github.com/chhylp123/hifiasm). default: `false`|
 | `--flye_mode` | The mode to be used by [`flye`](https://github.com/fenderglass/Flye); default: `"--nano-hq"` |
 | `--genome_size` | Expected genome size for [`flye`](https://github.com/fenderglass/Flye). If this is `null` (default), the haploid genome size for each sample will be estimated via [`genomescope`](https://github.com/schatzlab/genomescope/). If this is not `null`, the given value will be used for _all_ samples. |
 | `--flye_args` | Arguments to be passed to [`flye`](https://github.com/fenderglass/Flye), default: `none`. Example: `--flye_args '--genome-size 130g --asm-coverage 50'` |
+| `--hifi` | Additional pacbio hifi reads are available? default: `false`|
+| `--hifi_ont` | Use hifi and ONT reads with `hifiasm --ul`? default: `false`|
+| `--hifi_args` | Extra arguments passed to [`hifiasm`](https://github.com/chhylp123/hifiasm). default: `''`|
+| `--hifiasm` | If *only* HiFi reads are available, this can be used to perform an assembly with [`hifiasm`](https://github.com/chhylp123/hifiasm) instead of `flye`. default: `false`|
 | `--polish_medaka` | Polish using [`medaka`](https://github.com/nanoporetech/medaka), default: `true` |
 | `--medaka_model` | Model used by [`medaka`](https://github.com/nanoporetech/medaka), default: 'r1041_e82_400bps_hac@v4.2.0:consesus' |
 | `--polish_pilon` | Polish with short reads using [`pilon`](https://github.com/broadinstitute/pilon)? Sefault: `false` |
@@ -49,6 +48,25 @@ See also [schema.md](schema.md)
 | `--skip_flye` | Skip assembly with [`flye`](https://github.com/fenderglass/Flye)?, requires different samplesheet (!); Default: `false` |
 | `--skip_alignments` | Skip alignments with [`minimap2`](https://github.com/lh3/minimap2)? requires different samplesheet (!); Default: `false` |
 | `--out` | Results directory, default: `'./results'` |
+
+# Included profiles
+
+This pipelines comes with some profiles, which can be used via `-profile`. Since there are different ways to handle HiFi reads, and combinations of HiFI and ONT reads, I provide profiles for three common scenarios: 
+  - Assembly of ONT via `flye`, assembly of HiFi via `hifiasm` and scaffolding of ONT assembly onto HiFi assembly: `ont_on_hifi`
+  - Combined assembly of ONT and HiFi with `hifiasm`: `hifiasm_ul`
+  - Assembly of only HiFi reads via `hifiasm`: `hifiasm`
+
+| Name | Contents |
+| --- | --- |
+| `charliecloud` | Container configurations for charliecloud |
+| `docker` | Container configurations for docker |
+| `singularity` | Container configurations for singularity |
+| `biohpc_gen` | Configuration to run on biohpc_gen SLURM cluster |
+| `ont_on_hifi` | parameters for assembly of HiFi (via `hifiasm`) and ONT (via `flye`) and subsequent scaffolding of the ONT assembly onto HiFi assembly with `ragtag` |
+| `hifi_ul` | parameters for the assembly of ONT and HiFI reads via `hifiasm` |
+| `hifi_only` | parameters for assembly using only HiFi reads via `hifiasm` |
+
+
 
 # Graph
 
@@ -177,7 +195,7 @@ or, if HiFi reads are used:
 --flye_mode '--pacbio-hifi' --polish_medaka false
 ```
 
-Alternatively, `hifiasm` can be used for assembly instead of flye using `--hifiasm`.
+Alternatively, `hifiasm` can be used for assembly instead of flye using `--hifiasm`. Arguments to `hifiasm` can be passed via `--hifi_args`
 
 
 ## Skipping Flye
