@@ -56,7 +56,7 @@ Run via nextflow:
 
 The standard pipeline assumes nanopore reads (10.14).
 
-The samplesheet _must_ adhere to this format, including the header row. Please note the absence of spaces after the commas:
+The samplesheet is a `.csv` file with a header. It _must_ adhere to this format, including the header row. Please note the absence of spaces after the commas:
 
 ```
 sample,ontreads,ref_fasta,ref_gff
@@ -167,6 +167,30 @@ To ease configuration there are three HiFi profiles included:
 | `hifiasm_ul`   |  Combine ONT and HiFI reads during `hifiasm` assembly | `--hifi --hifi_ont --polish_medaka false` |
 | `hifi_only`    |  Use only HiFi reads for assembly via `hifiasm` | `--hifi --hifi_only --polish_medaka false` |
 
+# Additional options
+
+## Polishing with pilon
+
+The assemblies can be polished using available short-reads using [`pilon`](https://github.com/broadinstitute/pilon).
+`--polish_pilon`
+
+This requires additional information in the samplesheet: `shortread_F`, `shortread_R` and `paired`:
+
+```
+sample,ontreads,ref_fasta,ref_gff,shortread_F,shortread_R,paired
+sampleName,reads,assembly.fasta.gz,reference.fasta,reference.gff,short_F1.fastq,short_F2.fastq,true
+```
+
+In a case where only single-reads are available, `shortread_R` should be empty, and `paired` should be false.
+
+## Scaffolding
+
+[`LINKS`](https://github.com/bcgsc/LINKS), [`longstitch`](https://github.com/bcgsc/longstitch) and / or [`ragtag`](https://github.com/malonge/RagTag) can be used for scaffolding.
+
+## Using liftoff
+
+If `--lift_annotations` is used (default), the annotations from the reference genome will be mapped to assemblies and scaffolds using liftoff.
+This will happen at each step of the pipeline where a new genome fasta is created, i.e. after assembly, after polishing and after scaffolding.
 
 ## No refence genome
 
@@ -198,29 +222,6 @@ This mode requires a different samplesheet:
 sample,readpath,assembly,ref_fasta,ref_gff,assembly_bam,assembly_bai,ref_bam
 sampleName,reads,assembly.fasta.gz,reference.fasta,reference.gff,reads_on_assembly.bam,reads_on_assembly.bai,reads_on_reference.bam
 ```
-
-## Polishing with pilon
-
-The assemblies can optionally be polished using available short-reads using [`pilon`](https://github.com/broadinstitute/pilon).
-`--polish_pilon`
-
-This requires additional information in the samplesheet: `shortread_F`, `shortread_R` and `paired`:
-
-```
-sample,ontreads,ref_fasta,ref_gff,shortread_F,shortread_R,paired
-sampleName,reads,assembly.fasta.gz,reference.fasta,reference.gff,short_F1.fastq,short_F2.fastq,true
-```
-
-In a case where only single-reads are available, `shortread_R` should be empty, and `paired` should be false
-
-## Scaffolding
-
-[`LINKS`](https://github.com/bcgsc/LINKS), [`longstitch`](https://github.com/bcgsc/longstitch) and / or [`ragtag`](https://github.com/malonge/RagTag) can be used for scaffolding.
-
-## Using liftoff
-
-If `lift_annotations` is used (default), the annotations from the reference genome will be mapped to assemblies and scaffolds using liftoff.
-This will happen at each step of the pipeline where a new genome fasta is created, i.e. after assembly, after polishing and after scaffolding.
 
 ## QUAST
 
