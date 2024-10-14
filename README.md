@@ -80,7 +80,7 @@ See also [schema.md](schema.md)
 | `--porechop` | Run [`porechop`](https://github.com/rrwick/Porechop)? (default: `false`) |
 | `--kmer_length` | kmer size for [`Jellyfish`](https://github.com/gmarcais/Jellyfish)? (default: 21) |
 | `--read_length` | Read length for [`genomescope`](https://github.com/schatzlab/genomescope/)? If this is `null` (default), the median read length estimated by [`nanoq`](https://github.com/esteinig/nanoq). will be used. If this is not `null`, the given value will be used for _all_ samples. |
-| `--flye_mode` | The mode to be used by [`flye`](https://github.com/fenderglass/Flye); default: `"--nano-hq"` |
+| `--flye_mode` | The mode to be used by [`flye`](https://github.com/fenderglass/Flye); default: `"--nano-hq"`, options are: `"--pacbio-raw"`, `"--pacbio-corr"`, `"--pacbio-hifi"`, `"--nano-raw"`, `"--nano-corr"`, `"--nano-hq"` |
 | `--genome_size` | Expected genome size for [`flye`](https://github.com/fenderglass/Flye). If this is `null` (default), the haploid genome size for each sample will be estimated via [`genomescope`](https://github.com/schatzlab/genomescope/). If this is not `null`, the given value will be used for _all_ samples. |
 | `--flye_args` | Arguments to be passed to [`flye`](https://github.com/fenderglass/Flye), default: `none`. Example: `--flye_args '--genome-size 130g --asm-coverage 50'` |
 | `--hifi` | Additional pacbio hifi reads are available? default: `false`|
@@ -133,6 +133,13 @@ or, if HiFi reads are used:
 --flye_mode '--pacbio-hifi' --polish_medaka false
 ```
 
+Irrespective of the real type of reads in that column, [`flye`](https://github.com/fenderglass/Flye) will always use the `ontreads` file for assembly. Therefore, if [`flye`](https://github.com/fenderglass/Flye) is used for assembly, the samplesheet should look like this:
+
+```
+sample,ontreads,ref_fasta,ref_gff
+sampleName,path/to/reads,path/to/reference.fasta,path/to/reference.gff
+```
+
 ## hifiasm
 
 Alternatively, `hifiasm` can be used for assembly instead of flye using `--hifi`. Arguments to `hifiasm` can be passed via `--hifi_args`
@@ -146,7 +153,7 @@ sampleName,path/to/ontreads,path/to/hifireads.fq.gz,path/to/reference.fasta,path
 
 There are two options when using `--hifi`, together with ONT reads, which are controlled by `--hifi_ont`:
  - If `--hifi_ont` is `false`, HiFi reads will be assembled via `hifiasm`, and used as a **scaffold** for the ONT reads assembled with `flye`, if `--scaffold_ragtag` is enabled. This will overide the standard procedure used in this pipeline, where the scaffolding would be done against the provided reference genome.
- - If `--hifi_ont` is `true`,  `hifiasm` will be used with `--ul` and the ONT reads will be used along the HiFi reads to assemble. If scaffolding against a reference is perfomed, the reference genome is used.
+ - If `--hifi_ont` is `true`,  `hifiasm` will be used with `--ul` and the ONT reads will be used along the HiFi reads to assemble. If scaffolding against a reference is performed, the reference genome is used.
 
 Another option is to use solely HiFi reads for assembly via `--hifi --hifi_only`.
 
