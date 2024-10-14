@@ -56,12 +56,13 @@ log.info """\
  ▀█   █▀    ███          ███    █▀    ███    ███   ███    █▀   ▄████████▀   ▄████████▀    ██████████  ▀█   ███   █▀  ▄█████████▀  █████▄▄██  ▀█████▀  
                                       ███    ███                                                                                  ▀                   
 ------------------------------------------------------------------------------------------------------------------------------------------------------
-Niklas Schandry                                      niklas@bio.lmu.de                                                                    
+Niklas Schandry                                          niklas@bio.lmu.de                                                                    
 ------------------------------------------------------------------------------------------------------------------------------------------------------
   Results directory  : ${params.out}
 
-  Genera parameters
+  General parameters
      samplesheet     : ${params.samplesheet}
+     use reference   : ${params.use_ref}
 
   ONT preprocessing
      collect         : ${params.collect}

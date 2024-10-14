@@ -8,13 +8,15 @@ The default expectation of this pipeline are ONT reads, however there is [suppor
 # Procedure
 
 
-For nanopore:
-  * Extract all fastq.gz files in the readpath folder into a single fastq file. By default this is skipped, enable with `--collect`.
-  * Barcodes and adaptors will be removed using [`porechop`](https://github.com/rrwick/Porechop). By default this is skipped, enable with `--porechop`.
-  * Read QC is done via [`nanoq`](https://github.com/esteinig/nanoq)
+Preprocessisng:
+  - For nanopore:
+    * Extract all fastq.gz files in the readpath folder into a single fastq file. By default this is skipped, enable with `--collect`.
+    * Barcodes and adaptors will be removed using [`porechop`](https://github.com/rrwick/Porechop). By default this is skipped, enable with `--porechop`.
+      > NB: flye claims to work well on raw, un-trimmed reads
+    * Read QC is done via [`nanoq`](https://github.com/esteinig/nanoq)
 
-For pacbio:
-  * [`lima`](https://lima.how/) to remove primers.
+  - For pacbio:
+    * [`lima`](https://lima.how/) to remove primers.
 
 Assembly
   * k-mer based assessment of the reads via [`Jellyfish`](https://github.com/gmarcais/Jellyfish) and [`genomescope`](https://github.com/schatzlab/genomescope/)
