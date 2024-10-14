@@ -3,7 +3,7 @@
 # nf-arassembly
 
 Assembly pipeline for arabidopsis genomes from long-read sequencing written in [`nextflow`](https://nextflow.io/). Should also work for other species.
-The default expectation of this pipeline are ONT reads, however there is [support](#additional-hifireads), for pacbio HiFI and for combinations of ONT and pacbio HiFi data.
+The default expectation of this pipeline are ONT reads, however there is [support](#Usage-with-PacBio-reads), for pacbio HiFI and for combinations of ONT and pacbio HiFi data.
 
 # Procedure
 
@@ -117,7 +117,23 @@ This pipelines comes with some profiles, which can be used via `-profile`. Since
 | `hifi_ul` | parameters for the assembly of ONT and HiFI reads via `hifiasm` |
 | `hifi_only` | parameters for assembly using only HiFi reads via `hifiasm` |
 
-## Additional hifireads
+# Usage with PacBio reads
+
+When pac-bio reads are used exclusively, and `flye` should be used for assembly, i suggest changing flye mode and skipping medaka.
+
+```
+--flye_mode '--pacbio-raw' --polish_medaka false
+```
+
+or, if HiFi reads are used:
+
+```
+--flye_mode '--pacbio-hifi' --polish_medaka false
+```
+
+## hifiasm
+
+Alternatively, `hifiasm` can be used for assembly instead of flye using `--hifi`. Arguments to `hifiasm` can be passed via `--hifi_args`
 
 The pipeline takes ONT and HiFi reads in the samplesheet like this:
 
@@ -145,23 +161,6 @@ To ease configuration there are three HiFi profiles included:
 
 If there is no reference genome available use `--use_ref false` to disable the reference genome.
 Liftoff should not be used without a reference, QUAST will no longer compare to reference. 
-
-## Usage with PacBio reads
-
-When pac-bio reads are used exclusively, and `flye` should be used for assembly, i suggest changing flye mode and skipping medaka.
-
-```
---flye_mode '--pacbio-raw' --polish_medaka false
-```
-
-or, if HiFi reads are used:
-
-```
---flye_mode '--pacbio-hifi' --polish_medaka false
-```
-
-Alternatively, `hifiasm` can be used for assembly instead of flye using `--hifiasm`. Arguments to `hifiasm` can be passed via `--hifi_args`
-
 
 ## Skipping Flye
 
