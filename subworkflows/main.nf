@@ -7,16 +7,17 @@
 // Preprocessing
 include { COLLECT_READS } from '../modules/local/collect_reads/main'
 include { PORECHOP } from '../modules/porechop/main'
-
+include { LIMA } from '../modules/lima/main'
+include { SAMTOOLS_FASTQ as TO_FASTQ } from '../modules/samtools/fastq/main'
 // Read statistics
 include { NANOQ } from '../modules/nanoq/main'
 
 // Jellyfish
-include { COUNT } from '../modules/jellyfish/main.nf'
-include { DUMP } from '../modules/jellyfish/main.nf'
-include { HISTO } from '../modules/jellyfish/main.nf'
-include { STATS } from '../modules/jellyfish/main.nf'
-include { GENOMESCOPE } from '../modules/genomescope/main.nf'
+include { COUNT } from '../modules/jellyfish/main'
+include { DUMP } from '../modules/jellyfish/main'
+include { HISTO } from '../modules/jellyfish/main'
+include { STATS } from '../modules/jellyfish/main'
+include { GENOMESCOPE } from '../modules/genomescope/main'
 
 // Alignment
 include { ALIGN_TO_BAM as ALIGN } from '../modules/align/main'
@@ -891,25 +892,24 @@ workflow ASSEMBLE {
   /*
   Prepare reads
   */
-  if(!params.hifiasm) {
+  if(!params.hifi_only) {
     PREPARE_ONT(ch_input)
     JELLYFISH(PREPARE_ONT.out.trimmed, PREPARE_ONT.out.trimmed_med_len)
     PREPARE_ONT.out.trimmed.set { ch_reads }
+    ch_ont_reads = ch_reads
   } 
 
-  if(params.hifiasm) {
+  if(params.hifi_only) {
     ch_input
       .map { it -> [it.sample, it.hifireads] }
       .set { ch_reads }
   }
 
 
-
-
   /*
-  Assemble with flye, unless --hifi_ont or --hifiasm is set
+  Assemble with flye, unless --hifi_ont or --hifi_only is set
   */
-  if (!params.hifi_ont && !params.hifiasm) {
+  if (!params.hifi_ont && !params.hifi_only) {
     ASSEMBLE_ONT(PREPARE_ONT.out.trimmed, ch_input, JELLYFISH.out.hap_len)
     ASSEMBLE_ONT
       .out
@@ -931,19 +931,29 @@ workflow ASSEMBLE {
     ch_input
       .map { it -> [it.sample, it.hifireads] }
       .set { ch_hifireads }
-    if (params.hifi_ont) {
-      ch_input
-       .map { it -> [it.sample, it.hifireads, it.ontreads] }
+
+    if(params.lima) {
+      if(is.null(params.pacbio_primers)) error 'Trimming with lima requires a file containing primers (--pacbio_primers)'
+      LIMA(ch_hifi_reads, params.pacbio_primers)
+      TO_FASTQ(LIMA.out.bam)
+      TO_FASTQ
+        .out
+        .set { ch_hifireads }
+    }
+
+    if(params.hifi_ont) {
+      ch_hifi_reads
+       .join(ch_ont_reads)
        .set { ch_hifireads }
     }
+
     ASSEMBLE_HIFI(ch_hifireads, ch_input)
-  
     ASSEMBLE_HIFI
       .out
       .ch_assembly
       .set { ch_hifi_assembly }
 
-    if (params.hifi_ont || params.hifiasm) {
+    if (params.hifi_ont || params.hifi_only) {
       ch_hifi_assembly 
         .set { ch_polished_genome }
     }
@@ -956,7 +966,7 @@ workflow ASSEMBLE {
   if(params.polish_medaka) {
     
     if(params.hifi_ont) error 'Medaka should not be used on ONT-HiFi hybrid assemblies'
-    if(params.hifiasm)  error 'Medaka should not be used on HiFi assemblies'
+    if(params.hifi_only)  error 'Medaka should not be used on HiFi assemblies'
 
     POLISH_MEDAKA(ch_input, PREPARE_ONT.out.trimmed, ch_polished_genome, ch_ref_bam)
 
@@ -982,9 +992,11 @@ workflow ASSEMBLE {
   */
 
   if(params.scaffold_ragtag) {
-    if(params.hifi && !params.hifi_ont) {
+    // If there are HiFi and ONT reads assembled individually, ONT will be scaffolded onto HiFi
+    if(params.hifi && !params.hifi_ont && !params.hifi_only) {
       RUN_RAGTAG(ch_input, ch_reads, ch_polished_genome, ch_hifi_assembly, ch_ref_bam)
     } else {
+      // In all other casas, the assembly will be scaffolded onto the reference
       RUN_RAGTAG(ch_input, ch_reads, ch_polished_genome, ch_refs, ch_ref_bam)
     }
   }

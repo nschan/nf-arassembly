@@ -27,17 +27,16 @@ process HIFIASM {
 
     script:
     def args = hifi_args ?: ''
-    def prefix = task.ext.prefix ?: "${meta}"
     """
     hifiasm \\
         $args \\
         -l0 \\
-        -o ${prefix}.asm \\
+        -o ${meta}.asm \\
         -t $task.cpus \\
         $reads \\
-        2> >( tee ${prefix}.stderr.log >&2  )
+        2> >( tee ${meta}.stderr.log >&2  )
     
-    awk '/^S/{print ">"\$2;print \$3}' ${prefix}.asm.p_ctg.gfa | gzip > ${prefix}.asm.p_ctg.fa.gz
+    awk '/^S/{print ">"\$2;print \$3}' ${meta}.asm.bp.p_ctg.gfa | gzip > ${meta}.asm.bp.p_ctg.fa.gz
     """
     }
 
@@ -71,17 +70,16 @@ process HIFIASM_UL {
 
     script:
     def args = hifi_args ?: ''
-    def prefix = task.ext.prefix ?: "${meta}"
     """
     hifiasm \\
         $args \\
         -l0 \\
-        -o ${prefix}.asm \\
+        -o ${meta}.asm \\
         -t $task.cpus \\
         --ul ${ont_reads} \\
         $hifi_reads \\
-        2> >( tee ${prefix}.stderr.log >&2  )
+        2> >( tee ${meta}.stderr.log >&2  )
     
-    awk '/^S/{print ">"\$2;print \$3}' ${prefix}.asm.p_ctg.gfa | gzip > ${prefix}.asm.p_ctg.fa.gz
+    awk '/^S/{print ">"\$2;print \$3}' ${meta}.asm.bp.p_ctg.gfa | gzip > ${meta}.asm.bp.p_ctg.fa.gz
     """
     }

@@ -2,20 +2,69 @@
 
 # nf-arassembly
 
-Assembly pipeline for arabidopsis genomes from nanopore sequencing written in [`nextflow`](https://nextflow.io/). Should also work for other species.
-The focus of this pipeline is ONT reads, however there is [experimental support](#additional-hifireads) for combinations of ONT and pacbio HiFi data, or exclusive HiFi data.
+Assembly pipeline for arabidopsis genomes from long-read sequencing written in [`nextflow`](https://nextflow.io/). Should also work for other species.
+The default expectation of this pipeline are ONT reads, however there is [support](#additional-hifireads), for pacbio HiFI and for combinations of ONT and pacbio HiFi data.
 
 # Procedure
 
+
+For nanopore:
   * Extract all fastq.gz files in the readpath folder into a single fastq file. By default this is skipped, enable with `--collect`.
   * Barcodes and adaptors will be removed using [`porechop`](https://github.com/rrwick/Porechop). By default this is skipped, enable with `--porechop`.
-  * Read QC is done via [`nanoq`](https://github.com/esteinig/nanoq).
+  * Read QC is done via [`nanoq`](https://github.com/esteinig/nanoq)
+
+For pacbio:
+  * [`lima`](https://lima.how/) to remove primers.
+
+Assembly
   * k-mer based assessment of the reads via [`Jellyfish`](https://github.com/gmarcais/Jellyfish) and [`genomescope`](https://github.com/schatzlab/genomescope/)
-  * Assemblies are performed with [`flye`](https://github.com/fenderglass/Flye) or [`hifiasm`](https://github.com/chhylp123/hifiasm)
-  * Polishing is done using medaka, and scaffolding via [`LINKS`](https://github.com/bcgsc/LINKS), [`longstitch`](https://github.com/bcgsc/longstitch) and / or [`ragtag`](https://github.com/malonge/RagTag). 
-  * Optional short-read polishing can be done using [`pilon`](https://github.com/broadinstitute/pilon). By default this is not done, enable with `--polish_pilon`, requires different samplesheet with shortreads.
-  * Annotations are lifted from reference using [`liftoff`](https://github.com/agshumate/Liftoff). 
+  * Assemblies are performed with [`flye`](https://github.com/fenderglass/Flye),
+  * or [`hifiasm`](https://github.com/chhylp123/hifiasm)
+
+Polishing:
+  * Polishing of ONT assemblies done using [`medaka`](https://github.com/nanoporetech/medaka)
+  * Optional short-read polishing can be done using [`pilon`](https://github.com/broadinstitute/pilon) 
+
+Scaffolding:
+  * [`LINKS`](https://github.com/bcgsc/LINKS)
+  * [`longstitch`](https://github.com/bcgsc/longstitch) 
+  * [`ragtag`](https://github.com/malonge/RagTag)
+
+Annotation:
+  * Annotations are lifted from reference using [`liftoff`](https://github.com/agshumate/Liftoff).
+
+QC: 
   * Quality of each stage is assessed using [`QUAST`](https://github.com/ablab/quast) and [`BUSCO`](https://gitlab.com/ezlab/busco) (standalone).
+
+# Tubemap
+
+![Tubemap](assembly_v2.graph.png)
+
+# Usage
+
+Clone this repo:
+
+```bash
+git clone https://github.com/nschan/nf-arassembly/
+```
+
+Run via nextflow:
+
+The standard pipeline assumes nanopore reads (10.14).
+
+The samplesheet _must_ adhere to this format, including the header row. Please note the absence of spaces after the commas:
+
+```
+sample,ontreads,ref_fasta,ref_gff
+sampleName,path/to/reads,path/to/reference.fasta,path/to/reference.gff
+```
+
+To run the default pipeline with a samplesheet on biohpc_gen using charliecloud:
+
+```bash
+nextflow run nf-arassembly --samplesheet 'path/to/sample_sheet.csv' \
+                           -profile charliecloud,biohpc_gen
+```
 
 # Parameters
 
@@ -33,13 +82,15 @@ See also [schema.md](schema.md)
 | `--genome_size` | Expected genome size for [`flye`](https://github.com/fenderglass/Flye). If this is `null` (default), the haploid genome size for each sample will be estimated via [`genomescope`](https://github.com/schatzlab/genomescope/). If this is not `null`, the given value will be used for _all_ samples. |
 | `--flye_args` | Arguments to be passed to [`flye`](https://github.com/fenderglass/Flye), default: `none`. Example: `--flye_args '--genome-size 130g --asm-coverage 50'` |
 | `--hifi` | Additional pacbio hifi reads are available? default: `false`|
+| `--lima` | Run [`lima`](https://lima.how/) on pacbio reads? default: `false`|
+| `--pacbio_primers` | Primers to be used with [`lima`](https://lima.how/) (required if `--lima` is used)? default: `null`|
 | `--hifi_ont` | Use hifi and ONT reads with `hifiasm --ul`? default: `false`|
+| `--hifi_only` | If *only* HiFi reads are available, this can be used to perform an assembly with [`hifiasm`](https://github.com/chhylp123/hifiasm) instead of `flye`. default: `false`|
 | `--hifi_args` | Extra arguments passed to [`hifiasm`](https://github.com/chhylp123/hifiasm). default: `''`|
-| `--hifiasm` | If *only* HiFi reads are available, this can be used to perform an assembly with [`hifiasm`](https://github.com/chhylp123/hifiasm) instead of `flye`. default: `false`|
 | `--polish_medaka` | Polish using [`medaka`](https://github.com/nanoporetech/medaka), default: `true` |
 | `--medaka_model` | Model used by [`medaka`](https://github.com/nanoporetech/medaka), default: 'r1041_e82_400bps_hac@v4.2.0:consesus' |
 | `--polish_pilon` | Polish with short reads using [`pilon`](https://github.com/broadinstitute/pilon)? Sefault: `false` |
-| `--busco_db` | Path to local [`BUSCO`](https://gitlab.com/ezlab/busco) db?; default: `/dss/dsslegfs01/pn73so/pn73so-dss-0000/becker_common/software/busco_db` |
+| `--busco_db` | Path to local [`BUSCO`](https://gitlab.com/ezlab/busco) db?; default: `""` |
 | `--busco_lineage` | [`BUSCO`](https://gitlab.com/ezlab/busco) lineage to use; default: `brassicales_odb10` |
 | `--scaffold_ragtag` | Scaffolding with [`ragtag`](https://github.com/malonge/RagTag)? Default: `false` |
 | `--scaffold_links` | Scaffolding with [`LINKS`](https://github.com/bcgsc/LINKS)? Default: `false` |
@@ -66,122 +117,29 @@ This pipelines comes with some profiles, which can be used via `-profile`. Since
 | `hifi_ul` | parameters for the assembly of ONT and HiFI reads via `hifiasm` |
 | `hifi_only` | parameters for assembly using only HiFi reads via `hifiasm` |
 
-
-
-# Graph
-
-```mermaid
-graph TD
-  hifi[HiFi reads] --> Hifiassembly
-  fastq[ONT Reads fastq] --> porechop("porechop")
-  porechop --> clean_reads(clean reads)
-  fastq -. skip porechop .-> clean_reads
-  clean_reads --> Readqc
-  subgraph k-mers
-  direction TB
-  jellyfish --> genomescope
-  end
-  subgraph Readqc[Read QC]
-  nanoq
-  end
-  clean_reads --> k-mers
-  nanoq -. median read length .-> jellyfish
-  clean_reads --> Assembly
-  subgraph Assembly[flye assembly]
-  direction TB
-  assembler[flye]
-  assembler --> asqc(QC: BUSCO & QUAST)
-  assembler --> asliftoff(Annotation:Liftoff)
-  end
-  subgraph Hifiassembly
-  direction TB
-  assembler2[hifiasm]
-  assembler2 --> asqc2(QC: BUSCO & QUAST)
-  assembler2 --> asliftoff2(Annotation:Liftoff)
-  end
-  genomescope -. estimated genome size .-> Assembly
-  subgraph Polish
-  direction LR
-  subgraph Medaka
-  medaka[medaka] 
-  medaka --> meliftoff(Annotation:Liftof)
-  medaka --> meqc(QC: BUSCO & QUAST)
-  end
-  subgraph Pilon
-  pilon[pilon] 
-  pilon --> piliftoff(Annotation:Liftoff)
-  pilon --> piqc(QC: BUSCO & QUAST)
-  end
-  Medaka -.-> Pilon
-  end
-  Assembly --> Polish
-  subgraph Scaffold
-  direction TB
-  Longstitch
-  Links
-  RagTag
-  end
-  subgraph Longstitch
-  direction TB
-  longstitch[Longstitch] --> lsliftoff(Annotation:Liftoff)
-  longstitch --> lsQC(QC: BUSCO & QUAST)
-  end
-  subgraph Links
-  direction TB
-  links[Links] --> liliftoff(Annotation:Liftoff)
-  links --> liQC(QC: BUSCO & QUAST)
-  end
-  subgraph RagTag
-  direction TB
-  ragtag[RagTag] --> raliftoff(Annotation:Liftoff)
-  ragtag --> raQC(QC: BUSCO & QUAST)
-  end
-  Assembly -. skip polishing .-> Scaffold
-  Polish --> Scaffold
-```
-
-# Tubemap
-
-![Tubemap](nf-arassembly.tubes.png)
-
-# Usage
-
-Clone this repo:
-
-```
-git clone https://github.com/nschan/nf-arassembly/
-```
-
-## Standard Pipeline
-
-The standard pipeline assumes nanopore reads (10.14).
-
-The samplesheet _must_ adhere to this format, including the header row. Please note the absence of spaces after the commas:
-
-```
-sample,ontreads,ref_fasta,ref_gff
-sampleName,path/to/reads,path/to/reference.fasta,path/to/reference.gff
-```
-
-To run the pipeline with a samplesheet on biohpc_gen:
-```
-nextflow run nf-arassembly --samplesheet 'path/to/sample_sheet.csv' \
-                           --out './results' \
-                           -profile charliecloud,biohpc_gen
-```
-
 ## Additional hifireads
 
-The pipeline expects ONT and HiFi reads in the samplesheet like this:
+The pipeline takes ONT and HiFi reads in the samplesheet like this:
 
 ```
 sample,ontreads,hifireads,ref_fasta,ref_gff
 sampleName,path/to/ontreads,path/to/hifireads.fq.gz,path/to/reference.fasta,path/to/reference.gff
 ```
 
-There are two options when using `--hifi`, which are controlled by `--hifi_ont`:
+There are two options when using `--hifi`, together with ONT reads, which are controlled by `--hifi_ont`:
  - If `--hifi_ont` is `false`, HiFi reads will be assembled via `hifiasm`, and used as a **scaffold** for the ONT reads assembled with `flye`, if `--scaffold_ragtag` is enabled. This will overide the standard procedure used in this pipeline, where the scaffolding would be done against the provided reference genome.
- - If `--hifi_ont` is `true`,  `hifiasm` will be used with `--ul` and the ONT reads will be used along the HiFi reads to assemble. 
+ - If `--hifi_ont` is `true`,  `hifiasm` will be used with `--ul` and the ONT reads will be used along the HiFi reads to assemble. If scaffolding against a reference is perfomed, the reference genome is used.
+
+Another option is to use solely HiFi reads for assembly via `--hifi --hifi_only`.
+
+To ease configuration there are three HiFi profiles included:
+
+| Profile Name | Effect | Params |
+|     ---      |  ---   |   ---  |
+| `ont_on_hifi`  |  Use HiFi assembly as a scaffold for ONT reads | `--hifi --hifi_ont false --scaffold_ragtag` | 
+| `hifiasm_ul`   |  Combine ONT and HiFI reads during `hifiasm` assembly | `--hifi --hifi_ont --polish_medaka false` |
+| `hifi_only`    |  Use only HiFi reads for assembly via `hifiasm` | `--hifi --hifi_only --polish_medaka false` |
+
 
 ## No refence genome
 

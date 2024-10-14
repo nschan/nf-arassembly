@@ -39,7 +39,8 @@
     "properties": {
         "samplesheet": {
             "type": "string",
-            "description": "samplesheet"
+            "description": "samplesheet",
+            "default": "''"
         },
         "enable_conda": {
             "type": "boolean",
@@ -115,6 +116,56 @@
             "type": "string",
             "description": "busco lineage to use",
             "default": "\"brassicales_odb10\""
+        },
+        "jelly_is_reads": {
+            "type": "string",
+            "description": "not used",
+            "hidden": true
+        },
+        "kmer_length": {
+            "type": "integer",
+            "description": "k-mer length",
+            "default": 21
+        },
+        "read_length": {
+            "type": "integer",
+            "description": "read length (if null, estimate)"
+        },
+        "dump": {
+            "type": "boolean",
+            "description": "Dump kmers from jellyfish"
+        },
+        "genome_size": {
+            "type": "integer",
+            "description": "Expected genome size, if null estimate from kmers"
+        },
+        "hifi": {
+            "type": "boolean",
+            "description": "HiFi reads available?"
+        },
+        "lima": {
+            "type": "boolean",
+            "description": "Use lima on hifi reads"
+        },
+        "pacbio_primers": {
+            "type": "string",
+            "description": "File containing pacbio primers"
+        },
+        "hifi_ont": {
+            "type": "boolean",
+            "description": "Merge hifi and ont reads"
+        },
+        "hifi_only": {
+            "type": "boolean",
+            "description": "Only hifi reads"
+        },
+        "hifi_args": {
+            "type": "string",
+            "description": "Extra arguments for hifiasm"
+        },
+        "polish_medaka": {
+            "type": "string",
+            "description": "polish with medaka"
         }
     },
     "required": [

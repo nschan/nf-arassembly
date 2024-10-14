@@ -22,8 +22,10 @@ params.genome_size = null
 params.flye_mode = '--nano-hq'
 params.flye_args = ''
 params.hifi = false
+params.lima = false
+params.pacbio_primers = null
 params.hifi_ont = false
-params.hifiasm = false
+params.hifi_only = false
 params.hifi_args = ''
 params.polish_pilon = false
 params.polish_medaka = true
@@ -33,7 +35,7 @@ params.scaffold_ragtag = false
 params.scaffold_links = false
 params.scaffold_longstitch = false
 params.lift_annotations = true
-params.busoc_db = "/dss/dsslegfs01/pn73so/pn73so-dss-0000/becker_common/software/busco_db"
+params.busoc_db = ""
 params.busco_lineage = "brassicales_odb10"
 params.out = './results'
 
@@ -58,30 +60,49 @@ Niklas Schandry                                      niklas@bio.lmu.de
 ------------------------------------------------------------------------------------------------------------------------------------------------------
   Results directory  : ${params.out}
 
-  Parameters:
+  Genera parameters
      samplesheet     : ${params.samplesheet}
+
+  ONT preprocessing
      collect         : ${params.collect}
      porechop        : ${params.porechop}
+
+  Flye assembly
      read_length     : ${params.read_length}
      genome_size     : ${params.genome_size}
      flye_mode       : ${params.flye_mode}
-     polish_medaka   : ${params.polish_medaka}
-     medaka_model    : ${params.medaka_model}
-     polish_pilon    : ${params.polish_pilon}
+
+  pacbio preprocessing
+    lima             : ${params.lima}
+    pacbio primers   : ${params.pacbio_primers}
+
+  Hifiasm assembly   : ${params.hifi} 
+     Mix HiFi and ONT: ${params.hifi_ont}
+     Only HiFi       : ${params.hifi_only}
+     hifiasm args    : ${params.hifi_args}
+
+  ONT Polishing
+     Run Medaka      : ${params.polish_medaka}
+     Medaka model    : ${params.medaka_model}
+
+  Short-read polishing
+     Run pilon       : ${params.polish_pilon}
+
+  BUSCO parameters
      busco db        : ${params.busoc_db}
      busco lineage   : ${params.busco_lineage}
      use reference   : ${params.use_ref}
 
-    Scaffolding Tools
+  Scaffolding Tools
      ragtag          : ${params.scaffold_ragtag}
      LINKS           : ${params.scaffold_links}
      longstitch      : ${params.scaffold_longstitch}
 
-    Annotation lift  : ${params.lift_annotations}
+  Annotation lift    : ${params.lift_annotations}
 
-    Steps skipped
-     skip_flye       : ${params.skip_flye}
-     skip_alignments : ${params.skip_alignments}
+  Steps skipped
+     flye            : ${params.skip_flye}
+     alignments      : ${params.skip_alignments}
 ======================================================================================================================================================
 ======================================================================================================================================================
 """
