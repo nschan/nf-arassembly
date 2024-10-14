@@ -942,7 +942,7 @@ workflow ASSEMBLE {
     }
 
     if(params.hifi_ont) {
-      ch_hifi_reads
+      ch_hifireads
        .join(ch_ont_reads)
        .set { ch_hifireads }
     }
