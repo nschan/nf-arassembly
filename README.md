@@ -1,12 +1,14 @@
 [![DOI](https://zenodo.org/badge/786746077.svg)](https://zenodo.org/doi/10.5281/zenodo.10972895)
 
+The goal of [`nf-arassembly`](https://github.com/nschan/nf-arassembly) and [`nf-annotate`](https://github.com/nschan/nf-annotate) is to make to genome assembly and annotation workflows accessible for a broader community, particularily for plant-sciences. Long-read sequencing technologies are already cheap and will continue to drop in price, genome sequencing will soon be available to many researchers without a strong bioinformatic background. 
+The assembly is naturally quite organisms agnostic, but the annotation pipeline contains some steps that may not make sense for other eukaryotes, unless there is a particular interest in NB-LRR genes.
+
 # nf-arassembly
 
 Assembly pipeline for arabidopsis genomes from long-read sequencing written in [`nextflow`](https://nextflow.io/). Should also work for other species.
 The default expectation of this pipeline are ONT reads, however there is [support](#Usage-with-PacBio-reads), for pacbio HiFI and for combinations of ONT and pacbio HiFi data.
 
 # Procedure
-
 
 Preprocessisng:
   - For nanopore:
