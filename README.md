@@ -19,7 +19,7 @@ Preprocessisng:
     * [`lima`](https://lima.how/) to remove primers.
 
 Assembly
-  * k-mer based assessment of the reads via [`Jellyfish`](https://github.com/gmarcais/Jellyfish) and [`genomescope`](https://github.com/schatzlab/genomescope/)
+  * k-mer based assessment of ONT reads via [`Jellyfish`](https://github.com/gmarcais/Jellyfish) and [`genomescope`](https://github.com/schatzlab/genomescope/)
   * Assemblies are performed with [`flye`](https://github.com/fenderglass/Flye),
   * or [`hifiasm`](https://github.com/chhylp123/hifiasm)
 
