@@ -65,7 +65,7 @@ process KMER_SHORTREADS {
     task.ext.when == null || task.ext.when
 
     script:
-    input_reads = meta.paired ? "<(zcat ${reads}) <(zcat ${reads})" : "${fastq}"
+    input_reads = paired ? "<(zcat ${reads}) <(zcat ${reads})" : "${fastq}"
     """
     yak count -b37 -t$task.cpus -o ${meta}_shortreads.yak $input_reads
     """

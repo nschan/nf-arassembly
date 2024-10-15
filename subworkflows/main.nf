@@ -860,8 +860,8 @@ workflow RUN_BUSCO {
 
   main:
     KMER_ASSEMBLY(assembly)
-    KMER_ASSEMBLY_HIST()
-    if(short_reads) {
+    KMER_ASSEMBLY_HIST(KMER_ASSEMBLY.out)
+    if(params.short_reads) {
       KMER_ASSEMBLY
       .out
       .join(kmer_shortreads)
@@ -979,11 +979,11 @@ workflow ASSEMBLE {
     KMER_ONT
       .out
       .set { ont_kmers }
-    ONT_KV(ont_kmers)
+    KMER_ONT_QV(ont_kmers)
     KMER_ONT_HIST(ont_kmers)
   } 
   
-  if(short_reads) {
+  if(params.short_reads) {
     ch_input
       .map { create_shortread_channel(it) }
       .set { ch_short }
@@ -1042,7 +1042,7 @@ workflow ASSEMBLE {
     KMER_HIFI
       .out
       .set { hifi_kmers } 
-    HIFI_KV(hifi_kmers)
+    KMER_HIFI_QV(hifi_kmers)
     KMER_HIFI_HIST(hifi_kmers)
 
     // If there is a combined assembly for ONT and hifi keep the ont reads.
