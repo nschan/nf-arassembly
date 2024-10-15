@@ -27,6 +27,7 @@ params.pacbio_primers = null
 params.hifi_ont = false
 params.hifi_only = false
 params.hifi_args = ''
+params.short_reads = false
 params.polish_pilon = false
 params.polish_medaka = true
 params.medaka_model = 'r1041_e82_400bps_hac_v4.2.0'
@@ -86,7 +87,7 @@ Niklas Schandry                                          niklas@bio.lmu.de
      Run Medaka      : ${params.polish_medaka}
      Medaka model    : ${params.medaka_model}
 
-  Short-read polishing
+  Short-reads        : ${params.short_reads} 
      Run pilon       : ${params.polish_pilon}
 
   BUSCO parameters

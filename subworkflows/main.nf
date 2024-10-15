@@ -44,6 +44,46 @@ include { LIFTOFF } from '../modules/local/liftoff/main'
 include { QUAST } from '../modules/quast/main'
 include { BUSCO } from '../modules/busco/main'
 
+// YAK
+include { KMER_ASSEMBLY } from '../modules/yak/main'
+include { KMER_LONGREADS as KMER_ONT } from '../modules/yak/main'
+include { KMER_LONGREADS as KMER_HIFI } from '../modules/yak/main'
+include { KMER_SHORTREADS } from '../modules/yak/main'
+include { KMER_HISTOGRAM as KMER_ONT_HIST } from '../modules/yak/main'
+include { KMER_HISTOGRAM as KMER_HIFI_HIST} from '../modules/yak/main'
+include { KMER_HISTOGRAM as KMER_SR_HIST} from '../modules/yak/main'
+include { KMER_HISTOGRAM as KMER_ASSEMBLY_HIST} from '../modules/yak/main'
+include { READ_QV as KMER_ONT_QV } from '../modules/yak/main'
+include { READ_QV as KMER_HIFI_QV } from '../modules/yak/main'
+include { ASSEMBLY_KQV as KMER_ASSEMBLY_QV } from '../modules/yak/main'
+
+ /*
+ Accessory function to create input for pilon
+ modified from nf-core/rnaseq/subworkflows/local/input_check.nf
+ */
+
+def create_shortread_channel(LinkedHashMap row) {
+    // create meta map
+    def meta = [:]
+    meta.id       = row.sample
+    meta.paired   = row.paired.toBoolean()
+
+    // add path(s) of the fastq file(s) to the meta map
+    def shortreads = []
+    if (!file(row.shortread_F).exists()) {
+        exit 1, "ERROR: shortread_F fastq file does not exist!\n${row.shortread_F}"
+    }
+    if (!meta.paired) {
+        shortreads = [ meta.id, meta.paired, [ file(row.shortread_F) ] ]
+    } else {
+        if (!file(row.shortread_R).exists()) {
+            exit 1, "ERROR: shortread_R fastq file does not exist!\n${row.shortread_R}"
+        }
+        shortreads = [ meta.id, meta.paired, [ file(row.shortread_F), file(row.shortread_R) ] ]
+    }
+    return shortreads
+}
+
 /* 
  ===========================================
  ===========================================
@@ -314,6 +354,7 @@ workflow ASSEMBLE_ONT {
     ont_reads
     ch_input
     genomescope_out
+    shortread_kmers
     
   main:
     Channel.empty().set { ch_refs }
@@ -395,8 +436,9 @@ workflow ASSEMBLE_ONT {
       RUN_LIFTOFF(FLYE.out.fasta, ch_input)
     }
     /*
-    Run QUAST on initial assembly
+    QC on initial assembly
     */
+    YAK_QC(ch_assembly, shortread_kmers)
 
     RUN_QUAST(ch_assembly, ch_input, ch_ref_bam, ch_assembly_bam)
 
@@ -411,6 +453,7 @@ workflow ASSEMBLE_HIFI {
   take: 
     hifi_reads // normal mode: meta, hifireads; UL mode: meta, hifireads, ontreads
     ch_input
+    shortread_kmers
         
   main:
     Channel.empty().set { ch_refs }
@@ -487,14 +530,16 @@ workflow ASSEMBLE_HIFI {
         .aln_to_assembly_bam_bai
         .set { ch_assembly_bam_bai }
     }
-
+    
     if(params.lift_annotations) {
       RUN_LIFTOFF(ch_assembly, ch_input)
     }
 
   /*
-  Run QUAST on initial assembly
-  */
+  QC on initial assembly
+  */ 
+    YAK_QC(ch_assembly, shortread_kmers)
+
     RUN_QUAST(ch_assembly, ch_input, ch_ref_bam, ch_assembly_bam)
 
     RUN_BUSCO(ch_assembly)
@@ -542,6 +587,7 @@ workflow POLISH_MEDAKA {
       in_reads
       assembly
       ch_aln_to_ref
+      shortread_kmers
 
     main:
       RUN_MEDAKA(in_reads, assembly)
@@ -551,6 +597,8 @@ workflow POLISH_MEDAKA {
       RUN_QUAST(RUN_MEDAKA.out, ch_input, ch_aln_to_ref, MAP_TO_ASSEMBLY.out.aln_to_assembly_bam)
 
       RUN_BUSCO(RUN_MEDAKA.out)
+
+      YAK_QC(RUN_MEDAKA.out, shortread_kmers)
 
       if(params.lift_annotations) {
         RUN_LIFTOFF(RUN_MEDAKA.out, ch_input)
@@ -587,52 +635,35 @@ workflow POLISH_PILON {
     in_reads
     assembly
     ch_aln_to_ref
+    shortread_kmers
   
   main:
     ch_input
         .map { create_shortread_channel(it) }
         .set { ch_shortreads }
     MAP_SR(ch_shortreads, assembly)
+
     RUN_PILON(assembly, MAP_SR.out.aln_to_assembly_bam_bai)
+
     RUN_PILON
        .out
        .set { pilon_improved }
+
     MAP_TO_ASSEMBLY(in_reads, pilon_improved)
+
     RUN_QUAST(pilon_improved, ch_input, ch_aln_to_ref, MAP_TO_ASSEMBLY.out.aln_to_assembly_bam)
+   
     RUN_BUSCO(pilon_improved)
+
+    YAK_QC(pilon_improved, shortread_kmers)
+
+
     if(params.lift_annotations) {
         RUN_LIFTOFF(RUN_PILON.out, ch_input)
     }
   
   emit:
     pilon_improved
-}
-
- /*
- Accessory function to create input for pilon
- modified from nf-core/rnaseq/subworkflows/local/input_check.nf
- */
-
-def create_shortread_channel(LinkedHashMap row) {
-    // create meta map
-    def meta = [:]
-    meta.id       = row.sample
-    meta.paired   = row.paired.toBoolean()
-
-    // add path(s) of the fastq file(s) to the meta map
-    def shortreads = []
-    if (!file(row.shortread_F).exists()) {
-        exit 1, "ERROR: shortread_F fastq file does not exist!\n${row.shortread_F}"
-    }
-    if (!meta.paired) {
-        shortreads = [ meta.id, meta.paired, [ file(row.shortread_F) ] ]
-    } else {
-        if (!file(row.shortread_R).exists()) {
-            exit 1, "ERROR: shortread_R fastq file does not exist!\n${row.shortread_R}"
-        }
-        shortreads = [ meta.id, meta.paired, [ file(row.shortread_F), file(row.shortread_R) ] ]
-    }
-    return shortreads
 }
 
 /*
@@ -656,6 +687,7 @@ workflow RUN_RAGTAG {
     assembly
     references
     ch_aln_to_ref
+    shortread_kmers
   
   main:
     assembly
@@ -680,6 +712,8 @@ workflow RUN_RAGTAG {
 
     RUN_BUSCO(ragtag_scaffold_fasta)
 
+    YAK_QC(ragtag_scaffold_fasta, shortread_kmers)
+
     if(params.lift_annotations) {
       RUN_LIFTOFF(RAGTAG_SCAFFOLD.out.corrected_assembly, inputs)
     }
@@ -696,19 +730,26 @@ workflow RUN_LINKS {
     assembly
     references
     ch_aln_to_ref
+    shortread_kmers
   
   main:
     assembly
       .join(in_reads)
       .set { links_in }
     LINKS(links_in)
+
     LINKS
       .out
       .scaffolds
       .set { scaffolds }
     MAP_TO_ASSEMBLY(in_reads, scaffolds)
+
     RUN_QUAST(scaffolds, inputs, ch_aln_to_ref, MAP_TO_ASSEMBLY.out.aln_to_assembly_bam)
+
     RUN_BUSCO(scaffolds)
+
+    YAK_QC(scaffolds, shortread_kmers)
+
     if(params.lift_annotations) {
       RUN_LIFTOFF(LINKS.out.scaffolds, inputs)
     }
@@ -723,19 +764,27 @@ workflow RUN_LONGSTITCH {
     assembly
     references
     ch_aln_to_ref
+    shortreads
   
   main:
     assembly
       .join(in_reads)
       .set { longstitch_in }
     LONGSTITCH(longstitch_in)
+
     LONGSTITCH
       .out
       .ntlLinks_arks_scaffolds
       .set { scaffolds }
+
     MAP_TO_ASSEMBLY(in_reads, scaffolds)
+
     RUN_QUAST(scaffolds, inputs, ch_aln_to_ref, MAP_TO_ASSEMBLY.out.aln_to_assembly_bam)
+
     RUN_BUSCO(scaffolds)
+
+    YAK_QC(scaffolds, shortreads)
+
     if(params.lift_annotations) {
       RUN_LIFTOFF(LONGSTITCH.out.ntlLinks_arks_scaffolds, inputs)
     }
@@ -797,6 +846,31 @@ workflow RUN_BUSCO {
   main:
     BUSCO(assembly, params.busco_lineage, params.busoc_db)
 }
+
+/*
+ * YAK
+ ===========================================
+ */
+
+
+ workflow YAK_QC {
+  take:
+    assembly
+    kmer_shortreads
+
+  main:
+    KMER_ASSEMBLY(assembly)
+    KMER_ASSEMBLY_HIST()
+    if(short_reads) {
+      KMER_ASSEMBLY
+      .out
+      .join(kmer_shortreads)
+      .set{ yak_qv_in }
+      KMER_ASSEMBLY_QV(yak_qv_in)
+    }
+ }
+
+
 
 /*
  ===========================================
@@ -871,6 +945,7 @@ workflow ASSEMBLE {
   Channel.empty().set { ch_medaka_in }
   Channel.empty().set { ch_polished_genome }
   Channel.empty().set { ch_short_reads }
+  Channel.empty().set { sr_kmers }
 
   /*
   Check samplesheet
@@ -895,22 +970,41 @@ workflow ASSEMBLE {
   if(!params.hifi_only) {
     PREPARE_ONT(ch_input)
     JELLYFISH(PREPARE_ONT.out.trimmed, PREPARE_ONT.out.trimmed_med_len)
-    PREPARE_ONT.out.trimmed.set { ch_reads }
+    PREPARE_ONT
+      .out
+      .trimmed
+      .set { ch_reads }
     ch_ont_reads = ch_reads
+    KMER_ONT(ch_ont_reads)
+    KMER_ONT
+      .out
+      .set { ont_kmers }
+    ONT_KV(ont_kmers)
+    KMER_ONT_HIST(ont_kmers)
   } 
+  
+  if(short_reads) {
+    ch_input
+      .map { create_shortread_channel(it) }
+      .set { ch_short }
+    KMER_SHORTREADS(ch_short)
+    KMER_SHORTREADS
+      .out
+      .set { sr_kmers }
+    KMER_SR_HIST(sr_kmers)
+  }
 
   if(params.hifi_only) {
     ch_input
       .map { it -> [it.sample, it.hifireads] }
       .set { ch_reads }
   }
-
-
+   
   /*
   Assemble with flye, unless --hifi_ont or --hifi_only is set
   */
   if (!params.hifi_ont && !params.hifi_only) {
-    ASSEMBLE_ONT(PREPARE_ONT.out.trimmed, ch_input, JELLYFISH.out.hap_len)
+    ASSEMBLE_ONT(PREPARE_ONT.out.trimmed, ch_input, JELLYFISH.out.hap_len, sr_kmers)
     ASSEMBLE_ONT
       .out
       .ch_assembly
@@ -933,21 +1027,32 @@ workflow ASSEMBLE {
       .set { ch_hifireads }
 
     if(params.lima) {
+
       if(is.null(params.pacbio_primers)) error 'Trimming with lima requires a file containing primers (--pacbio_primers)'
+
       LIMA(ch_hifi_reads, params.pacbio_primers)
       TO_FASTQ(LIMA.out.bam)
       TO_FASTQ
         .out
         .set { ch_hifireads }
-    }
 
+    }
+    // kmers from (trimmed) reads
+    KMER_HIFI(ch_hifireads)
+    KMER_HIFI
+      .out
+      .set { hifi_kmers } 
+    HIFI_KV(hifi_kmers)
+    KMER_HIFI_HIST(hifi_kmers)
+
+    // If there is a combined assembly for ONT and hifi keep the ont reads.
     if(params.hifi_ont) {
       ch_hifireads
-       .join(ch_ont_reads)
-       .set { ch_hifireads }
+        .join(ch_ont_reads)
+        .set { ch_hifireads }
     }
 
-    ASSEMBLE_HIFI(ch_hifireads, ch_input)
+    ASSEMBLE_HIFI(ch_hifireads, ch_input, sr_kmers)
     ASSEMBLE_HIFI
       .out
       .ch_assembly
@@ -966,9 +1071,9 @@ workflow ASSEMBLE {
   if(params.polish_medaka) {
     
     if(params.hifi_ont) error 'Medaka should not be used on ONT-HiFi hybrid assemblies'
-    if(params.hifi_only)  error 'Medaka should not be used on HiFi assemblies'
+    if(params.hifi_only) error 'Medaka should not be used on HiFi assemblies'
 
-    POLISH_MEDAKA(ch_input, PREPARE_ONT.out.trimmed, ch_polished_genome, ch_ref_bam)
+    POLISH_MEDAKA(ch_input, PREPARE_ONT.out.trimmed, ch_polished_genome, ch_ref_bam, sr_kmers)
 
     POLISH_MEDAKA
       .out
@@ -980,7 +1085,7 @@ workflow ASSEMBLE {
   */
 
   if(params.polish_pilon) {
-    POLISH_PILON(ch_input, ch_reads, ch_polished_genome, ch_ref_bam)
+    POLISH_PILON(ch_input, ch_reads, ch_polished_genome, ch_ref_bam, sr_kmers)
     POLISH_PILON
       .out
       .pilon_improved
@@ -994,18 +1099,17 @@ workflow ASSEMBLE {
   if(params.scaffold_ragtag) {
     // If there are HiFi and ONT reads assembled individually, ONT will be scaffolded onto HiFi
     if(params.hifi && !params.hifi_ont && !params.hifi_only) {
-      RUN_RAGTAG(ch_input, ch_reads, ch_polished_genome, ch_hifi_assembly, ch_ref_bam)
+      RUN_RAGTAG(ch_input, ch_reads, ch_polished_genome, ch_hifi_assembly, ch_ref_bam, sr_kmers)
     } else {
       // In all other casas, the assembly will be scaffolded onto the reference
-      RUN_RAGTAG(ch_input, ch_reads, ch_polished_genome, ch_refs, ch_ref_bam)
+      RUN_RAGTAG(ch_input, ch_reads, ch_polished_genome, ch_refs, ch_ref_bam, sr_kmers)
     }
   }
-
   if(params.scaffold_links) {
-    RUN_LINKS(ch_input, ch_reads, ch_polished_genome, ch_refs, ch_ref_bam)
+    RUN_LINKS(ch_input, ch_reads, ch_polished_genome, ch_refs, ch_ref_bam, sr_kmers)
   }
   if(params.scaffold_longstitch) {
-    RUN_LONGSTITCH(ch_input, ch_reads, ch_polished_genome, ch_refs, ch_ref_bam)
+    RUN_LONGSTITCH(ch_input, ch_reads, ch_polished_genome, ch_refs, ch_ref_bam, sr_kmers)
   }
   
 } 

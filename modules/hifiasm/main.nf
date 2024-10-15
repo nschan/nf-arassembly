@@ -7,9 +7,6 @@ process HIFIASM {
       overwrite: true,
       saveAs: { fn -> fn.substring(fn.lastIndexOf('/')+1) }
     ) 
-    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/hifiasm:0.19.8--h43eeafb_0' :
-        'quay.io/biocontainers/hifiasm:0.19.9--h43eeafb_0' }"
 
     input:
     tuple val(meta), path(reads)
@@ -49,9 +46,6 @@ process HIFIASM_UL {
       overwrite: true,
       saveAs: { fn -> fn.substring(fn.lastIndexOf('/')+1) }
     ) 
-    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/hifiasm:0.19.8--h43eeafb_0' :
-        'quay.io/biocontainers/hifiasm:0.19.9--h43eeafb_0' }"
 
     input:
     tuple val(meta), path(hifi_reads), path(ont_reads)
