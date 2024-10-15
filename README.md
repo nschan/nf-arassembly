@@ -39,6 +39,7 @@ Annotation:
 
 QC: 
   * Quality of each stage is assessed using [`QUAST`](https://github.com/ablab/quast) and [`BUSCO`](https://gitlab.com/ezlab/busco) (standalone).
+  * k-mer spectra can be used for further QC with [`yak`](https://github.com/lh3/yak)
 
 # Tubemap
 
@@ -167,9 +168,19 @@ To ease configuration there are three HiFi profiles included:
 | `hifiasm_ul`   |  Combine ONT and HiFI reads during `hifiasm` assembly | `--hifi --hifi_ont --polish_medaka false` |
 | `hifi_only`    |  Use only HiFi reads for assembly via `hifiasm` | `--hifi --hifi_only --polish_medaka false` |
 
-# Additional options
+# Short reads: QC with yak
 
-## Polishing with pilon
+If short reads are available, [`yak`](https://github.com/lh3/yak) can be used to perform additional quality control based on kmer spectra.
+This can be enabled using `--short_reads` and a samplesheet that looks like this:
+
+```
+sample,ontreads,ref_fasta,ref_gff,shortread_F,shortread_R,paired
+sampleName,reads,assembly.fasta.gz,reference.fasta,reference.gff,short_F1.fastq,short_F2.fastq,true
+```
+
+If there are only single-end reads, shortread_R should remain empty, and paired should be `false`
+
+# Short reads: Polishing with pilon
 
 The assemblies can be polished using available short-reads using [`pilon`](https://github.com/broadinstitute/pilon).
 `--polish_pilon`
@@ -183,21 +194,21 @@ sampleName,reads,assembly.fasta.gz,reference.fasta,reference.gff,short_F1.fastq,
 
 In a case where only single-reads are available, `shortread_R` should be empty, and `paired` should be false.
 
-## Scaffolding
+# Scaffolding
 
 [`LINKS`](https://github.com/bcgsc/LINKS), [`longstitch`](https://github.com/bcgsc/longstitch) and / or [`ragtag`](https://github.com/malonge/RagTag) can be used for scaffolding.
 
-## Using liftoff
+# Using liftoff
 
 If `--lift_annotations` is used (default), the annotations from the reference genome will be mapped to assemblies and scaffolds using liftoff.
 This will happen at each step of the pipeline where a new genome fasta is created, i.e. after assembly, after polishing and after scaffolding.
 
-## No refence genome
+# No refence genome
 
 If there is no reference genome available use `--use_ref false` to disable the reference genome.
 Liftoff should not be used without a reference, QUAST will no longer compare to reference. 
 
-## Skipping Flye
+# Skipping Flye
 
 In case you already have an assembly and would only like to check it with QUAST and polish use
 `--skip_flye true`
@@ -211,7 +222,7 @@ sampleName,path/to/reads,assembly.fasta.gz,reference.fasta,reference.gff
 
 When skipping flye the original reads will be mapped to the assembly and the reference genome.
 
-## Skipping Flye and mappings
+# Skipping Flye and mappings
 
 In case you have an assembly and have already mapped your reads to the assembly and the reference genome you can use
 `--skip_flye true --skip_alignments true`
@@ -223,7 +234,7 @@ sample,readpath,assembly,ref_fasta,ref_gff,assembly_bam,assembly_bai,ref_bam
 sampleName,reads,assembly.fasta.gz,reference.fasta,reference.gff,reads_on_assembly.bam,reads_on_assembly.bai,reads_on_reference.bam
 ```
 
-## QUAST
+# QUAST
 
 [`QUAST`](https://github.com/ablab/quast) will run with the following additional parameters:
 
