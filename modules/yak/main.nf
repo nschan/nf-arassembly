@@ -84,14 +84,15 @@ process READ_QV {
       tuple val(meta), path(longread_yak), path(shortread_yak)
 
     output:
-      tuple val(meta), path("${reads}.txt"), emit: read_qv
+      tuple val(meta), path("*.kqv.txt"), emit: read_qv
 
     when:
     task.ext.when == null || task.ext.when
 
     script:
     """
-    yak inspect $longread_yak $shortread_yak > ${meta}.longread_shortread.kqv.txt
+    name=(basename $longread_yak yak)
+    yak inspect $longread_yak $shortread_yak > ${meta}.\$name.longread_shortread.kqv.txt
     """
 }
 process ASSEMBLY_KQV {
@@ -107,7 +108,7 @@ process ASSEMBLY_KQV {
     tuple val(meta), path(assembly_yak), path(shortread_yak)
 
     output:
-    tuple val(meta), path("${reads}.yak")       , emit: read_hashes
+    tuple val(meta), path("*.kqv.txt")       , emit: kqv
 
     when:
     task.ext.when == null || task.ext.when
