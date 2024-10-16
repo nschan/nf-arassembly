@@ -17,14 +17,16 @@ params.dump = false
 
 //
 params.use_ref = true
-params.skip_flye = false
+params.skip_assembly = false
 params.genome_size = null
 params.flye_mode = '--nano-hq'
 params.flye_args = ''
 params.hifi = false
 params.lima = false
 params.pacbio_primers = null
-params.hifi_ont = false
+params.assembler = "flye"
+params.qc_reads = null
+params.hifiasm_ont = false
 params.hifi_only = false
 params.hifi_args = ''
 params.short_reads = false
@@ -69,17 +71,19 @@ Niklas Schandry                                          niklas@bio.lmu.de
      collect         : ${params.collect}
      porechop        : ${params.porechop}
 
+  pacbio preprocessing
+    lima             : ${params.lima}
+    pacbio primers   : ${params.pacbio_primers}
+   
+  Assembler          : ${params.assembler}
+
   Flye assembly
      read_length     : ${params.read_length}
      genome_size     : ${params.genome_size}
      flye_mode       : ${params.flye_mode}
 
-  pacbio preprocessing
-    lima             : ${params.lima}
-    pacbio primers   : ${params.pacbio_primers}
-
   Hifiasm assembly   : ${params.hifi} 
-     Mix HiFi and ONT: ${params.hifi_ont}
+     Mix HiFi and ONT: ${params.hifiasm_ont}
      Only HiFi       : ${params.hifi_only}
      hifiasm args    : ${params.hifi_args}
 
@@ -103,7 +107,7 @@ Niklas Schandry                                          niklas@bio.lmu.de
   Annotation lift    : ${params.lift_annotations}
 
   Steps skipped
-     flye            : ${params.skip_flye}
+     flye            : ${params.skip_assembly}
      alignments      : ${params.skip_alignments}
 ======================================================================================================================================================
 ======================================================================================================================================================

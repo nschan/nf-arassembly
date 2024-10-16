@@ -57,6 +57,7 @@ include { READ_QV as KMER_ONT_QV } from '../modules/yak/main'
 include { READ_QV as KMER_HIFI_QV } from '../modules/yak/main'
 include { ASSEMBLY_KQV as KMER_ASSEMBLY_QV } from '../modules/yak/main'
 
+include { TRIMGALORE } from '../modules/trimgalore/main'
  /*
  Accessory function to create input for pilon
  modified from nf-core/rnaseq/subworkflows/local/input_check.nf
@@ -349,9 +350,9 @@ workflow MAP_SR {
  ===========================================
 */
 
-workflow ASSEMBLE_ONT {
+workflow ASSEMBLE_FLYE {
   take: 
-    ont_reads
+    flye_in_reads
     ch_input
     genomescope_out
     shortread_kmers
@@ -374,12 +375,12 @@ workflow ASSEMBLE_ONT {
     } else {
       // Run flye
       if(!params.genome_size == null) {
-        ont_reads
+        flye_in_reads
           .map { it -> [it[0], it[1], params.genome_size] }
           .set { flye_in }
       }
       if(params.genome_size == null) {
-        ont_reads
+        flye_in_reads
           .join(genomescope_out)
           .set { flye_in }
       } 
@@ -449,7 +450,7 @@ workflow ASSEMBLE_ONT {
     ch_ref_bam
 }
 
-workflow ASSEMBLE_HIFI {
+workflow ASSEMBLE_HIFIASM {
   take: 
     hifi_reads // normal mode: meta, hifireads; UL mode: meta, hifireads, ontreads
     ch_input
@@ -946,6 +947,8 @@ workflow ASSEMBLE {
   Channel.empty().set { ch_polished_genome }
   Channel.empty().set { ch_short_reads }
   Channel.empty().set { sr_kmers }
+  Channel.empty().set { ch_flye_inputs }
+  Channel.empty().set { ch_hifiasm_inputs }
 
   /*
   Check samplesheet
@@ -987,7 +990,12 @@ workflow ASSEMBLE {
     ch_input
       .map { create_shortread_channel(it) }
       .set { ch_short }
-    KMER_SHORTREADS(ch_short)
+    TRIMGALORE(ch_short)
+    TRIMGALORE
+      .out
+      .reads
+      .set { ch_short_trimmed }
+    KMER_SHORTREADS(ch_short_trimmed)
     KMER_SHORTREADS
       .out
       .set { sr_kmers }
@@ -1004,13 +1012,13 @@ workflow ASSEMBLE {
   Assemble with flye, unless --hifi_ont or --hifi_only is set
   */
   if (!params.hifi_ont && !params.hifi_only) {
-    ASSEMBLE_ONT(PREPARE_ONT.out.trimmed, ch_input, JELLYFISH.out.hap_len, sr_kmers)
-    ASSEMBLE_ONT
+    ASSEMBLE_FLYE(PREPARE_ONT.out.trimmed, ch_input, JELLYFISH.out.hap_len, sr_kmers)
+    ASSEMBLE_FLYE
       .out
       .ch_assembly
       .set { ch_polished_genome }
     if (params.use_ref) {
-      ASSEMBLE_ONT
+      ASSEMBLE_FLYE
         .out
         .ch_ref_bam
         .set { ch_ref_bam }
@@ -1054,8 +1062,8 @@ workflow ASSEMBLE {
         .set { ch_hifireads }
     }
 
-    ASSEMBLE_HIFI(ch_hifireads, ch_input, sr_kmers)
-    ASSEMBLE_HIFI
+    ASSEMBLE_HIFIASM(ch_hifireads, ch_input, sr_kmers)
+    ASSEMBLE_HIFIASM
       .out
       .ch_assembly
       .set { ch_hifi_assembly }
