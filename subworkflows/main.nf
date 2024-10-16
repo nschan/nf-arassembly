@@ -979,7 +979,7 @@ workflow ASSEMBLE {
     KMER_ONT
       .out
       .set { ont_kmers }
-    KMER_ONT_QV(ont_kmers)
+    if(params.short_reads) KMER_ONT_QV(ont_kmers.join(sr_kmers))
     KMER_ONT_HIST(ont_kmers)
   } 
   
@@ -1042,7 +1042,9 @@ workflow ASSEMBLE {
     KMER_HIFI
       .out
       .set { hifi_kmers } 
-    KMER_HIFI_QV(hifi_kmers)
+
+    if(params.short_reads) KMER_HIFI_QV(hifi_kmers.join(sr_kmers))
+
     KMER_HIFI_HIST(hifi_kmers)
 
     // If there is a combined assembly for ONT and hifi keep the ont reads.

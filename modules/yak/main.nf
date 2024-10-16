@@ -1,7 +1,7 @@
 process KMER_ASSEMBLY {
     tag "$meta"
     publishDir(
-      path: { "${params.out}/${task.process}".replace(':','/').toLowerCase() }, 
+      path: { "${params.out}/yak".replace(':','/').toLowerCase() }, 
       mode: 'copy',
       overwrite: true,
       saveAs: { fn -> fn.substring(fn.lastIndexOf('/')+1) }
@@ -25,7 +25,7 @@ process KMER_ASSEMBLY {
 process KMER_LONGREADS {
     tag "$meta"
     publishDir(
-      path: { "${params.out}/${task.process}".replace(':','/').toLowerCase() }, 
+      path: { "${params.out}/yak".replace(':','/').toLowerCase() }, 
       mode: 'copy',
       overwrite: true,
       saveAs: { fn -> fn.substring(fn.lastIndexOf('/')+1) }
@@ -35,7 +35,7 @@ process KMER_LONGREADS {
     tuple val(meta), path(reads)
 
     output:
-    tuple val(meta), path("${reads}.yak")       , emit: read_hashes
+    tuple val(meta), path("*.yak")       , emit: read_hashes
 
     when:
     task.ext.when == null || task.ext.when
@@ -49,7 +49,7 @@ process KMER_LONGREADS {
 process KMER_SHORTREADS {
     tag "$meta"
     publishDir(
-      path: { "${params.out}/${task.process}".replace(':','/').toLowerCase() }, 
+      path: { "${params.out}/yak".replace(':','/').toLowerCase() }, 
       mode: 'copy',
       overwrite: true,
       saveAs: { fn -> fn.substring(fn.lastIndexOf('/')+1) }
@@ -74,23 +74,22 @@ process KMER_SHORTREADS {
 process READ_QV {
     tag "$meta"
     publishDir(
-      path: { "${params.out}/${task.process}".replace(':','/').toLowerCase() }, 
+      path: { "${params.out}/yak".replace(':','/').toLowerCase() }, 
       mode: 'copy',
       overwrite: true,
       saveAs: { fn -> fn.substring(fn.lastIndexOf('/')+1) }
     ) 
 
     input:
-    tuple val(meta), path(longread_yak), path(shortread_yak)
+      tuple val(meta), path(longread_yak), path(shortread_yak)
 
     output:
-    tuple val(meta), path("${reads}.yak")       , emit: read_hashes
+      tuple val(meta), path("${reads}.txt"), emit: read_qv
 
     when:
     task.ext.when == null || task.ext.when
 
     script:
-    def args = hifi_args ?: ''
     """
     yak inspect $longread_yak $shortread_yak > ${meta}.longread_shortread.kqv.txt
     """
@@ -98,7 +97,7 @@ process READ_QV {
 process ASSEMBLY_KQV {
     tag "$meta"
     publishDir(
-      path: { "${params.out}/${task.process}".replace(':','/').toLowerCase() }, 
+      path: { "${params.out}/yak".replace(':','/').toLowerCase() }, 
       mode: 'copy',
       overwrite: true,
       saveAs: { fn -> fn.substring(fn.lastIndexOf('/')+1) }
@@ -122,7 +121,7 @@ process ASSEMBLY_KQV {
 process KMER_HISTOGRAM {
     tag "$meta"
     publishDir(
-      path: { "${params.out}/${task.process}".replace(':','/').toLowerCase() }, 
+      path: { "${params.out}/yak".replace(':','/').toLowerCase() }, 
       mode: 'copy',
       overwrite: true,
       saveAs: { fn -> fn.substring(fn.lastIndexOf('/')+1) }
@@ -132,7 +131,7 @@ process KMER_HISTOGRAM {
     tuple val(meta), path(yakfile)
 
     output:
-    tuple val(meta), path("${reads}.yak")       , emit: read_hashes
+    tuple val(meta), path("*.hist")       , emit: kmer_histo
 
     when:
     task.ext.when == null || task.ext.when
