@@ -146,13 +146,13 @@ workflow GENOMEASSEMBLY {
   */
   if(params.ont) {
     PREPARE_ONT(ch_input)
-    JELLYFISH(PREPARE_ONT.out.trimmed, PREPARE_ONT.out.trimmed_med_len)
+    JELLYFISH(PREPARE_ONT.out.trimmed, PREPARE_ONT.out.med_len)
     if(params.genome_size == null) {
-    JELLYFISH
+      JELLYFISH
         .out
         .hap_len
         .set { genome_size }
-  }
+    }
     PREPARE_ONT
       .out
       .trimmed

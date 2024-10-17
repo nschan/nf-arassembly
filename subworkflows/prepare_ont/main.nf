@@ -15,9 +15,9 @@ workflow PREPARE_ONT {
 
     RUN_NANOQ(trimmed)
 
-    trimmed_med_len = RUN_NANOQ.out.median_length
+    med_len = RUN_NANOQ.out.median_length
 
   emit:
       trimmed
-      trimmed_med_len
+      med_len
 }
