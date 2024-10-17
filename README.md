@@ -82,7 +82,7 @@ See also [schema.md](schema.md)
 | `--use_ref` | Use a refence genome? (default: `true`) |
 | `--lift_annotations` | Lift annotations from reference using [`liftoff`](https://github.com/agshumate/Liftoff)? Default: `true` |
 | `--out` | Results directory, default: `'./results'` |
-|`--ont` | ONT reads are available? These should go into the `ontreads` column of the samplesheet. Default: `false` |
+| `--ont` | ONT reads are available? These should go into the `ontreads` column of the samplesheet. Default: `false` |
 | `--hifi` | Pacbio hifi reads are available? These should go into the `hifireads` column of the samplesheet. default: `false` |
 | **ONT Preprocessing** | |
 | `--collect` | Are the provided reads a folder (`true`) or a single fq files (default: `false` ) |
