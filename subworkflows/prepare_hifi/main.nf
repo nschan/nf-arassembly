@@ -5,7 +5,7 @@ workflow PREPARE_HIFI {
   take: inputs
 
   main:
-    ch_input
+    inputs
       .map { it -> [it.sample, it.hifireads] }
       .set { hifireads }
     if(params.lima) {

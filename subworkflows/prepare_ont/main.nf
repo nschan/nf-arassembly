@@ -1,7 +1,7 @@
 
-include { CHOP } from 'chop/main'
-include { COLLECT } from 'collect/main'
-include { NANOQ } from 'run_nanoq/main'
+include { CHOP } from './chop/main'
+include { COLLECT } from './collect/main'
+include { NANOQ } from './run_nanoq/main'
 
 workflow PREPARE_ONT {
   take: inputs

@@ -1,6 +1,6 @@
-include { KMER_ASSEMBLY } from '../../../../modules/yak/main'
-include { KMER_HISTOGRAM as KMER_ASSEMBLY_HIST} from '../../../../modules/yak/main'
-include { ASSEMBLY_KQV as KMER_ASSEMBLY_QV } from '../../../../modules/yak/main'
+include { KMER_ASSEMBLY } from '../../../modules/yak/main'
+include { KMER_HISTOGRAM as KMER_ASSEMBLY_HIST} from '../../../modules/yak/main'
+include { ASSEMBLY_KQV as KMER_ASSEMBLY_QV } from '../../../modules/yak/main'
 
 workflow YAK_QC {
   take:

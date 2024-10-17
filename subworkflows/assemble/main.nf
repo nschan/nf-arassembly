@@ -1,13 +1,13 @@
 include { FLYE } from '../../modules/flye/main'    
 include { HIFIASM; HIFIASM_UL } from '../../modules/hifiasm/main'
 include { MAP_TO_ASSEMBLY } from '../mapping/map_to_assembly/main'
-include { MAP_TO_ref } from '../mapping/map_to_ref/main'
+include { MAP_TO_REF } from '../mapping/map_to_ref/main'
 include { RUN_QUAST } from '../qc/quast/main'
 include { RUN_BUSCO } from '../qc/busco/main'
 include { YAK_QC } from '../qc/yak/main'
 include { RUN_LIFTOFF } from '../liftoff/main'
 
-workflow ASSEMBLY {
+workflow ASSEMBLE {
   take: 
     ont_reads // meta, reads
     hifi_reads // meta, reads
@@ -63,14 +63,16 @@ workflow ASSEMBLY {
         if(params.hifiasm_ont) {
            hifi_reads
             .join(ont_reads) 
-            .set { hifiasm_in }
-          HIFIASM_UL(hifiasm_inputs, params.hifi_args)
+            .set { hifiasm_inputs }
+          HIFIASM_UL(hifiasm_inputs, params.hifiasm_args)
           HIFIASM_UL
             .out
             .primary_contigs_fasta
             .set { ch_assembly }
         } else {      
-          HIFIASM(hifi_reads, params.hifi_args)
+          hifi_reads
+            .set { hifiasm_inputs }
+          HIFIASM(hifiasm_inputs, params.hifiasm_args)
           HIFIASM
             .out
             .primary_contigs_fasta
@@ -80,7 +82,7 @@ workflow ASSEMBLY {
       if(params.assembler == "flye_on_hifiasm") {
         // Run flye
         FLYE(flye_inputs, params.flye_mode)
-        HIFIASM(hifi_reads, params.hifi_args)
+        HIFIASM(hifi_reads, params.hifiasm_args)
 
         FLYE
           .out
@@ -172,9 +174,10 @@ workflow ASSEMBLY {
     if(params.lift_annotations) {
       RUN_LIFTOFF(ch_assembly, ch_input)
     }
-    assembly = ch_cassembly
+    assembly = ch_assembly
     ref_bam = ch_ref_bam
   emit: 
     assembly
     ref_bam
+    longreads
 }

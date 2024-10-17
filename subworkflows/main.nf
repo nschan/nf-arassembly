@@ -22,34 +22,34 @@ include { TRIMGALORE } from '../modules/trimgalore/main'
  ===========================================
  */
 // Read preparation
-include { PREPARE_ONT } from 'prepare_ont/main'
-include { JELLYFISH } from 'jellyfish/main'
-include { PREPARE_HIFI } from 'prepare_hifi/main'
+include { PREPARE_ONT } from './prepare_ont/main'
+include { JELLYFISH } from './jellyfish/main'
+include { PREPARE_HIFI } from './prepare_hifi/main'
 
 // Mapping
-include { MAP_TO_REF  } from 'mapping/map_to_ref/main'
-include { MAP_TO_ASSEMBLY  } from 'mapping/map_to_assembly/main'
-include { MAP_SR } from 'mapping/map_sr/main'
+include { MAP_TO_REF  } from './mapping/map_to_ref/main'
+include { MAP_TO_ASSEMBLY  } from './mapping/map_to_assembly/main'
+include { MAP_SR } from './mapping/map_sr/main'
 
 // Assembly 
-include { ASSEMBLY } from 'assembly/main'
+include { ASSEMBLE } from './assemble/main'
 
 // Polishing
-include { POLISH_MEDAKA } from 'polishing/medaka/polish_medaka/main'
-include { POLISH_PILON } from 'polishing/pilon/polish_pilon/main'
+include { POLISH_MEDAKA } from './polishing/medaka/polish_medaka/main'
+include { POLISH_PILON } from './polishing/pilon/polish_pilon/main'
 
 // Scaffolding
-include { RUN_RAGTAG } from 'scaffolding/ragtag/main'
-include { RUN_LINKS } from 'scaffolding/links/main'
-include { RUN_LONGSTITCH } from 'scaffolding/longstitch/main'
+include { RUN_RAGTAG } from './scaffolding/ragtag/main'
+include { RUN_LINKS } from './scaffolding/links/main'
+include { RUN_LONGSTITCH } from './scaffolding/longstitch/main'
 
 // Annotation
-include { RUN_LIFTOFF } from 'liftoff/main'
+include { RUN_LIFTOFF } from './liftoff/main'
 
 // Quality control
-include { RUN_QUAST } from 'qc/quast/main'
-include { RUN_BUSCO } from 'qc/busco/main'
-include { YAK_QC } from 'qc/yak/main'
+include { RUN_QUAST } from './qc/quast/main'
+include { RUN_BUSCO } from './qc/busco/main'
+include { YAK_QC } from './qc/yak/main'
 
 
  /*
@@ -94,11 +94,11 @@ workflow GENOME {
   Channel.empty().set { ch_polished_genome }
   Channel.empty().set { ch_ont_reads }
   Channel.empty().set { ch_hifi_reads }
-  Channel.empty().set { ch_short_reads }
+  Channel.empty().set { ch_shortreads_reads }
   Channel.empty().set { sr_kmers }
   Channel.empty().set { ch_flye_inputs }
   Channel.empty().set { ch_hifiasm_inputs }
-
+  Channel.empty().set { genome_size }
   /*
   Check samplesheet
   */
@@ -127,15 +127,15 @@ workflow GENOME {
   if(params.short_reads) {
     ch_input
       .map { create_shortread_channel(it) }
-      .set { ch_short }
+      .set { ch_shortreads }
     if(params.trim_short_reads) {
-      TRIMGALORE(ch_short)
+      TRIMGALORE(ch_shortreads)
       TRIMGALORE
         .out
         .reads
-        .set { ch_short }
+        .set { ch_shortreads }
     }
-    KMER_SHORTREADS(ch_short)
+    KMER_SHORTREADS(ch_shortreads)
     KMER_SHORTREADS
       .out
       .set { sr_kmers }
@@ -147,6 +147,12 @@ workflow GENOME {
   if(params.ont) {
     PREPARE_ONT(ch_input)
     JELLYFISH(PREPARE_ONT.out.trimmed, PREPARE_ONT.out.trimmed_med_len)
+    if(params.genome_size == null) {
+    JELLYFISH
+        .out
+        .estimated_hap_len
+        .set { genome_size }
+  }
     PREPARE_ONT
       .out
       .trimmed
@@ -171,22 +177,14 @@ workflow GENOME {
       .out
       .set { hifi_kmers }
     KMER_HIFI_HIST(hifi_kmers)
-    if(params.short_reads) KMER_ONT_QV(ont_kmers.join(sr_kmers))
+    if(params.short_reads) KMER_HIFI_QV(hifi_kmers.join(sr_kmers))
   }
-    
+
   /*
   Assembly
   */
-  if(params.genome_size == null) {
-      JELLYFISH
-        .out
-        .estimated_hap_len
-        .set { genome_size }
-  } else {
-    genome_size = params.genome_size
-  }
 
-  ASSEMBLE(ont_reads, hifi_reads, ch_input, genome_size, sr_kmers)
+  ASSEMBLE(ch_ont_reads, ch_hifi_reads, ch_input, genome_size, sr_kmers)
   ASSEMBLE
     .out
     .assembly
@@ -195,6 +193,10 @@ workflow GENOME {
     .out
     .ref_bam
     .set { ch_ref_bam }
+  ASSEMBLE
+    .out
+    .longreads
+    .set { ch_longreads }
   /*
   Polishing with medaka; ONT only
   */
@@ -216,7 +218,7 @@ workflow GENOME {
   */
 
   if(params.polish_pilon) {
-    POLISH_PILON(ch_input, ch_reads, ch_polished_genome, ch_ref_bam, sr_kmers)
+    POLISH_PILON(ch_input, ch_shortreads, ch_longreads, ch_polished_genome, ch_ref_bam, sr_kmers)
     POLISH_PILON
       .out
       .pilon_improved
@@ -228,15 +230,15 @@ workflow GENOME {
   */
 
   if(params.scaffold_ragtag) {
-    RUN_RAGTAG(ch_input, ch_reads, ch_polished_genome, ch_refs, ch_ref_bam, sr_kmers)
+    RUN_RAGTAG(ch_input, ch_longreads, ch_polished_genome, ch_refs, ch_ref_bam, sr_kmers)
   }
 
   if(params.scaffold_links) {
-    RUN_LINKS(ch_input, ch_reads, ch_polished_genome, ch_refs, ch_ref_bam, sr_kmers)
+    RUN_LINKS(ch_input, ch_longreads, ch_polished_genome, ch_refs, ch_ref_bam, sr_kmers)
   }
 
   if(params.scaffold_longstitch) {
-    RUN_LONGSTITCH(ch_input, ch_reads, ch_polished_genome, ch_refs, ch_ref_bam, sr_kmers)
+    RUN_LONGSTITCH(ch_input, ch_longreads, ch_polished_genome, ch_refs, ch_ref_bam, sr_kmers)
   }
   
 } 

@@ -1,4 +1,4 @@
-include { include { ALIGN_SHORT_TO_BAM as ALIGN_SHORT } from '../../../modules/align/main'
+include { ALIGN_SHORT_TO_BAM as ALIGN_SHORT } from '../../../modules/align/main'
 include { BAM_INDEX_STATS_SAMTOOLS as BAM_STATS } from '../../../modules/bam_sort_stat/main'
 
 workflow MAP_SR {
