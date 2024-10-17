@@ -77,33 +77,48 @@ See also [schema.md](schema.md)
 
 | Parameter | Effect |
 | --- | --- |
+| **General parameters** | |
 | `--samplesheet` | Path to samplesheet |
-| `--collect` | Are the provided reads a folder (`true`) or a single fq files (default: `false` ) |
 | `--use_ref` | Use a refence genome? (default: `true`) |
-| `--porechop` | Run [`porechop`](https://github.com/rrwick/Porechop)? (default: `false`) |
-| `--kmer_length` | kmer size for [`Jellyfish`](https://github.com/gmarcais/Jellyfish)? (default: 21) |
-| `--read_length` | Read length for [`genomescope`](https://github.com/schatzlab/genomescope/)? If this is `null` (default), the median read length estimated by [`nanoq`](https://github.com/esteinig/nanoq). will be used. If this is not `null`, the given value will be used for _all_ samples. |
-| `--flye_mode` | The mode to be used by [`flye`](https://github.com/fenderglass/Flye); default: `"--nano-hq"`, options are: `"--pacbio-raw"`, `"--pacbio-corr"`, `"--pacbio-hifi"`, `"--nano-raw"`, `"--nano-corr"`, `"--nano-hq"` |
-| `--genome_size` | Expected genome size for [`flye`](https://github.com/fenderglass/Flye). If this is `null` (default), the haploid genome size for each sample will be estimated via [`genomescope`](https://github.com/schatzlab/genomescope/). If this is not `null`, the given value will be used for _all_ samples. |
-| `--flye_args` | Arguments to be passed to [`flye`](https://github.com/fenderglass/Flye), default: `none`. Example: `--flye_args '--genome-size 130g --asm-coverage 50'` |
-| `--hifi` | Additional pacbio hifi reads are available? default: `false`|
+| `--lift_annotations` | Lift annotations from reference using [`liftoff`](https://github.com/agshumate/Liftoff)? Default: `true` |
+| `--out` | Results directory, default: `'./results'` |
+|`--ont` | ONT reads are available? These should go into the `ontreads` column of the samplesheet. Default: `false` |
+| `--hifi` | Pacbio hifi reads are available? These should go into the `hifireads` column of the samplesheet. default: `false` |
+| **ONT Preprocessing** | |
+| `--collect` | Are the provided reads a folder (`true`) or a single fq files (default: `false` ) |
+| `--porechop` | Run [`porechop`](https://github.com/rrwick/Porechop) on ONT reads? (default: `false`) |
+| **pacbio Preprocessing** | |
 | `--lima` | Run [`lima`](https://lima.how/) on pacbio reads? default: `false`|
 | `--pacbio_primers` | Primers to be used with [`lima`](https://lima.how/) (required if `--lima` is used)? default: `null`|
+| **Assembly** |  |
+| `--assembler` | Assembler to use. Valid choices are: `'hifiasm'`, `'flye'`, or `'flye_on_hifiasm'`. `flye_on_hifiasm` will scaffold flye assembly (ont) on hifiasm (hifi) assembly using [`ragtag`](https://github.com/malonge/RagTag). Defaul: `'flye'`|
+| **Assembly** | _`flye` specific arguments_ |
+| `--flye_args` | The mode to be used by [`flye`](https://github.com/fenderglass/Flye); default: `"--nano-hq"`, options are: `"--pacbio-raw"`, `"--pacbio-corr"`, `"--pacbio-hifi"`, `"--nano-raw"`, `"--nano-corr"`, `"--nano-hq"` |
+| `--kmer_length` | kmer size for [`Jellyfish`](https://github.com/gmarcais/Jellyfish)? (default: 21) |
+| `--read_length` | Read length for [`genomescope`](https://github.com/schatzlab/genomescope/)? If this is `null` (default), the median read length estimated by [`nanoq`](https://github.com/esteinig/nanoq). will be used. If this is not `null`, the given value will be used for _all_ samples. |
+| `--genome_size` | Expected genome size for [`flye`](https://github.com/fenderglass/Flye). If this is `null` (default), the haploid genome size for each sample will be estimated via [`genomescope`](https://github.com/schatzlab/genomescope/). If this is not `null`, the given value will be used for _all_ samples. |
+| `--flye_args` | Arguments to be passed to [`flye`](https://github.com/fenderglass/Flye), default: `none`. Example: `--flye_args '--genome-size 130g --asm-coverage 50'` |
+| **Assembly** | _`hifiasm` specific arguments_ |
 | `--hifi_ont` | Use hifi and ONT reads with `hifiasm --ul`? default: `false`|
-| `--hifi_only` | If *only* HiFi reads are available, this can be used to perform an assembly with [`hifiasm`](https://github.com/chhylp123/hifiasm) instead of `flye`. default: `false`|
-| `--hifi_args` | Extra arguments passed to [`hifiasm`](https://github.com/chhylp123/hifiasm). default: `''`|
-| `--polish_medaka` | Polish using [`medaka`](https://github.com/nanoporetech/medaka), default: `true` |
+| `--hifiasm_args` | Extra arguments passed to [`hifiasm`](https://github.com/chhylp123/hifiasm). default: `''`|
+| **Polishing** | |
+| `--polish_medaka` | Polish using [`medaka`](https://github.com/nanoporetech/medaka), default: `false` |
 | `--medaka_model` | Model used by [`medaka`](https://github.com/nanoporetech/medaka), default: 'r1041_e82_400bps_hac@v4.2.0:consesus' |
-| `--polish_pilon` | Polish with short reads using [`pilon`](https://github.com/broadinstitute/pilon)? Sefault: `false` |
-| `--busco_db` | Path to local [`BUSCO`](https://gitlab.com/ezlab/busco) db?; default: `""` |
-| `--busco_lineage` | [`BUSCO`](https://gitlab.com/ezlab/busco) lineage to use; default: `brassicales_odb10` |
+| `--polish_pilon` | Polish with short reads (see below) using [`pilon`](https://github.com/broadinstitute/pilon)? Sefault: `false` |
+| **Scaffolding** | |
 | `--scaffold_ragtag` | Scaffolding with [`ragtag`](https://github.com/malonge/RagTag)? Default: `false` |
 | `--scaffold_links` | Scaffolding with [`LINKS`](https://github.com/bcgsc/LINKS)? Default: `false` |
 | `--scaffold_longstitch` | Scaffolding with [`longstitch`](https://github.com/bcgsc/longstitch)? Default: `false` |
-| `--lift_annotations` | Lift annotations from reference using [`liftoff`](https://github.com/agshumate/Liftoff)? Default: `true` |
-| `--skip_flye` | Skip assembly with [`flye`](https://github.com/fenderglass/Flye)?, requires different samplesheet (!); Default: `false` |
-| `--skip_alignments` | Skip alignments with [`minimap2`](https://github.com/lh3/minimap2)? requires different samplesheet (!); Default: `false` |
-| `--out` | Results directory, default: `'./results'` |
+| **QC** | |
+| `--short_reads` | Short reads available? These should go into `shortread_F` and `shortread_R` columns and the `paired` column should be true if both are filled. If only single-end reads are available, `shortread_R` remains empty, and `paired` is false. If short-reads are supplied, k-mer spectra will be used to assess quality of the assembly(s). Default: `false` |
+| `--trim_short_reads` | Trim short reads with [`trimgalore`](https://github.com/FelixKrueger/TrimGalore)? Default: `true` |
+| `--busco` | Run [`BUSCO`](https://gitlab.com/ezlab/busco)? Default: `'true'` |
+| `--busco_db` | Path to local [`BUSCO`](https://gitlab.com/ezlab/busco) db? Default: `""` |
+| `--busco_lineage` | [`BUSCO`](https://gitlab.com/ezlab/busco) lineage to use. Default: `brassicales_odb10` |
+| `--quast`| Run [`QUAST`](https://github.com/ablab/quast)? Default: `true` |
+| **Skipping steps** | |
+| `--skip_assembly` | Skip assembly? Requires different samplesheet (!). Default: `false` |
+| `--skip_alignments` | Skip alignments with [`minimap2`](https://github.com/lh3/minimap2)? Requires different samplesheet (!). Default: `false` |
 
 # Included profiles
 
@@ -134,13 +149,6 @@ or, if HiFi reads are used:
 
 ```
 --flye_mode '--pacbio-hifi' --polish_medaka false
-```
-
-Irrespective of the real type of reads in that column, [`flye`](https://github.com/fenderglass/Flye) will always use the `ontreads` file for assembly. Therefore, if [`flye`](https://github.com/fenderglass/Flye) is used for assembly, the samplesheet should look like this:
-
-```
-sample,ontreads,ref_fasta,ref_gff
-sampleName,path/to/reads,path/to/reference.fasta,path/to/reference.gff
 ```
 
 ## hifiasm

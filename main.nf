@@ -10,11 +10,9 @@ params.enable_conda = false
 params.collect = false
 params.porechop = false
 //Jellyfish params
-params.jelly_is_reads = true
 params.kmer_length = 21
 params.read_length = null
 params.dump = false
-
 //
 params.use_ref = true
 params.skip_assembly = false
@@ -22,24 +20,27 @@ params.genome_size = null
 params.flye_mode = '--nano-hq'
 params.flye_args = ''
 params.hifi = false
+params.ont = false
+params.short_reads = false
+params.trim_short_reads = true
 params.lima = false
 params.pacbio_primers = null
-params.assembler = "flye"
+params.assembler = 'flye'
 params.qc_reads = null
 params.hifiasm_ont = false
-params.hifi_only = false
-params.hifi_args = ''
-params.short_reads = false
+params.hifiasm_args = ''
 params.polish_pilon = false
-params.polish_medaka = true
+params.polish_medaka = false
 params.medaka_model = 'r1041_e82_400bps_hac_v4.2.0'
 params.skip_alignments = false
 params.scaffold_ragtag = false
 params.scaffold_links = false
 params.scaffold_longstitch = false
 params.lift_annotations = true
-params.busoc_db = ""
+params.busco = true
+params.busoc_db = ''
 params.busco_lineage = "brassicales_odb10"
+params.quast = true
 params.out = './results'
 
 /*
@@ -76,22 +77,23 @@ Niklas Schandry                                          niklas@bio.lmu.de
     pacbio primers   : ${params.pacbio_primers}
    
   Assembler          : ${params.assembler}
+     flye_mode       : ${params.flye_mode}
+     flye_args       : ${params.flye_args}
+     hifiasm args    : ${params.hifiasm_args}
 
-  Flye assembly
+  ONT assembly       : ${params.ont}
      read_length     : ${params.read_length}
      genome_size     : ${params.genome_size}
-     flye_mode       : ${params.flye_mode}
 
-  Hifiasm assembly   : ${params.hifi} 
+  Hifi assembly      : ${params.hifi} 
      Mix HiFi and ONT: ${params.hifiasm_ont}
-     Only HiFi       : ${params.hifi_only}
-     hifiasm args    : ${params.hifi_args}
 
   ONT Polishing
      Run Medaka      : ${params.polish_medaka}
      Medaka model    : ${params.medaka_model}
 
   Short-reads        : ${params.short_reads} 
+     Trim short-reads: ${params.trim_short_reads}
      Run pilon       : ${params.polish_pilon}
 
   BUSCO parameters
@@ -114,8 +116,8 @@ Niklas Schandry                                          niklas@bio.lmu.de
 """
     .stripIndent(false)
 
-include { ASSEMBLE } from './subworkflows/main'
+include { GENOME } from './subworkflows/main'
 
 workflow {
-  ASSEMBLE()
+  GENOME()
 }

@@ -1,12 +1,13 @@
+include { FLYE } from '../../modules/flye/main'    
+include { HIFIASM; HIFIASM_UL } from '../../modules/hifiasm/main'
+include { MAP_TO_ASSEMBLY } from '../mapping/map_to_assembly/main'
+include { MAP_TO_ref } from '../mapping/map_to_ref/main'
+include { RUN_QUAST } from '../qc/quast/main'
+include { RUN_BUSCO } from '../qc/busco/main'
+include { YAK_QC } from '../qc/yak/main'
+include { RUN_LIFTOFF } from '../liftoff/main'
 
-/* Generic assembly workflow
-new params:     params.assembler -> switch between "flye" and "hifiasm" and "flye_on_hifiasm"
-                qc_reads  -> "ONT" or 'HIFI' to decide which reads to use for QC with HIFIASM_UL or "flye_on_hifiasm"
-renamed params: skip_flye   ->  skip_assembly
-                hifi_ont    ->  hifiasm_ont
-*/ 
-
-workflow ASSEMBLE {
+workflow ASSEMBLY {
   take: 
     ont_reads // meta, reads
     hifi_reads // meta, reads
@@ -24,7 +25,7 @@ workflow ASSEMBLE {
         .set { ch_refs }
     }
 
-    if(params.skip_assembly ) { // CHANGE: PARAM renamed: skip_flye -> skip_assembly
+    if(params.skip_assembly ) { 
       // Sample sheet layout when skipping assembly
       // sample,ontreads,assembly,ref_fasta,ref_gff
       ch_input
@@ -32,14 +33,16 @@ workflow ASSEMBLE {
         .set { ch_assembly }
     } 
     if(!params.skip_assembly ) {
+      def hifi_only = (params.hifi && !params.ont) ? true : false
       // Somewhat hacky approach to use hifi reads with flye
-      if(params.hifi_only && params.assembler == "flye") {
+      if(params.hifi && params.assembler == "flye") {
+        if(!hifi_only) error 'Cannot combine hifi and ont reads with'
         hifi_reads
           .set { ont_reads }
       }
       if(!params.genome_size == null) {
         ont_reads
-          .map { it -> [it[0], it[1], params.genome_size] }
+          .combine(params.genome_size)
           .set { flye_inputs }
       }
       if(params.genome_size == null) {
@@ -47,7 +50,6 @@ workflow ASSEMBLE {
           .join(genomescope_out)
           .set { flye_inputs }
       } 
-
       // CHANGE: new param: assembler 
       if(params.assembler == "flye") {
         // Run flye
@@ -58,7 +60,7 @@ workflow ASSEMBLE {
           .set { ch_assembly }
       } 
       if(params.assembler == "hifiasm") {
-        if(params.hifiasm_ont) { // CHANGE: PARAM renamed: hifi_ont -> hifiasm_ont
+        if(params.hifiasm_ont) {
            hifi_reads
             .join(ont_reads) 
             .set { hifiasm_in }
@@ -96,12 +98,11 @@ workflow ASSEMBLE {
           .set { ch_assembly }
       } 
     }
-
     /*
     Prepare alignments
     */
     if(params.skip_alignments) {
-      // Sample sheet layout when skipping FLYE and mapping
+      // Sample sheet layout when skipping assembly and mapping
       // sample,ontreads,assembly,ref_fasta,ref_gff,assembly_bam,assembly_bai,ref_bam
       ch_input
         .map { row -> [row.sample, row.ref_bam] }
@@ -126,7 +127,7 @@ workflow ASSEMBLE {
         hifiasm_inputs
           .set { longreads }
         // When using either hifiasm_ont or flye_on_hifiasm, both reads are available, which should be used for qc?
-        if(params.hifiasm_ont || params.assembler == "flye_on_hifiasm") { // CHANGE: NEW PARAM: qc_reads
+        if(params.hifiasm_ont || params.assembler == "flye_on_hifiasm" || (params.hifi && params.ont)) { // CHANGE: NEW PARAM: qc_reads
           if(!params.qc_reads) error "Please specify which reads should be used for qc: 'ONT' or 'HIFI'"
           if(params.qc_reads == 'ONT') {
             flye_inputs
@@ -171,8 +172,9 @@ workflow ASSEMBLE {
     if(params.lift_annotations) {
       RUN_LIFTOFF(ch_assembly, ch_input)
     }
-
+    assembly = ch_cassembly
+    ref_bam = ch_ref_bam
   emit: 
-    ch_assembly
-    ch_ref_bam
+    assembly
+    ref_bam
 }
