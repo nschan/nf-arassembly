@@ -6,6 +6,7 @@ include { RUN_QUAST } from '../qc/quast/main'
 include { RUN_BUSCO } from '../qc/busco/main'
 include { YAK_QC } from '../qc/yak/main'
 include { RUN_LIFTOFF } from '../liftoff/main'
+include { RAGTAG_SCAFFOLD } from '../../modules/local/ragtag/main'
 
 workflow ASSEMBLE {
   take: 
@@ -36,7 +37,7 @@ workflow ASSEMBLE {
       def hifi_only = (params.hifi && !params.ont) ? true : false
       // Somewhat hacky approach to use hifi reads with flye
       if(params.hifi && params.assembler == "flye") {
-        if(!hifi_only) error 'Cannot combine hifi and ont reads with'
+        if(!hifi_only) error 'Cannot combine hifi and ont reads with flye'
         hifi_reads
           .set { ont_reads }
       }
@@ -80,9 +81,24 @@ workflow ASSEMBLE {
         }
       }
       if(params.assembler == "flye_on_hifiasm") {
+        // Run hifiasm
+        hifi_reads
+          .set { hifiasm_inputs }
+        HIFIASM(hifiasm_inputs, params.hifiasm_args)
+
         // Run flye
+        if(!params.genome_size == null) {
+          ont_reads
+            .combine(params.genome_size)
+            .set { flye_inputs }
+        }
+        if(params.genome_size == null) {
+          ont_reads
+            .join(genomescope_out)
+            .set { flye_inputs }
+        } 
+
         FLYE(flye_inputs, params.flye_mode)
-        HIFIASM(hifi_reads, params.hifiasm_args)
 
         FLYE
           .out

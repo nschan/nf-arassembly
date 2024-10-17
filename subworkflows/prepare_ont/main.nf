@@ -1,7 +1,7 @@
 
 include { CHOP } from './chop/main'
 include { COLLECT } from './collect/main'
-include { NANOQ } from './run_nanoq/main'
+include { RUN_NANOQ } from './run_nanoq/main'
 
 workflow PREPARE_ONT {
   take: inputs
@@ -15,7 +15,7 @@ workflow PREPARE_ONT {
 
     RUN_NANOQ(trimmed)
 
-    trimmed_med_len = NANOQ.out.median_length
+    trimmed_med_len = RUN_NANOQ.out.median_length
 
   emit:
       trimmed

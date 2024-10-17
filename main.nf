@@ -26,7 +26,7 @@ params.trim_short_reads = true
 params.lima = false
 params.pacbio_primers = null
 params.assembler = 'flye'
-params.qc_reads = null
+params.qc_reads = 'ONT'
 params.hifiasm_ont = false
 params.hifiasm_args = ''
 params.polish_pilon = false
@@ -86,7 +86,9 @@ Niklas Schandry                                          niklas@bio.lmu.de
      genome_size     : ${params.genome_size}
 
   Hifi assembly      : ${params.hifi} 
-     Mix HiFi and ONT: ${params.hifiasm_ont}
+  
+  Mix HiFi and ONT   : ${params.hifiasm_ont}
+      QC Reads       : ${params.qc_reads}
 
   ONT Polishing
      Run Medaka      : ${params.polish_medaka}
@@ -116,8 +118,8 @@ Niklas Schandry                                          niklas@bio.lmu.de
 """
     .stripIndent(false)
 
-include { GENOME } from './subworkflows/main'
+include { GENOMEASSEMBLY } from './subworkflows/main'
 
 workflow {
-  GENOME()
+  GENOMEASSEMBLY()
 }

@@ -19,7 +19,7 @@ workflow RUN_NANOQ {
 
   NANOQ
     .out
-    .stats
+    .median_length
     .set { median_length }
 
   emit:

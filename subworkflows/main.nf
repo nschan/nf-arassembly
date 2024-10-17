@@ -79,10 +79,10 @@ def create_shortread_channel(LinkedHashMap row) {
     return shortreads
 }
 
-workflow GENOME {
- /*
- Define channels
- */
+workflow GENOMEASSEMBLY {
+  /*
+  Define channels
+  */
 
   Channel.empty().set { ch_input }
   Channel.empty().set { ch_refs }
@@ -94,7 +94,7 @@ workflow GENOME {
   Channel.empty().set { ch_polished_genome }
   Channel.empty().set { ch_ont_reads }
   Channel.empty().set { ch_hifi_reads }
-  Channel.empty().set { ch_shortreads_reads }
+  Channel.empty().set { ch_shortreads }
   Channel.empty().set { sr_kmers }
   Channel.empty().set { ch_flye_inputs }
   Channel.empty().set { ch_hifiasm_inputs }
@@ -150,7 +150,7 @@ workflow GENOME {
     if(params.genome_size == null) {
     JELLYFISH
         .out
-        .estimated_hap_len
+        .hap_len
         .set { genome_size }
   }
     PREPARE_ONT
@@ -203,7 +203,7 @@ workflow GENOME {
 
   if(params.polish_medaka) {
     
-    if(params.hifi_ont) error 'Medaka should not be used on ONT-HiFi hybrid assemblies'
+    if(params.hifiasm_ont) error 'Medaka should not be used on ONT-HiFi hybrid assemblies'
     if(params.hifi && !params.ont) error 'Medaka should not be used on HiFi assemblies'
 
     POLISH_MEDAKA(ch_input, PREPARE_ONT.out.trimmed, ch_polished_genome, ch_ref_bam, sr_kmers)
@@ -240,5 +240,4 @@ workflow GENOME {
   if(params.scaffold_longstitch) {
     RUN_LONGSTITCH(ch_input, ch_longreads, ch_polished_genome, ch_refs, ch_ref_bam, sr_kmers)
   }
-  
 } 
