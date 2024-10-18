@@ -6,7 +6,7 @@ The assembly is naturally quite organisms agnostic, but the annotation pipeline 
 # nf-arassembly
 
 Assembly pipeline for arabidopsis genomes from long-read sequencing written in [`nextflow`](https://nextflow.io/). Should also work for other species.
-The default expectation of this pipeline are ONT reads, however there is [support](#Usage-with-PacBio-reads), for pacbio HiFI and for combinations of ONT and pacbio HiFi data.
+The pipeline supports for assembly Oxford Nanopore, Pacbio HiFi and combinations of ONT and pacbio HiFi data and can take short-reads for quality control or polishing.
 
 # Procedure
 
@@ -40,10 +40,11 @@ Annotation:
 QC: 
   * Quality of each stage is assessed using [`QUAST`](https://github.com/ablab/quast) and [`BUSCO`](https://gitlab.com/ezlab/busco) (standalone).
   * k-mer spectra can be used for further QC with [`yak`](https://github.com/lh3/yak)
+  * if short-reads are provided [`merqury`](https://github.com/lh3/yak) is run to compare k-mer spectra between assemblies (or scaffolds) and short-reads
 
 # Tubemap
 
-![Tubemap](assembly_v2.graph.png)
+![Tubemap](assembly_v2.graph.drawio.png)
 
 # Usage
 
@@ -55,13 +56,11 @@ git clone https://github.com/nschan/nf-arassembly/
 
 Run via nextflow:
 
-The standard pipeline assumes nanopore reads (10.14).
-
 The samplesheet is a `.csv` file with a header. It _must_ adhere to this format, including the header row. Please note the absence of spaces after the commas:
 
 ```
-sample,ontreads,ref_fasta,ref_gff
-sampleName,path/to/reads,path/to/reference.fasta,path/to/reference.gff
+sample,ontreads,hifireads,ref_fasta,ref_gff
+sampleName,path/to/reads,path/to/hifi.fastq.gz,path/to/reference.fasta,path/to/reference.gff
 ```
 
 To run the default pipeline with a samplesheet on biohpc_gen using charliecloud:
@@ -124,59 +123,15 @@ See also [schema.md](schema.md)
 
 # Included profiles
 
-This pipelines comes with some profiles, which can be used via `-profile`. Since there are different ways to handle HiFi reads, and combinations of HiFI and ONT reads, I provide profiles for three common scenarios: 
-  - Assembly of ONT via `flye`, assembly of HiFi via `hifiasm` and scaffolding of ONT assembly onto HiFi assembly: `ont_on_hifi`
-  - Combined assembly of ONT and HiFi with `hifiasm`: `hifiasm_ul`
-  - Assembly of only HiFi reads via `hifiasm`: `hifiasm`
+This pipelines comes with some profiles to modify run behaviour independent of infrastructure configs, which can be used via `-profile`.
 
 | Name | Contents |
 | --- | --- |
-| `charliecloud` | Container configurations for charliecloud |
-| `docker` | Container configurations for docker |
-| `singularity` | Container configurations for singularity |
-| `biohpc_gen` | Configuration to run on biohpc_gen SLURM cluster |
-| `ont_on_hifi` | parameters for assembly of HiFi (via `hifiasm`) and ONT (via `flye`) and subsequent scaffolding of the ONT assembly onto HiFi assembly with `ragtag` |
-| `hifi_ul` | parameters for the assembly of ONT and HiFI reads via `hifiasm` |
-| `hifi_only` | parameters for assembly using only HiFi reads via `hifiasm` |
-
-# Usage with PacBio reads
-
-When pac-bio reads are used exclusively, and `flye` should be used for assembly, i suggest changing flye mode and skipping medaka.
-
-```
---flye_mode '--pacbio-raw' --polish_medaka false
-```
-
-or, if HiFi reads are used:
-
-```
---flye_mode '--pacbio-hifi' --polish_medaka false
-```
-
-## hifiasm
-
-Alternatively, `hifiasm` can be used for assembly instead of flye using `--hifi`. Arguments to `hifiasm` can be passed via `--hifi_args`
-
-The pipeline takes ONT and HiFi reads in the samplesheet like this:
-
-```
-sample,ontreads,hifireads,ref_fasta,ref_gff
-sampleName,path/to/ontreads,path/to/hifireads.fq.gz,path/to/reference.fasta,path/to/reference.gff
-```
-
-There are two options when using `--hifi`, together with ONT reads, which are controlled by `--hifi_ont`:
- - If `--hifi_ont` is `false`, HiFi reads will be assembled via `hifiasm`, and used as a **scaffold** for the ONT reads assembled with `flye`, if `--scaffold_ragtag` is enabled. This will overide the standard procedure used in this pipeline, where the scaffolding would be done against the provided reference genome.
- - If `--hifi_ont` is `true`,  `hifiasm` will be used with `--ul` and the ONT reads will be used along the HiFi reads to assemble. If scaffolding against a reference is performed, the reference genome is used.
-
-Another option is to use solely HiFi reads for assembly via `--hifi --hifi_only`.
-
-To ease configuration there are three HiFi profiles included:
-
-| Profile Name | Effect | Params |
-|     ---      |  ---   |   ---  |
-| `ont_on_hifi`  |  Use HiFi assembly as a scaffold for ONT reads | `--hifi --hifi_ont false --scaffold_ragtag` | 
-| `hifiasm_ul`   |  Combine ONT and HiFI reads during `hifiasm` assembly | `--hifi --hifi_ont --polish_medaka false` |
-| `hifi_only`    |  Use only HiFi reads for assembly via `hifiasm` | `--hifi --hifi_only --polish_medaka false` |
+| `ont_flye` | Assemble ONT reads with `flye` |
+| `hifi_flye` | Assemble pac-bio hifi reads with `flye` |
+| `hifi_hifiasm` | Assemble pac-bio hifi reads with `hifiasm` |
+| `hifi_ul` | Assemble ONT and HiFI reads via `hifiasm` |
+| `ont_on_hifi` | Assemble HiFi (via `hifiasm`) and ONT (via `flye`) and subsequent scaffolding of the ONT assembly onto HiFi assembly with `ragtag` |
 
 # Short reads: QC with yak
 
@@ -184,8 +139,8 @@ If short reads are available, [`yak`](https://github.com/lh3/yak) can be used to
 This can be enabled using `--short_reads` and a samplesheet that looks like this:
 
 ```
-sample,ontreads,ref_fasta,ref_gff,shortread_F,shortread_R,paired
-sampleName,reads,assembly.fasta.gz,reference.fasta,reference.gff,short_F1.fastq,short_F2.fastq,true
+sample,ontreads,hifireads,ref_fasta,ref_gff,shortread_F,shortread_R,paired
+sampleName,ontreads.fa.gz,hifireads.fa.gz,assembly.fasta.gz,reference.fasta,reference.gff,short_F1.fastq,short_F2.fastq,true
 ```
 
 If there are only single-end reads, shortread_R should remain empty, and paired should be `false`
@@ -218,10 +173,10 @@ This will happen at each step of the pipeline where a new genome fasta is create
 If there is no reference genome available use `--use_ref false` to disable the reference genome.
 Liftoff should not be used without a reference, QUAST will no longer compare to reference. 
 
-# Skipping Flye
+# Skipping Assembly
 
 In case you already have an assembly and would only like to check it with QUAST and polish use
-`--skip_flye true`
+`--skip_assembly true`
 
 This mode requires a different samplesheet:
 
@@ -235,7 +190,7 @@ When skipping flye the original reads will be mapped to the assembly and the ref
 # Skipping Flye and mappings
 
 In case you have an assembly and have already mapped your reads to the assembly and the reference genome you can use
-`--skip_flye true --skip_alignments true`
+`--skip_assembly true --skip_alignments true`
 
 This mode requires a different samplesheet:
 
