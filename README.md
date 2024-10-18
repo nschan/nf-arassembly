@@ -38,9 +38,9 @@ Annotation:
   * Annotations are lifted from reference using [`liftoff`](https://github.com/agshumate/Liftoff).
 
 QC: 
-  * Quality of each stage is assessed using [`QUAST`](https://github.com/ablab/quast) and [`BUSCO`](https://gitlab.com/ezlab/busco) (standalone).
-  * k-mer spectra can be used for further QC with [`yak`](https://github.com/lh3/yak)
-  * if short-reads are provided [`merqury`](https://github.com/lh3/yak) is run to compare k-mer spectra between assemblies (or scaffolds) and short-reads
+  * Quality of each stage is assessed using [`QUAST`](https://github.com/ablab/quast) and [`BUSCO`](https://gitlab.com/ezlab/busco) (standalone),
+  * k-mer spectra can be used for further QC with [`yak`](https://github.com/lh3/yak),
+  * if short-reads are provided [`merqury`](https://github.com/lh3/yak) is run to compare k-mer spectra between assemblies (or scaffolds) and short-reads.
 
 # Tubemap
 
