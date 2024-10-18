@@ -35,10 +35,12 @@ include { MAP_SR } from './mapping/map_sr/main'
 include { ASSEMBLE } from './assemble/main'
 
 // Polishing
+include { POLISH } from './polishing/main'
 include { POLISH_MEDAKA } from './polishing/medaka/polish_medaka/main'
 include { POLISH_PILON } from './polishing/pilon/polish_pilon/main'
 
 // Scaffolding
+include { SCAFFOLD } from './scaffolding/main'
 include { RUN_RAGTAG } from './scaffolding/ragtag/main'
 include { RUN_LINKS } from './scaffolding/links/main'
 include { RUN_LONGSTITCH } from './scaffolding/longstitch/main'
@@ -203,47 +205,23 @@ workflow GENOMEASSEMBLY {
     .out
     .longreads
     .set { ch_longreads }
+  
   /*
-  Polishing with medaka; ONT only
+  Polishing
   */
 
-  if(params.polish_medaka) {
-    
-    if(params.hifiasm_ont) error 'Medaka should not be used on ONT-HiFi hybrid assemblies'
-    if(params.hifi && !params.ont) error 'Medaka should not be used on HiFi assemblies'
-
-    POLISH_MEDAKA(ch_input, PREPARE_ONT.out.trimmed, ch_polished_genome, ch_ref_bam, yak_kmers, meryl_kmers)
-
-    POLISH_MEDAKA
-      .out
-      .set { ch_polished_genome }
-  }
-
-  /*
-  Polishing with short reads using pilon
-  */
-
-  if(params.polish_pilon) {
-    POLISH_PILON(ch_input, ch_shortreads, ch_longreads, ch_polished_genome, ch_ref_bam, yak_kmers, meryl_kmers)
-    POLISH_PILON
-      .out
-      .pilon_improved
-      .set { ch_polished_genome }
-  } 
+  POLISH(ch_input, ch_ont_reads, ch_longreads, ch_shortreads, ch_polished_genome, ch_ref_bam, yak_kmers, meryl_kmers)
+  POLISH
+    .out
+    .set { ch_polished_genome }
 
   /*
   Scaffolding
   */
+  
+  SCAFFOLD(ch_input, ch_longreads, ch_polished_genome, ch_refs, ch_ref_bam, yak_kmers, meryl_kmers)
 
-  if(params.scaffold_ragtag) {
-    RUN_RAGTAG(ch_input, ch_longreads, ch_polished_genome, ch_refs, ch_ref_bam, yak_kmers, meryl_kmers)
-  }
-
-  if(params.scaffold_links) {
-    RUN_LINKS(ch_input, ch_longreads, ch_polished_genome, ch_refs, ch_ref_bam, yak_kmers, meryl_kmers)
-  }
-
-  if(params.scaffold_longstitch) {
-    RUN_LONGSTITCH(ch_input, ch_longreads, ch_polished_genome, ch_refs, ch_ref_bam, yak_kmers, meryl_kmers)
-  }
+  /*
+  The End
+  */
 } 
