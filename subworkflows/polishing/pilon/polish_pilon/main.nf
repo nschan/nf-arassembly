@@ -5,6 +5,7 @@ include { RUN_BUSCO } from '../../../qc/busco/main'
 include { RUN_QUAST } from '../../../qc/quast/main'
 include { YAK_QC } from '../../../qc/yak/main'
 include { RUN_LIFTOFF } from '../../../liftoff/main'
+include { MERQURY_QC } from '../../../qc/merqury/main'
 
 workflow POLISH_PILON {
   take:
@@ -13,7 +14,8 @@ workflow POLISH_PILON {
     in_reads
     assembly
     ch_aln_to_ref
-    shortread_kmers
+    yak_kmers
+    meryl_kmers
   
   main:
     MAP_SR(shortreads, assembly)
@@ -30,12 +32,11 @@ workflow POLISH_PILON {
    
     RUN_BUSCO(pilon_improved)
 
-    YAK_QC(pilon_improved, shortread_kmers)
+    if(params.short_reads) MERQURY_QC(pilon_improved, meryl_kmers)
 
+    YAK_QC(pilon_improved, yak_kmers)
 
-    if(params.lift_annotations) {
-        RUN_LIFTOFF(RUN_PILON.out, ch_input)
-    }
+    if(params.lift_annotations) RUN_LIFTOFF(RUN_PILON.out, ch_input)
   
   emit:
     pilon_improved

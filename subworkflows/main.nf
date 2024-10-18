@@ -13,7 +13,7 @@ include { KMER_HISTOGRAM as KMER_HIFI_HIST} from '../modules/yak/main'
 include { KMER_HISTOGRAM as KMER_SR_HIST} from '../modules/yak/main'
 include { READ_QV as KMER_ONT_QV } from '../modules/yak/main'
 include { READ_QV as KMER_HIFI_QV } from '../modules/yak/main'
-
+include { MERYL_COUNT } from '../modules/meryl/count/main'
 include { TRIMGALORE } from '../modules/trimgalore/main'
 
 /*
@@ -95,7 +95,8 @@ workflow GENOMEASSEMBLY {
   Channel.empty().set { ch_ont_reads }
   Channel.empty().set { ch_hifi_reads }
   Channel.empty().set { ch_shortreads }
-  Channel.empty().set { sr_kmers }
+  Channel.empty().set { yak_kmers }
+  Channel.empty().set { meryl_kmers }
   Channel.empty().set { ch_flye_inputs }
   Channel.empty().set { ch_hifiasm_inputs }
   Channel.empty().set { genome_size }
@@ -135,11 +136,15 @@ workflow GENOMEASSEMBLY {
         .reads
         .set { ch_shortreads }
     }
+    MERYL_COUNT(ch_shortreads, params.meryl_k)
+    MERYL_COUNT
+      .out
+      .set { meryl_kmers }
     KMER_SHORTREADS(ch_shortreads)
     KMER_SHORTREADS
       .out
-      .set { sr_kmers }
-    KMER_SR_HIST(sr_kmers)
+      .set { yak_kmers }
+    KMER_SR_HIST(yak_kmers)
   }
   /*
   ONT reads
@@ -162,7 +167,7 @@ workflow GENOMEASSEMBLY {
       .out
       .set { ont_kmers }
     KMER_ONT_HIST(ont_kmers)
-    if(params.short_reads) KMER_ONT_QV(ont_kmers.join(sr_kmers))
+    if(params.short_reads) KMER_ONT_QV(ont_kmers.join(yak_kmers))
   } 
   /*
   HIFI reads
@@ -177,14 +182,14 @@ workflow GENOMEASSEMBLY {
       .out
       .set { hifi_kmers }
     KMER_HIFI_HIST(hifi_kmers)
-    if(params.short_reads) KMER_HIFI_QV(hifi_kmers.join(sr_kmers))
+    if(params.short_reads) KMER_HIFI_QV(hifi_kmers.join(yak_kmers))
   }
 
   /*
   Assembly
   */
 
-  ASSEMBLE(ch_ont_reads, ch_hifi_reads, ch_input, genome_size, sr_kmers)
+  ASSEMBLE(ch_ont_reads, ch_hifi_reads, ch_input, genome_size, yak_kmers, meryl_kmers)
   ASSEMBLE
     .out
     .assembly
@@ -206,7 +211,7 @@ workflow GENOMEASSEMBLY {
     if(params.hifiasm_ont) error 'Medaka should not be used on ONT-HiFi hybrid assemblies'
     if(params.hifi && !params.ont) error 'Medaka should not be used on HiFi assemblies'
 
-    POLISH_MEDAKA(ch_input, PREPARE_ONT.out.trimmed, ch_polished_genome, ch_ref_bam, sr_kmers)
+    POLISH_MEDAKA(ch_input, PREPARE_ONT.out.trimmed, ch_polished_genome, ch_ref_bam, yak_kmers, meryl_kmers)
 
     POLISH_MEDAKA
       .out
@@ -218,7 +223,7 @@ workflow GENOMEASSEMBLY {
   */
 
   if(params.polish_pilon) {
-    POLISH_PILON(ch_input, ch_shortreads, ch_longreads, ch_polished_genome, ch_ref_bam, sr_kmers)
+    POLISH_PILON(ch_input, ch_shortreads, ch_longreads, ch_polished_genome, ch_ref_bam, yak_kmers, meryl_kmers)
     POLISH_PILON
       .out
       .pilon_improved
@@ -230,14 +235,14 @@ workflow GENOMEASSEMBLY {
   */
 
   if(params.scaffold_ragtag) {
-    RUN_RAGTAG(ch_input, ch_longreads, ch_polished_genome, ch_refs, ch_ref_bam, sr_kmers)
+    RUN_RAGTAG(ch_input, ch_longreads, ch_polished_genome, ch_refs, ch_ref_bam, yak_kmers, meryl_kmers)
   }
 
   if(params.scaffold_links) {
-    RUN_LINKS(ch_input, ch_longreads, ch_polished_genome, ch_refs, ch_ref_bam, sr_kmers)
+    RUN_LINKS(ch_input, ch_longreads, ch_polished_genome, ch_refs, ch_ref_bam, yak_kmers, meryl_kmers)
   }
 
   if(params.scaffold_longstitch) {
-    RUN_LONGSTITCH(ch_input, ch_longreads, ch_polished_genome, ch_refs, ch_ref_bam, sr_kmers)
+    RUN_LONGSTITCH(ch_input, ch_longreads, ch_polished_genome, ch_refs, ch_ref_bam, yak_kmers, meryl_kmers)
   }
 } 

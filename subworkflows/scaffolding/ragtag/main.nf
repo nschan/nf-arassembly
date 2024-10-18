@@ -4,6 +4,8 @@ include { RUN_QUAST } from '../../qc/quast/main'
 include { RUN_BUSCO } from '../../qc/busco/main'
 include { YAK_QC } from '../../qc/yak/main'
 include { RUN_LIFTOFF } from '../../liftoff/main'
+include { MERQURY_QC } from '../../qc/merqury/main'
+
 
 workflow RUN_RAGTAG {
   take:
@@ -12,8 +14,9 @@ workflow RUN_RAGTAG {
     assembly
     references
     ch_aln_to_ref
-    shortread_kmers
-  
+    yak_kmers
+    meryl_kmers
+
   main:
     assembly
       .join(references)
@@ -37,11 +40,11 @@ workflow RUN_RAGTAG {
 
     RUN_BUSCO(ragtag_scaffold_fasta)
 
-    YAK_QC(ragtag_scaffold_fasta, shortread_kmers)
+    YAK_QC(ragtag_scaffold_fasta, yak_kmers)
 
-    if(params.lift_annotations) {
-      RUN_LIFTOFF(RAGTAG_SCAFFOLD.out.corrected_assembly, inputs)
-    }
+    if(params.short_reads) MERQURY_QC(ragtag_scaffold_fasta, meryl_kmers)
+
+    if(params.lift_annotations) RUN_LIFTOFF(RAGTAG_SCAFFOLD.out.corrected_assembly, inputs)
 
   emit:
       ragtag_scaffold_fasta

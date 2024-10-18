@@ -13,6 +13,8 @@ params.porechop = false
 params.kmer_length = 21
 params.read_length = null
 params.dump = false
+// meryl
+params.meryl_k = 21
 //
 params.use_ref = true
 params.skip_assembly = false

@@ -1,15 +1,12 @@
 process TRIMGALORE {
     tag "$meta"
-    label 'process_high'
     publishDir(
-      path: { "${params.out}/${task.process}".replace(':','/').toLowerCase() }, 
+      path: { "${params.out}/short_reads/trimgalore/" }, 
       mode: 'copy',
       overwrite: true,
       saveAs: { fn -> fn.substring(fn.lastIndexOf('/')+1) }
     ) 
 
-    conda "bioconda::trim-galore=0.6.7"
- 
     input:
     tuple val(meta), val(paired), path(reads)
 
@@ -19,8 +16,7 @@ process TRIMGALORE {
     tuple val(meta), path("*unpaired*.fq.gz")                   , emit: unpaired, optional: true
     tuple val(meta), path("*.html")                             , emit: html    , optional: true
     tuple val(meta), path("*.zip")                              , emit: zip     , optional: true
-    path "versions.yml"                                         , emit: versions
-
+  
     when:
     task.ext.when == null || task.ext.when
 
@@ -67,12 +63,6 @@ process TRIMGALORE {
             --gzip \\
             ${prefix}_1.fastq.gz \\
             ${prefix}_2.fastq.gz
-
-        cat <<-END_VERSIONS > versions.yml
-        "${task.process}":
-            trimgalore: \$(echo \$(trim_galore --version 2>&1) | sed 's/^.*version //; s/Last.*\$//')
-            cutadapt: \$(cutadapt --version)
-        END_VERSIONS
         """
     }
 }

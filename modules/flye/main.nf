@@ -30,12 +30,13 @@ process FLYE {
     def valid_mode = ["--pacbio-raw", "--pacbio-corr", "--pacbio-hifi", "--nano-raw", "--nano-corr", "--nano-hq"]
     if ( !valid_mode.contains(mode) )  { error "Unrecognised mode to run Flye. Options: ${valid_mode.join(', ')}" }
     def flye_args = params.flye_args
+    def genome_size_arg = genome_size == null ? '' : "--genome-size ${genome_size}"
 
     """
     flye \\
         $mode \\
         $reads \\
-        --genome-size $genome_size \\
+        $genome_size_arg \\
         --out-dir . \\
         --threads $task.cpus \\
         $flye_args

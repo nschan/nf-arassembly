@@ -4,6 +4,7 @@ include { RUN_QUAST } from '../../qc/quast/main'
 include { RUN_BUSCO } from '../../qc/busco/main'
 include { YAK_QC } from '../../qc/yak/main'
 include { RUN_LIFTOFF } from '../../liftoff/main'
+include { MERQURY_QC } from '../../qc/merqury/main'
 
 workflow RUN_LONGSTITCH {
   take:
@@ -12,7 +13,8 @@ workflow RUN_LONGSTITCH {
     assembly
     references
     ch_aln_to_ref
-    shortreads
+    yak_kmers
+    meryl_kmers
   
   main:
     assembly
@@ -31,11 +33,11 @@ workflow RUN_LONGSTITCH {
 
     RUN_BUSCO(scaffolds)
 
-    YAK_QC(scaffolds, shortreads)
+    YAK_QC(scaffolds, yak_kmers)
 
-    if(params.lift_annotations) {
-      RUN_LIFTOFF(LONGSTITCH.out.ntlLinks_arks_scaffolds, inputs)
-    }
+    if(params.short_reads) MERQURY_QC(scaffolds, meryl_kmers)
+
+    if(params.lift_annotations) RUN_LIFTOFF(LONGSTITCH.out.ntlLinks_arks_scaffolds, inputs)
 
   emit:
      scaffolds
