@@ -112,6 +112,7 @@ See also [schema.md](schema.md)
 | **QC** | |
 | `--short_reads` | Short reads available? These should go into `shortread_F` and `shortread_R` columns and the `paired` column should be true if both are filled. If only single-end reads are available, `shortread_R` remains empty, and `paired` is false. If short-reads are supplied, k-mer spectra will be used to assess quality of the assembly(s). Default: `false` |
 | `--trim_short_reads` | Trim short reads with [`trimgalore`](https://github.com/FelixKrueger/TrimGalore)? Default: `true` |
+| `--meryl_k` | Value of k for meryl k-mers. Default: `21` |
 | `--qc_reads` | Long reads that should be used for QC when both ONT and HiFi reads are provided. Options are `'ONT'` or `'HIFI'`. Default: `'ONT'` |
 | `--busco` | Run [`BUSCO`](https://gitlab.com/ezlab/busco)? Default: `'true'` |
 | `--busco_db` | Path to local [`BUSCO`](https://gitlab.com/ezlab/busco) db? Default: `""` |

@@ -135,8 +135,9 @@ workflow GENOMEASSEMBLY {
         .out
         .reads
         .set { ch_shortreads }
+      
     }
-    MERYL_COUNT(ch_shortreads, params.meryl_k)
+    MERYL_COUNT(ch_shortreads.map { it -> [it[0], it[2]] }, params.meryl_k)
     MERYL_COUNT
       .out
       .set { meryl_kmers }

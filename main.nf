@@ -99,6 +99,7 @@ Niklas Schandry                                          niklas@bio.lmu.de
   Short-reads        : ${params.short_reads} 
      Trim short-reads: ${params.trim_short_reads}
      Run pilon       : ${params.polish_pilon}
+     Meryl k         : ${params.meryl_k}
 
   BUSCO parameters
      busco db        : ${params.busoc_db}

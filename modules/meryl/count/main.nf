@@ -1,7 +1,12 @@
 process MERYL_COUNT {
     tag "$meta"
     label 'process_high'
-
+    publishDir(
+      path: { "${params.out}/merqury/meryl/" }, 
+      mode: 'copy',
+      overwrite: true,
+      saveAs: { fn -> fn.substring(fn.lastIndexOf('/')+1) }
+    ) 
     input:
     tuple val(meta), path(reads)
     val kvalue
@@ -14,7 +19,7 @@ process MERYL_COUNT {
 
     script:
     def args = task.ext.args ?: ''
-    def prefix = task.ext.prefix ?: "${meta.id}"
+    def prefix = task.ext.prefix ?: "${meta}"
     """
     for READ in $reads; do
         meryl count \\

@@ -1,7 +1,12 @@
 process MERQURY {
     tag "$meta"
     label 'process_low'
-
+    publishDir(
+      path: { "${params.out}/merqury/merqury/" }, 
+      mode: 'copy',
+      overwrite: true,
+      saveAs: { fn -> fn.substring(fn.lastIndexOf('/')+1) }
+    ) 
     input:
     tuple val(meta), path(meryl_db), path(assembly)
 
