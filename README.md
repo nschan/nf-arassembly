@@ -51,7 +51,7 @@ QC:
 Clone this repo:
 
 ```bash
-git clone https://github.com/nschan/nf-arassembly/
+git clone https://github.com/nschan/nf-genomeassembly/
 ```
 
 Run via nextflow:
@@ -66,7 +66,7 @@ sampleName,path/to/reads,path/to/hifi.fastq.gz,path/to/reference.fasta,path/to/r
 To run the default pipeline with a samplesheet on biohpc_gen using charliecloud:
 
 ```bash
-nextflow run nf-arassembly --samplesheet 'path/to/sample_sheet.csv' \
+nextflow run nf-genomeassembly --samplesheet 'path/to/sample_sheet.csv' \
                            -profile charliecloud,biohpc_gen
 ```
 
