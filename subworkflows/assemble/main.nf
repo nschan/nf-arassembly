@@ -43,6 +43,7 @@ workflow ASSEMBLE {
         if(params.hifi) {
           if(!hifi_only) error 'Cannot combine hifi and ont reads with flye'
           hifi_reads
+            .map { it -> [it[0], it[1], null]}
             .set { flye_inputs }
         }
         if(params.ont) {
