@@ -1,6 +1,5 @@
 process FLYE {
     tag "$meta"
-    label 'process_high'
 
     publishDir(
       path: { "${params.out}/${task.process}".replace(':','/').toLowerCase() }, 
@@ -8,10 +7,6 @@ process FLYE {
       overwrite: true,
       saveAs: { fn -> fn.substring(fn.lastIndexOf('/')+1) }
     ) 
-    conda "bioconda::flye=2.9"
-    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/flye:2.9--py39h6935b12_1' :
-        'quay.io/biocontainers/flye:2.9--py39h6935b12_1' }"
 
     input:
     tuple val(meta), path(reads), val(genome_size)
@@ -35,12 +30,13 @@ process FLYE {
     def valid_mode = ["--pacbio-raw", "--pacbio-corr", "--pacbio-hifi", "--nano-raw", "--nano-corr", "--nano-hq"]
     if ( !valid_mode.contains(mode) )  { error "Unrecognised mode to run Flye. Options: ${valid_mode.join(', ')}" }
     def flye_args = params.flye_args
+    def genome_size_arg = genome_size == null ? '' : "--genome-size ${genome_size}"
 
     """
     flye \\
         $mode \\
         $reads \\
-        --genome-size $genome_size \\
+        $genome_size_arg \\
         --out-dir . \\
         --threads $task.cpus \\
         $flye_args

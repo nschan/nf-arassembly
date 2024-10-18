@@ -5,9 +5,9 @@
 
 params.options = [:]
 
-include { SAMTOOLS_STATS    } from '../samtools/stats/main'    addParams( options: params.options )
-include { SAMTOOLS_IDXSTATS } from '../samtools/idxstats/main' addParams( options: params.options )
-include { SAMTOOLS_FLAGSTAT } from '../samtools/flagstat/main' addParams( options: params.options )
+include { SAMTOOLS_STATS    } from '../samtools/stats/main'    
+include { SAMTOOLS_IDXSTATS } from '../samtools/idxstats/main' 
+include { SAMTOOLS_FLAGSTAT } from '../samtools/flagstat/main' 
 
 workflow BAM_STATS_SAMTOOLS {
     take:

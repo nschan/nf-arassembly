@@ -7,10 +7,10 @@ params.samtools_sort_options  = [:]
 params.samtools_index_options = [:]
 params.bam_stats_options      = [:]
 
-include { SAMTOOLS_SORT      } from '../samtools/sort/main'  addParams( options: params.samtools_sort_options )
-include { SAMTOOLS_INDEX     } from '../samtools/index/main' addParams( options: params.samtools_index_options )
-include { BAM_STATS_SAMTOOLS } from './bam_stats_samtools'  addParams( options: params.bam_stats_options )
-include { SAMTOOLS_GET_UNMAPPED  } from '../samtools/unmapped/main' addParams( options: params.bam_stats_options )
+include { SAMTOOLS_SORT      } from '../samtools/sort/main'  
+include { SAMTOOLS_INDEX     } from '../samtools/index/main' 
+include { BAM_STATS_SAMTOOLS } from './bam_stats_samtools'  
+include { SAMTOOLS_GET_UNMAPPED  } from '../samtools/unmapped/main' 
 
 workflow BAM_SORT_SAMTOOLS {
     take:
