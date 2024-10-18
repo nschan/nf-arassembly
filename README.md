@@ -5,7 +5,7 @@ The assembly is naturally quite organisms agnostic, but the annotation pipeline 
 
 # nf-arassembly
 
-Assembly pipeline for arabidopsis genomes from long-read sequencing written in [`nextflow`](https://nextflow.io/). Should also work for other species.
+Assembly pipeline for genomes from long-read sequencing written in [`nextflow`](https://nextflow.io/). Should also work for other species.
 The pipeline supports for assembly Oxford Nanopore, Pacbio HiFi and combinations of ONT and pacbio HiFi data and can take short-reads for quality control or polishing.
 
 # Procedure
